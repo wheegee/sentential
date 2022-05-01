@@ -11,9 +11,10 @@ resource "null_resource" "release" {
 
     triggers = {
       code_change = local.code_sha
+      compose_yaml = yamlencode(local.compose)
     }
 
     provisioner "local-exec" {
-        command = "echo '${yamlencode(local.compose)}' | docker compose -f - push"
+        command = "echo '${self.triggers.compose_yaml}' | docker compose -f - push"
     }
 }

@@ -2,8 +2,6 @@ resource "null_resource" "deploy" {
     depends_on = [ null_resource.build ]
 
     triggers = {
-      code_change = local.code_sha
-      compose_yaml = yamlencode(local.compose)
       always = timestamp()
     }
 
