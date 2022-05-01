@@ -1,7 +1,7 @@
 import uvicorn
 import os
 
-from config.env import API_NAME, API_VERSION
+from config.env import API_DESCRIPTION, API_NAME, API_VERSION
 from config.ssm import auth0_config
 
 from auth0.v3.authentication.token_verifier import TokenVerifier, AsymmetricSignatureVerifier, TokenValidationError
@@ -24,8 +24,8 @@ def authorize(token: str = Depends(token_auth_scheme)):
 api = FastAPI(
     title=API_NAME,
     version=API_VERSION,
+    description=API_DESCRIPTION,
     dependencies=[Depends(authorize)],
-    debug=True
 )
 
 @api.get("/")
