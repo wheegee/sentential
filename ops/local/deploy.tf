@@ -1,7 +1,6 @@
 resource "null_resource" "deploy" {
-    depends_on = [ null_resource.build ]
-
     triggers = {
+      compose_yaml = yamlencode(local.compose)
       always = timestamp()
     }
 
@@ -11,6 +10,6 @@ resource "null_resource" "deploy" {
 
     provisioner "local-exec" {
         when = destroy
-        command = "echo '${self.triggers.compose_yaml}' | docker compose -f - down -v"
+        command = "echo '${self.triggers.compose_yaml}' | docker compose -f - down -v --rmi local"
     }
 }
