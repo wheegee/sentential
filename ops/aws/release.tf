@@ -7,12 +7,11 @@ data "external" "login" {
 }
 
 resource "null_resource" "release" {
-    triggers = {
-      code_sha = local.code_sha
-      always = timestamp()
-    }
-
     depends_on = [null_resource.build, data.external.login]
+
+    triggers = {
+      code_change = local.code_sha
+    }
 
     provisioner "local-exec" {
         command = "echo '${yamlencode(local.compose)}' | docker compose -f - push"

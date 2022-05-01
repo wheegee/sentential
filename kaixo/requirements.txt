@@ -3,3 +3,4 @@ uvicorn[standard]
 PyJWT
 mangum
 aws-lambda-powertools
+auth0-python

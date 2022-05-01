@@ -1,22 +1,21 @@
-from config.env import API_NAME, API_VERSION
-from config.ssm import api_config
-
 import uvicorn
 import os
+
+from config.env import API_NAME, API_VERSION
+from config.ssm import auth0_config
 
 from auth0.v3.authentication.token_verifier import TokenVerifier, AsymmetricSignatureVerifier, TokenValidationError
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import HTTPBearer
-from fastapi.middleware.cors import CORSMiddleware
 
 from mangum import Mangum
 
 token_auth_scheme = HTTPBearer()
-sv = AsymmetricSignatureVerifier(api_config.jwks_endpoint)
+sv = AsymmetricSignatureVerifier(auth0_config.jwks_endpoint)
 
 def authorize(token: str = Depends(token_auth_scheme)):
-    tv = TokenVerifier(signature_verifier=sv, issuer=api_config.issuer, audience=api_config.audience)
+    tv = TokenVerifier(signature_verifier=sv, issuer=auth0_config.issuer, audience=auth0_config.audience)
     try:
         return tv.verify(token.credentials)
     except TokenValidationError:
@@ -25,27 +24,19 @@ def authorize(token: str = Depends(token_auth_scheme)):
 api = FastAPI(
     title=API_NAME,
     version=API_VERSION,
-    dependencies=[Depends(authorize)]
+    dependencies=[Depends(authorize)],
+    debug=True
 )
 
-origins = [
-    "http://localhost",
-    "http://localhost:8080",
-]
+@api.get("/")
+def get_root():
+    return { "root": "route" }
 
-api.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@api.get("/env")
-def get_env():
-    return api_config
+@api.get("/private")
+def get_private():
+    return auth0_config
 
 if os.getenv('LAMBDA_TASK_ROOT') is not None:
     handler = Mangum(api)
 elif __name__ == "__main__":
-    uvicorn.run("main:api", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:api", host="0.0.0.0", port=8080, reload=True)

@@ -1,7 +1,6 @@
 resource "null_resource" "build" {
     triggers = {
-      code_sha = local.code_sha
-      always = timestamp()
+      code_change = local.code_sha
     }
 
     provisioner "local-exec" {

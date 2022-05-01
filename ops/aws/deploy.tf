@@ -18,6 +18,17 @@ resource "aws_iam_role" "api" {
 EOF
 }
 
+resource "aws_iam_policy" "ssm" {
+  name   = "${var.api}-ssm-access"
+  path   = "/"
+  policy = data.aws_iam_policy_document.ssm.json
+}
+
+resource "aws_iam_role_policy_attachment" "allow_ssm" {
+  role       = aws_iam_role.api.name
+  policy_arn = aws_iam_policy.ssm.arn
+}
+
 resource "aws_lambda_function" "deploy" {
   depends_on = [null_resource.build, null_resource.release]
   function_name = var.api
