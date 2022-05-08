@@ -5,8 +5,8 @@ RUN pip install -r requirements.txt
 
 ADD src/ ${LAMBDA_TASK_ROOT}
 
-ENV API_NAME=kaixo
-ENV API_VERSION=0.0.1
+ENV API_NAME=${API_NAME}
+ENV API_VERSION=${API_VERSION}
 ENV API_DESCRIPTION="test api"
 
 CMD ["main.handler"]

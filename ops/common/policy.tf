@@ -14,18 +14,19 @@ data "aws_iam_policy_document" "ssm" {
   }
 
   statement {
-      effect = "Allow"
-      actions = ["kms:Decrypt"]
-      resources = [data.aws_kms_key.ssm.arn]
+    effect = "Allow"
+    actions = ["kms:Decrypt"]
+    resources = [data.aws_kms_key.ssm.arn]
   }
-  # Uncomment to enable lambda logging to cloudwatch
   
+  # Uncomment to enable lambda logging to cloudwatch
   statement {
     effect = "Allow"
 		actions = [
-								"logs:CreateLogGroup",
-								"logs:CreateLogStream",
-								"logs:PutLogEvents"]
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents"
+    ]
 		resources = ["*"]
   }
 }

@@ -10,13 +10,14 @@ terraform {
 provider "aws" {}
 
 locals {
-    code_dir = "${path.module}/../../${var.api}"
-    code_sha = sha1(join("",[ for f in fileset(local.code_dir, "**"): sha1(filebase64("${local.code_dir}/${f}"))]))
+  code_dir    = "${path.module}/../../app"
+  gateway_dir = "${path.module}/../../gateway"
+  code_sha    = sha1(join("",[ for f in fileset(local.code_dir, "**"): sha1(filebase64("${local.code_dir}/${f}"))]))
 }
 
 variable "api" {
   description = "the name of the api to deploy"
-  default = "kaixo"
+  default = "app"
 }
 
 variable "kms_key_alias" {
