@@ -1,0 +1,5 @@
+pyhumps
+starlette
+uvicorn
+boto3
+pydantic
