@@ -18,15 +18,15 @@ resource "aws_iam_role" "api" {
   EOT
 }
 
-resource "aws_iam_policy" "ssm" {
-  name   = "${var.api}-ssm-access"
+resource "aws_iam_policy" "combined" {
+  name   = "${var.api}-access"
   path   = "/"
-  policy = data.aws_iam_policy_document.ssm.json
+  policy = data.aws_iam_policy_document.combined.json
 }
 
-resource "aws_iam_role_policy_attachment" "allow_ssm" {
+resource "aws_iam_role_policy_attachment" "allow_combined" {
   role       = aws_iam_role.api.name
-  policy_arn = aws_iam_policy.ssm.arn
+  policy_arn = aws_iam_policy.combined.arn
 }
 
 resource "aws_lambda_function" "deploy" {

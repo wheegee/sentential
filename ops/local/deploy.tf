@@ -5,7 +5,10 @@ resource "null_resource" "deploy" {
   }
 
   provisioner "local-exec" {
-    command = "echo '${self.triggers.compose_yaml}' | docker compose -f - up -d --force-recreate"
+    command = <<-EOT
+    echo '${self.triggers.compose_yaml}' | docker-compose -f - build && \
+      echo '${self.triggers.compose_yaml}' | docker compose -f - up -d --force-recreate
+    EOT
   }
 
   provisioner "local-exec" {

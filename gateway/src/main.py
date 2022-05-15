@@ -20,10 +20,12 @@ client = boto3.client(
 
 
 async def proxy(request):
+    # import code; code.interact(local=dict(globals(), **locals()))
+
     event = APIGatewayV2Event(
         raw_path=request.url.path,
         raw_query_string=request.url.query,
-        cookies=[f"{key}={value}" for (key, value) in request.cookies],
+        cookies=[f"{key}={value}" for (key, value) in request.cookies.items()],
         headers=request.headers,
         query_string_parameters=request.query_params,
         path_parameters=request.path_params,
@@ -43,6 +45,7 @@ async def proxy(request):
         Payload=event.json(by_alias=True, exclude_none=True),
     )
 
+    import code; code.interact(local=locals())
     response = json.loads(lambda_response['Payload'].read())
     response = APIGatewayV2Response.parse_obj(response)
     response = Response(

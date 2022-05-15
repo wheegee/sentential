@@ -3,6 +3,7 @@ import os
 
 from config.env import API_DESCRIPTION, API_NAME, API_VERSION
 from config.ssm import auth0_config
+from config.rds import db_conn
 
 from auth0.v3.authentication.token_verifier import (
     TokenVerifier,
@@ -44,6 +45,12 @@ api = FastAPI(
 def get_root():
     return {"root": "route"}
 
+@api.get("/dbtest")
+def get_db_test():
+    cur = db_conn.cursor()
+    cur.execute("""SELECT now()""")
+    query_results = cur.fetchall()
+    return {"query_results": query_results}
 
 @api.get("/private")
 def get_private():

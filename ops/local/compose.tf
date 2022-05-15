@@ -5,17 +5,14 @@ locals {
         image       = "${var.api}:local"
         build       = {
           context = local.code_dir
-          args    = {
-            "API_NAME" = var.api
-            "API_VERSION" = local.code_sha
-          }
         }
         ports       = [
           "9000:8080"
         ]
         environment = merge(data.external.lambda_role_credentials.result, {
-          "API_NAME" = var.api
-          "API_VERSION" = local.code_sha
+          "API_NAME"        = var.api
+          "API_VERSION"     = local.code_sha
+          "API_DESCRIPTION" = var.api_description
         })
       }
       "gateway" = {
@@ -38,6 +35,6 @@ data "external" "lambda_role_credentials" {
   program = ["bash", "${path.module}/lib/mock_role.sh"]
 
   query = {
-    policy_json = replace(data.aws_iam_policy_document.ssm.json, "\n", "")
+    policy_json = replace(data.aws_iam_policy_document.combined.json, "\n", "")
   }
 }

@@ -8,6 +8,12 @@
   - Docker
   - Python
   - Terraform
+- [ ] SSM parameters via Terraform
+  - Auth0
+  - RDS
+- [ ] Further scope `rds-db` and `describe` actions in policies
+- [ ] Security groups for RDS and Lambda
+- [ ] Connection pooling for Lambda -> RDS
 
 ## Requirements
 
@@ -26,6 +32,7 @@ In your Auth0 tenant, create a `Custom API`, and the populate the following _sec
 - `/<app_name>/domain`
 - `/<app_name>/audience`
   - Usually the `Identifier` for the API
+
 ### KMS key
 
 If needed, create a KMS key and alias:
@@ -35,6 +42,20 @@ aws kms create-alias \
   --alias-name alias/<key_name> \
   --target-key-id $KEYID
 ```
+
+### RDS
+
+Populate the following _secure_ SSM parameters in AWS:
+- `/<app_name>/db_user`
+- `/<app_name>/db_root_cert`
+  - Base64 encoded
+
+Grant your Postgres user permission to use IAM authentication:
+```sql
+GRANT rds_iam TO <user>;
+```
+
+## Usage
 
 ## Project structure 
 

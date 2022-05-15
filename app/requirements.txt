@@ -4,3 +4,5 @@ PyJWT==2.3.0
 mangum==0.15.0
 aws-lambda-powertools==1.25.10
 auth0-python==3.23.0
+psycopg==3.0.13
+psycopg-binary==3.0.13

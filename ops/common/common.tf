@@ -20,6 +20,11 @@ variable "api" {
   default = "app"
 }
 
+variable "api_description" {
+  description = "the description of the api"
+  default = "test api"
+}
+
 variable "kms_key_alias" {
   description = "kms key used to encrypt ssm parameters (default follows chamber default config)"
   default = "parameter_store_key"

@@ -1,7 +1,9 @@
 from aws_lambda_powertools.utilities import parameters
 from botocore.config import Config
-from config.env import AWS_REGION, API_NAME
+from base64 import b64decode
 from pydantic import BaseModel
+
+from config.env import AWS_REGION, API_NAME
 
 config = Config(region_name=AWS_REGION)
 ssm_provider = parameters.SSMProvider(config=config)
@@ -17,10 +19,23 @@ class Auth0Config(BaseModel):
     issuer: str
     jwks_endpoint: str
 
+class RDSConfig(BaseModel):
+    instance: str
+    user: str
+    root_cert: str
+    database: str
+
 
 auth0_config = Auth0Config(
     domain=ssm_params["domain"],
     audience=ssm_params["audience"],
     issuer='{}/'.format(ssm_params["domain"]),
     jwks_endpoint='{}/.well-known/jwks.json'.format(ssm_params["domain"])
+)
+
+rds_config = RDSConfig(
+    instance=ssm_params["db_instance"],
+    user=ssm_params["db_user"],
+    root_cert=b64decode(ssm_params["db_root_cert"]),
+    database=ssm_params["db_name"]
 )

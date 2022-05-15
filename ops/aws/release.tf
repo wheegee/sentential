@@ -15,6 +15,9 @@ resource "null_resource" "release" {
   }
 
   provisioner "local-exec" {
-    command = "echo '${self.triggers.compose_yaml}' | docker compose -f - push"
+    command = <<-EOT
+    echo '${self.triggers.compose_yaml}' | docker-compose -f - build && \
+      echo '${self.triggers.compose_yaml}' | docker compose -f - push
+    EOT
   }
 }
