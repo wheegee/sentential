@@ -40,22 +40,26 @@ api = FastAPI(
     dependencies=[Depends(authorize)],
 )
 
+
 @api.get("/")
 def get_root():
     return {"root": "route"}
+
 
 @api.get("/time")
 def get_db_test():
     client = rds_client()
     cursor = client.cursor()
     result = cursor.execute("""SELECT now()""").fetchall()
-    return { 
+    return {
         "time": result
     }
+
 
 @api.get("/private")
 def get_private():
     return auth0_config
+
 
 if os.getenv('LAMBDA_TASK_ROOT') is not None:
     handler = Mangum(api)

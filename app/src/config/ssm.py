@@ -12,17 +12,20 @@ ssm_params = ssm_provider.get_multiple(f"/{API_NAME}/", decrypt=True)
 # Levarage this to give meaningful validation / requirements of SSM parameters.
 # Currently it doesn't do much good.
 
+
 class Auth0Config(BaseModel):
     domain: str
     audience: str
     issuer: str
     jwks_endpoint: str
 
+
 class RDSConfig(BaseModel):
     db_instance: str
     db_user: str
     db_root_cert: str
     db_name: str
+
 
 auth0_config = Auth0Config(
     domain=ssm_params["domain"],

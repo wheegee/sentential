@@ -45,7 +45,6 @@ async def proxy(request):
         Payload=event.json(by_alias=True, exclude_none=True),
     )
 
-    import code; code.interact(local=locals())
     response = json.loads(lambda_response['Payload'].read())
     response = APIGatewayV2Response.parse_obj(response)
     response = Response(

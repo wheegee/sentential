@@ -8,16 +8,26 @@ from config.ssm import rds_config
 session = boto3.Session(region_name=AWS_REGION)
 client = session.client('rds')
 
+
 def rds_endpoint():
-    instances = client.describe_db_instances(DBInstanceIdentifier=rds_config.db_instance)['DBInstances']
+    instances = client.describe_db_instances(
+        DBInstanceIdentifier=rds_config.db_instance
+    )['DBInstances']
     for instance in instances:
         if rds_config.db_instance == instance['DBInstanceIdentifier']:
             endpoint = instance['Endpoint']['Address']
             port = instance['Endpoint']['Port']
             return endpoint, port
 
+
 def rds_token(endpoint, port):
-    return client.generate_db_auth_token(DBHostname=endpoint, Port=port, DBUsername=rds_config.db_user, Region=AWS_REGION)
+    return client.generate_db_auth_token(
+        DBHostname=endpoint,
+        Port=port,
+        DBUsername=rds_config.db_user,
+        Region=AWS_REGION
+    )
+
 
 def rds_client():
     with tempfile.NamedTemporaryFile() as root_cert:
@@ -32,4 +42,3 @@ def rds_client():
             sslrootcert=root_cert.name,
             sslmode="verify-full",
             dbname=rds_config.db_name)
-
