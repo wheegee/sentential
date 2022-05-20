@@ -1,19 +1,6 @@
 # sentential
 
 ![CI](https://github.com/bkeane/sentential/actions/workflows/main.yml/badge.svg)
-## Todo
-
-- [ ] Configuration of shared TF state for AWS deployments
-- [ ] Dependabot
-  - Docker
-  - Python
-  - Terraform
-- [ ] SSM parameters via Terraform
-  - Auth0
-  - RDS
-- [ ] Further scope `rds-db` and `describe` actions in policies
-- [ ] Security groups for RDS and Lambda
-- [ ] Connection pooling for Lambda -> RDS
 
 ## Requirements
 

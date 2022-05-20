@@ -3,7 +3,7 @@ import os
 
 from config.env import API_DESCRIPTION, API_NAME, API_VERSION
 from config.ssm import auth0_config
-from config.rds import db_conn
+from config.rds import rds_client
 
 from auth0.v3.authentication.token_verifier import (
     TokenVerifier,
@@ -40,22 +40,22 @@ api = FastAPI(
     dependencies=[Depends(authorize)],
 )
 
-
 @api.get("/")
 def get_root():
     return {"root": "route"}
 
-@api.get("/dbtest")
+@api.get("/time")
 def get_db_test():
-    cur = db_conn.cursor()
-    cur.execute("""SELECT now()""")
-    query_results = cur.fetchall()
-    return {"query_results": query_results}
+    client = rds_client()
+    cursor = client.cursor()
+    result = cursor.execute("""SELECT now()""").fetchall()
+    return { 
+        "time": result
+    }
 
 @api.get("/private")
 def get_private():
     return auth0_config
-
 
 if os.getenv('LAMBDA_TASK_ROOT') is not None:
     handler = Mangum(api)
