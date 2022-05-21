@@ -1,7 +1,7 @@
-import uvicorn
-import boto3
-import json
 import os
+import json
+import boto3
+import uvicorn
 from starlette.applications import Starlette
 from starlette.responses import Response
 from starlette.routing import Route
