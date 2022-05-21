@@ -5,5 +5,10 @@ import os
 ssm_env = str(Path(f"/{os.getenv('PREFIX')}/runtime/"))
 ssm_provider = parameters.SSMProvider()
 
+
 def ssm():
-    return ssm_provider.get_multiple(path=ssm_env, decrypt=True, recursive=True)
+    return ssm_provider.get_multiple(
+        path=ssm_env,
+        decrypt=True,
+        recursive=True
+    )
