@@ -1,13 +1,6 @@
 # sentential
 
 ![CI](https://github.com/bkeane/sentential/actions/workflows/main.yml/badge.svg)
-## Todo
-
-- [ ] Configuration of shared TF state for AWS deployments
-- [ ] Dependabot
-  - Docker
-  - Python
-  - Terraform
 
 ## Requirements
 
@@ -34,6 +27,31 @@ KEYID=$(aws kms create-key | jq -r '.KeyMetadata.KeyId')
 aws kms create-alias \
   --alias-name alias/<key_name> \
   --target-key-id $KEYID
+```
+
+## Setup
+
+Install dependencies:
+```sh
+pip install -r requirements.txt
+```
+
+Set SSM parameter prefix and KMS key alias:
+```sh
+export KMS_KEY_ALIAS=<kms_key_alias>
+export PREFIX=<ssm_parameter_prefix>
+```
+
+Initialize API:
+```sh
+./ops.py init
+```
+
+Manage parameters:
+```sh
+./ops.py params set <key> <value>
+./ops.py params get
+./ops.py params delete <key>
 ```
 
 ## Project structure 

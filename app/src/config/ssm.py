@@ -7,8 +7,4 @@ ssm_provider = parameters.SSMProvider()
 
 
 def ssm():
-    return ssm_provider.get_multiple(
-        path=ssm_env,
-        decrypt=True,
-        recursive=True
-    )
+    return ssm_provider.get_multiple(path=ssm_env, decrypt=True, recursive=True)

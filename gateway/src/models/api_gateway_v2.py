@@ -22,7 +22,15 @@ class HttpStruct(CamelModel):
 
     @validator("method")
     def validate_method(cls, v):
-        valid_methods = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]  # noqa: E501
+        valid_methods = [
+            "DELETE",
+            "GET",
+            "HEAD",
+            "OPTIONS",
+            "PATCH",
+            "POST",
+            "PUT",
+        ]
         if v in valid_methods:
             return v
         else:
