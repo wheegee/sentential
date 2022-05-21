@@ -14,3 +14,5 @@ jobs:
 
     - name: Black
       uses: psf/black@stable
+      with:
+        options: --verbose
