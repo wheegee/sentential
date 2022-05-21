@@ -15,7 +15,7 @@ jobs:
     - name: Black
       uses: psf/black@stable
       with:
-        options: --diff
+        options: --verbose
 
     - name: Commit changes
       run: |
