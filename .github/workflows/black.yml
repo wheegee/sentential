@@ -18,9 +18,9 @@ jobs:
         options: --diff
 
     - name: Commit changes
-        run: |
-          git add .
-          if output=$(git status --porcelain) && [ ! -z "$output" ]; then
-            git commit -s -m 'code automatically formatted'
-            git push
-          fi
+      run: |
+        git add .
+        if output=$(git status --porcelain) && [ ! -z "$output" ]; then
+          git commit -s -m 'code automatically formatted'
+          git push
+        fi
