@@ -1,19 +1,13 @@
 locals {
   compose = {
     services = {
-      "${var.api}" = {
+      "${data.aws_ssm_parameter.name.value}" = {
         image       = "${data.aws_ecr_repository.api.repository_url}:${local.code_sha}"
         build       = {
           context = local.code_dir
-          args    = {
-            "API_NAME" = var.api
-            "API_VERSION" = local.code_sha
-          }
+          args    = local.build_args
         }
-        environment = {
-          "API_NAME" = var.api
-          "API_VERSION" = local.code_sha
-        }
+        environment = local.runtime_env
       }
     }
   }

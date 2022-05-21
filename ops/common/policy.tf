@@ -1,3 +1,9 @@
+data "aws_iam_policy_document" "combined" {
+  source_policy_documents = [
+    data.aws_iam_policy_document.ssm.json
+  ]
+}
+
 data "aws_iam_policy_document" "ssm" {
   statement {
     effect = "Allow"
@@ -8,8 +14,8 @@ data "aws_iam_policy_document" "ssm" {
       ]
 
     resources = [
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.api}/*",
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.api}/"
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${data.aws_ssm_parameter.name.value}/*",
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${data.aws_ssm_parameter.name.value}/"
       ]
   }
 
