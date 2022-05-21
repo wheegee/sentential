@@ -1,6 +1,6 @@
+import os
 from aws_lambda_powertools.utilities import parameters
 from pathlib import Path
-import os
 
 ssm_env = str(Path(f"/{os.getenv('PREFIX')}/runtime/"))
 ssm_provider = parameters.SSMProvider()

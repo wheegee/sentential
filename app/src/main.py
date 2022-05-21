@@ -1,5 +1,5 @@
-import uvicorn
 import os
+import uvicorn
 from fastapi import FastAPI
 from mangum import Mangum
 from datetime import datetime
