@@ -1,6 +1,7 @@
 import sys
 import json
 import boto3
+import subprocess
 from typer import echo, style, colors
 from pathlib import Path
 from botocore.exceptions import ClientError
@@ -17,6 +18,23 @@ except ClientError as e:
     else:
         echo(style(f"Identity error: {e}", fg=colors.RED))
         sys.exit(1)
+
+
+def cmd(target, command):
+    try:
+        result = subprocess.Popen(command, cwd=target, stdout=subprocess.PIPE)
+        # for line in iter(result.stdout.readline, b""):
+        #     echo(line)
+        if result.stderr:
+            raise subprocess.CalledProcessError(
+                returncode=result.returncode, cmd=result.args, stderr=result.stderr
+            )
+        if result.stdout:
+            return result.stdout.read().decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        return style(e, fg=colors.RED)
+    except FileNotFoundError as e:
+        return style(e, fg=colors.RED)
 
 
 class Parameters:
@@ -67,7 +85,7 @@ class Parameters:
         for key, value in results.items():
             if key.startswith(filter):
                 filtered[key] = value
-        return filtered
+        return json.dumps(filtered, indent=2)
 
     def delete(self, key):
         name = str(Path(f"{self.prefix}/{key}"))
@@ -122,3 +140,59 @@ class Registry:
                 return style(f"{self.name}:{tag}: image not found", fg=colors.RED)
             else:
                 return style(f"Client error: {e}", fg=colors.RED)
+
+
+class Deploy:
+    def __init__(self, kms_key_alias, prefix):
+        self.prefix = prefix
+        self.kms_key_alias = kms_key_alias
+
+    def init(self, target):
+        result = cmd(f"ops/{target}", ["terraform", "init"])
+        if "successfully initialized" in result:
+            return True
+        else:
+            return result
+
+    def apply(self, target):
+        result = cmd(
+            f"ops/{target}",
+            [
+                "terraform",
+                "apply",
+                "--auto-approve",
+                "-var",
+                f"kms_key_alias={self.kms_key_alias}",
+                "-var",
+                f"prefix={self.prefix}",
+            ],
+        )
+        return style(f"{target}: deployed", fg=colors.GREEN)
+
+
+class Destroy:
+    def __init__(self, kms_key_alias, prefix):
+        self.prefix = prefix
+        self.kms_key_alias = kms_key_alias
+
+    def init(self, target):
+        result = cmd(f"ops/{target}", ["terraform", "init"])
+        if "successfully initialized" in result:
+            return True
+        else:
+            return result
+
+    def destroy(self, target):
+        result = cmd(
+            f"ops/{target}",
+            [
+                "terraform",
+                "destroy",
+                "--auto-approve",
+                "-var",
+                f"kms_key_alias={self.kms_key_alias}",
+                "-var",
+                f"prefix={self.prefix}",
+            ],
+        )
+        return style(f"{target}: destroyed", fg=colors.GREEN)

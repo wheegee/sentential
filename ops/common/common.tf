@@ -46,7 +46,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 data "aws_ecr_repository" "api" {
-  name = data.aws_ssm_parameter.repo.value
+  name = data.aws_ssm_parameter.repository.value
 }
 
 data "aws_kms_key" "ssm" {
@@ -61,6 +61,6 @@ data "aws_ssm_parameter" "description" {
   name = "/${var.prefix}/description"
 }
 
-data "aws_ssm_parameter" "repo" {
-  name = "/${var.prefix}/repo"
+data "aws_ssm_parameter" "repository" {
+  name = "/${var.prefix}/repository"
 }

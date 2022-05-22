@@ -3,7 +3,7 @@
 import typer
 from typing import Optional
 
-from ops.lib import Parameters, Registry
+from ops.lib import Parameters, Registry, Deploy, Destroy
 
 
 cli = typer.Typer()
@@ -100,6 +100,38 @@ def delete(
     for key, value in results.items():
         if key == "name":
             typer.echo(Registry(value).delete(tag))
+
+
+@cli.command()
+def deploy(
+    target: str = typer.Argument(...),
+    kms_key_alias: str = typer.Option("aws/ssm", envvar="KMS_KEY_ALIAS"),
+    prefix: str = typer.Option(..., envvar="PREFIX"),
+):
+    """
+    deploy API at given target
+    """
+    init = Deploy(kms_key_alias, prefix).init(target)
+    if init:
+        typer.echo(Deploy(kms_key_alias, prefix).apply(target))
+    else:
+        typer.echo(init)
+
+
+@cli.command()
+def destroy(
+    target: str = typer.Argument(...),
+    kms_key_alias: str = typer.Option("aws/ssm", envvar="KMS_KEY_ALIAS"),
+    prefix: str = typer.Option(..., envvar="PREFIX"),
+):
+    """
+    destroy API at given target
+    """
+    init = Destroy(kms_key_alias, prefix).init(target)
+    if init:
+        typer.echo(Destroy(kms_key_alias, prefix).destroy(target))
+    else:
+        typer.echo(init)
 
 
 if __name__ == "__main__":
