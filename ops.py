@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import typer
 from typing import Optional
 
@@ -54,7 +55,7 @@ def get(
     """
     read parameters from SSM
     """
-    typer.echo(Parameters(kms_key_alias, prefix).get(filter))
+    typer.echo(json.dumps(Parameters(kms_key_alias, prefix).get(filter), indent=2))
 
 
 @params.command()
@@ -111,9 +112,10 @@ def deploy(
     """
     deploy API at given target
     """
-    init = Deploy(kms_key_alias, prefix).init(target)
+    init = Deploy(kms_key_alias, prefix, target).init()
     if init:
-        typer.echo(Deploy(kms_key_alias, prefix).apply(target))
+        typer.echo(Deploy(kms_key_alias, prefix, target).apply())
+        typer.echo(Deploy(kms_key_alias, prefix, target).output())
     else:
         typer.echo(init)
 
@@ -127,9 +129,9 @@ def destroy(
     """
     destroy API at given target
     """
-    init = Destroy(kms_key_alias, prefix).init(target)
+    init = Destroy(kms_key_alias, prefix, target).init()
     if init:
-        typer.echo(Destroy(kms_key_alias, prefix).destroy(target))
+        typer.echo(Destroy(kms_key_alias, prefix, target).destroy())
     else:
         typer.echo(init)
 

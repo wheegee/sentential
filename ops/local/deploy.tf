@@ -14,3 +14,7 @@ resource "null_resource" "deploy" {
     command = "echo '${self.triggers.compose_yaml}' | docker compose -f - down -v"
   }
 }
+
+output "local_url" {
+  value     = "http://localhost:${split(":", nonsensitive(local.compose.services["gateway"].ports[0]))[0]}"
+}

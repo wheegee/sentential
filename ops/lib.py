@@ -1,5 +1,4 @@
 import sys
-import json
 import boto3
 import subprocess
 from typer import echo, style, colors
@@ -85,7 +84,7 @@ class Parameters:
         for key, value in results.items():
             if key.startswith(filter):
                 filtered[key] = value
-        return json.dumps(filtered, indent=2)
+        return filtered
 
     def delete(self, key):
         name = str(Path(f"{self.prefix}/{key}"))
@@ -143,20 +142,21 @@ class Registry:
 
 
 class Deploy:
-    def __init__(self, kms_key_alias, prefix):
+    def __init__(self, kms_key_alias, prefix, target):
         self.prefix = prefix
         self.kms_key_alias = kms_key_alias
+        self.target = target
 
-    def init(self, target):
-        result = cmd(f"ops/{target}", ["terraform", "init"])
+    def init(self):
+        result = cmd(f"ops/{self.target}", ["terraform", "init"])
         if "successfully initialized" in result:
             return True
         else:
             return result
 
-    def apply(self, target):
+    def apply(self):
         result = cmd(
-            f"ops/{target}",
+            f"ops/{self.target}",
             [
                 "terraform",
                 "apply",
@@ -167,24 +167,29 @@ class Deploy:
                 f"prefix={self.prefix}",
             ],
         )
-        return style(f"{target}: deployed", fg=colors.GREEN)
+        return style(f"{self.target}: deployed", fg=colors.GREEN)
+
+    def output(self):
+        result = cmd(f"ops/{self.target}", ["terraform", "output"])
+        return style(f"================\n{result}", fg=colors.GREEN)
 
 
 class Destroy:
-    def __init__(self, kms_key_alias, prefix):
+    def __init__(self, kms_key_alias, prefix, target):
         self.prefix = prefix
         self.kms_key_alias = kms_key_alias
+        self.target = target
 
-    def init(self, target):
-        result = cmd(f"ops/{target}", ["terraform", "init"])
+    def init(self):
+        result = cmd(f"ops/{self.target}", ["terraform", "init"])
         if "successfully initialized" in result:
             return True
         else:
             return result
 
-    def destroy(self, target):
+    def destroy(self):
         result = cmd(
-            f"ops/{target}",
+            f"ops/{self.target}",
             [
                 "terraform",
                 "destroy",
@@ -195,4 +200,4 @@ class Destroy:
                 f"prefix={self.prefix}",
             ],
         )
-        return style(f"{target}: destroyed", fg=colors.GREEN)
+        return style(f"{self.target}: destroyed", fg=colors.GREEN)
