@@ -29,17 +29,21 @@ api.add_middleware(
     allow_headers=["*"],
 )
 
+
 @api.get("/")
 def root():
     return {"route": "/"}
+
 
 @api.get("/time")
 def time():
     return {"time": datetime.now(), "route": "/time"}
 
+
 @api.get("/config")
 def config():
     return {"config": ssm(), "route": "/config"}
+
 
 # Override fastapi's internal naming scheme for OpenAPI v3's operation_id property
 # source: https://fastapi.tiangolo.com/advanced/path-operation-advanced-configuration/#using-the-path-operation-function-name-as-the-operationid
