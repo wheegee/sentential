@@ -54,9 +54,19 @@ Manage parameters:
 ./ops.py params delete <key>
 ```
 
+Deploy API:
+```sh
+./ops.py deploy <local/aws>
+```
+
+Destroy API:
+```sh
+./ops.py destroy <local/aws>
+```
+
 ## Project structure 
 
 - `ops/local` - Local Lambda environment via Terraform
-- `ops/aws` - Creates AWS Lambda environment and URL via Terraform
+- `ops/aws` - AWS Lambda environment and URL via Terraform
 - `app/src` - `python3 main.py` runs application locally
 - `gateway/src` - `python3 main.py` runs Lambda gateway locally
