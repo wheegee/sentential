@@ -1,0 +1,37 @@
+name: Lint
+
+on:
+  push:
+
+permissions: read-all
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Black
+      uses: psf/black@stable
+      with:
+        options: --verbose
+
+    - name: Set up git
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git config user.name "sentential[bot]"
+        git config user.email "bot@sentential"
+        git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git
+
+    - name: Commit changes
+      run: |
+        git add .
+        if output=$(git status --porcelain) && [ ! -z "$output" ]; then
+          git commit -s -m 'code automatically formatted'
+          git push
+        fi
