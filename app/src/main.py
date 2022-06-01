@@ -42,7 +42,7 @@ def root():
             <p>`client` is available in debugger</p>
             <p>example:</p>
             <pre>
-            client.apis.default.time().then((res) => { console.log(res.body) })
+                client.apis.default.time().then((res) => { console.log(res.body) })
             </pre>
         </body>
         <script>
