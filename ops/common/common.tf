@@ -19,17 +19,17 @@ locals {
   api_description = data.aws_ssm_parameter.description.value
 
   build_args  = {
-            "API_NAME" = local.api_name
-            "API_DESCRIPTION" = local.api_description
-            "API_VERSION" = local.api_version
-          }
+    "API_NAME" = local.api_name
+    "API_DESCRIPTION" = local.api_description
+    "API_VERSION" = local.api_version
+  }
 
   runtime_env = {
-          "API_NAME" = local.api_name
-          "API_DESCRIPTION" = local.api_description
-          "API_VERSION" = local.api_version
-          "PREFIX" = var.prefix
-        }
+    "API_NAME" = local.api_name
+    "API_DESCRIPTION" = local.api_description
+    "API_VERSION" = local.api_version
+    "PREFIX" = var.prefix
+  }
 }
 
 variable "prefix" {

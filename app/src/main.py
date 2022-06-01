@@ -16,11 +16,6 @@ api = FastAPI(
     description=API_DESCRIPTION,
 )
 
-origins = [
-    "http://localhost",
-    "http://localhost:8080",
-]
-
 api.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -35,25 +30,24 @@ def root():
     return """
     <!DOCTYPE html>
     <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Client</title>
-        <script src="https://unpkg.com/swagger-client"></script>
-    </head>
-    <body>
-        <p>open dev console and reload</p>
-        <p>`client` is available in debugger</p>
-        <p>example:</p>
-        <pre>
-        (await client.apis.default.time()).body
-        </pre>
-
-    </body>
-    <script>
-        new SwaggerClient('http://localhost:8080/openapi.json').then(client => { debugger })
-    </script>
+        <head>
+            <meta charset="UTF-8">
+            <meta http-equiv="X-UA-Compatible" content="IE=edge">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Client</title>
+            <script src="https://unpkg.com/swagger-client"></script>
+        </head>
+        <body>
+            <p>open dev console and reload</p>
+            <p>`client` is available in debugger</p>
+            <p>example:</p>
+            <pre>
+            client.apis.default.time().then((res) => { console.log(res.body) })
+            </pre>
+        </body>
+        <script>
+            new SwaggerClient('/openapi.json').then(client => { debugger })
+        </script>
     </html>
     """
 
