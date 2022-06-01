@@ -21,7 +21,7 @@ locals {
           context = local.gateway_dir
         }
         ports       = [
-          "8080:8080"
+          "8081:8081"
         ]
         environment = merge(data.external.lambda_role_credentials.result, {
           "LAMBDA_ENDPOINT" = "http://${data.aws_ssm_parameter.name.value}:8080"
