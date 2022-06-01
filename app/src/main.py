@@ -29,6 +29,7 @@ api.add_middleware(
     allow_headers=["*"],
 )
 
+
 @api.get("/", response_class=HTMLResponse)
 def root():
     return """
@@ -61,19 +62,22 @@ def root():
 def time():
     return {"time": datetime.now(), "route": "/time"}
 
+
 @api.get("/hostname")
 def hostname():
-    return { "hostname": os.uname().nodename }
+    return {"hostname": os.uname().nodename}
+
 
 @api.post("/env")
 def set_env(key: str, value: str):
     os.environ[key] = value
-    return { "message": "success!" }
+    return {"message": "success!"}
+
 
 @api.get("/env")
 def get_env(key: str):
     value = os.getenv(key)
-    return { f"{key}": value }
+    return {f"{key}": value}
 
 
 # Override fastapi's internal naming scheme for OpenAPI v3's operation_id property
