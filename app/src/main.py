@@ -29,7 +29,12 @@ api.add_middleware(
     allow_headers=["*"],
 )
 
+<<<<<<< HEAD
 @api.get("/", response_class=HTMLResponse)
+=======
+
+@api.get("/")
+>>>>>>> 29174c8b9b8fb80ce5ab5dead1d49bb390fcfc7e
 def root():
     return """
     <!DOCTYPE html>
@@ -56,10 +61,12 @@ def root():
     </html>
     """
 
+
 @api.get("/time")
 def time():
     return {"time": datetime.now(), "route": "/time"}
 
+<<<<<<< HEAD
 @api.get("/hostname")
 def hostname():
     return { "hostname": os.uname().nodename }
@@ -73,6 +80,13 @@ def set_env(key: str, value: str):
 def get_env(key: str):
     value = os.getenv(key)
     return { f"{key}": value }
+=======
+
+@api.get("/config")
+def config():
+    return {"config": ssm(), "route": "/config"}
+>>>>>>> 29174c8b9b8fb80ce5ab5dead1d49bb390fcfc7e
+
 
 # Override fastapi's internal naming scheme for OpenAPI v3's operation_id property
 # source: https://fastapi.tiangolo.com/advanced/path-operation-advanced-configuration/#using-the-path-operation-function-name-as-the-operationid
