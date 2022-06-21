@@ -1,6 +1,0 @@
-fastapi==0.76.0
-uvicorn[standard]==0.17.6
-PyJWT==2.3.0
-mangum==0.15.0
-aws-lambda-powertools==1.25.10
-auth0-python==3.23.0
