@@ -1,3 +1,4 @@
+from functools import wraps
 import json
 import os
 from typing import Dict, List, Optional
@@ -5,11 +6,13 @@ from pathlib import Path, PosixPath
 from os import makedirs
 from os.path import exists
 from base64 import b64decode, b64encode
-from python_on_whales import DockerClient, docker
+from python_on_whales import docker
+from python_on_whales.exceptions import DockerException
 import boto3
 from pydantic import BaseModel, validator
 from jinja2 import Environment, FileSystemLoader, Template
 import requests
+from requests import HTTPError
 
 class PathConfig(BaseModel):
     root: PosixPath
@@ -85,6 +88,17 @@ class BoilerPlate:
     def policy(self):
         self.write(self.jinja.get_template("policy.json"), self.config.path.policy)
 
+
+def retry_with_login(func):
+    def wrap(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except (DockerException, HTTPError) as e:
+            print("retrying after ecr login")
+            self.client.docker.login_ecr()
+            return func(self, *args, **kwargs)
+    return wrap
+
 class Sentential:
     def __init__(self, config: Config) -> None:
         self.config = config
@@ -99,7 +113,7 @@ class Sentential:
         self.client.docker.build(
             f"{self.config.path.root}",
             tags=[f"{self.config.function}:local"],
-            labels={ 
+            labels={
                 "spec.prefix": f"{self.config.function}",
                 "spec.policy": b64policy
             },
@@ -126,33 +140,36 @@ class Sentential:
             }
         )
 
+    @retry_with_login
     def publish(self, version: str = "latest"):
-        self.client.docker.login_ecr()
         self.client.docker.image.tag(f"{self.config.function}:local", f"{self.config.repository_url}:{version}")
         self.client.docker.image.push(f"{self.config.repository_url}:{version}")
 
-    def ecr_api_get(self, url: str):
+    @retry_with_login
+    def deploy(self, version: str = "latest"):
+        self._ecr_api_get(f"https://{self.config.registry_url}/v2/{self.config.function}/manifests/{version}")
+        manifest = response.json()
+        digest = manifest["config"]["digest"]
+        response = self._ecr_api_get(f"https://{self.config.registry_url}/v2/{self.config.function}/blobs/{digest}")
+        return json.dumps(response.json()['config']['Labels'])
+
+    def _ecr_api_get(self, url: str):
         config_json = json.loads(open(os.path.expanduser("~/.docker/config.json")).read())
         auth = f"Basic {config_json['auths'][self.config.registry_url]['auth']}"
-        return requests.get(
+        response = requests.get(
             url,
             headers={
                 "Authorization": auth,
                 "Accept": "application/vnd.docker.distribution.manifest.v2+json"
             },
         )
-
-    def deploy(self, version: str = "latest"):
-        response = self.ecr_api_get(f"https://{self.config.registry_url}/v2/{self.config.function}/manifests/{version}")
-        manifest = response.json()
-        digest = manifest["config"]["digest"]
-        response = self.ecr_api_get(f"https://{self.config.registry_url}/v2/{self.config.function}/blobs/{digest}")
-        return json.dumps(response.json()['config']['Labels'])
+        response.raise_for_status()
+        return response
 
 config = Config(function="kaixo")
 sentential = Sentential(config)
-# sentential.init("amazon/aws-lambda-ruby")
-# sentential.build()
-# sentential.test()
-# sentential.publish()
+sentential.init("amazon/aws-lambda-ruby")
+sentential.build()
+sentential.test()
+sentential.publish()
 print(sentential.deploy())
