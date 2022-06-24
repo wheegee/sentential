@@ -111,7 +111,9 @@ def retry_with_login(func):
             print("retrying after ecr login")
             self.client.docker.login_ecr()
             return func(self, *args, **kwargs)
+
     return wrap
+
 
 class Sentential:
     def __init__(self, config: Config) -> None:
@@ -127,10 +129,7 @@ class Sentential:
         self.client.docker.build(
             f"{self.config.path.root}",
             tags=[f"{self.config.function}:local"],
-            labels={
-                "spec.prefix": f"{self.config.function}",
-                "spec.policy": b64policy
-            },
+            labels={"spec.prefix": f"{self.config.function}", "spec.policy": b64policy},
         )
 
     def test(self):
@@ -162,19 +161,27 @@ class Sentential:
 
     @retry_with_login
     def publish(self, version: str = "latest"):
-        self.client.docker.image.tag(f"{self.config.function}:local", f"{self.config.repository_url}:{version}")
+        self.client.docker.image.tag(
+            f"{self.config.function}:local", f"{self.config.repository_url}:{version}"
+        )
         self.client.docker.image.push(f"{self.config.repository_url}:{version}")
 
     @retry_with_login
     def deploy(self, version: str = "latest"):
-        response = self._ecr_api_get(f"https://{self.config.registry_url}/v2/{self.config.function}/manifests/{version}")
+        response = self._ecr_api_get(
+            f"https://{self.config.registry_url}/v2/{self.config.function}/manifests/{version}"
+        )
         manifest = response.json()
         digest = manifest["config"]["digest"]
-        response = self._ecr_api_get(f"https://{self.config.registry_url}/v2/{self.config.function}/blobs/{digest}")
-        return json.dumps(response.json()['config']['Labels'])
+        response = self._ecr_api_get(
+            f"https://{self.config.registry_url}/v2/{self.config.function}/blobs/{digest}"
+        )
+        return json.dumps(response.json()["config"]["Labels"])
 
     def _ecr_api_get(self, url: str):
-        config_json = json.loads(open(os.path.expanduser("~/.docker/config.json")).read())
+        config_json = json.loads(
+            open(os.path.expanduser("~/.docker/config.json")).read()
+        )
         auth = f"Basic {config_json['auths'][self.config.registry_url]['auth']}"
         response = requests.get(
             url,
@@ -185,6 +192,7 @@ class Sentential:
         )
         response.raise_for_status()
         return response
+
 
 config = Config(function="kaixo")
 sentential = Sentential(config)
