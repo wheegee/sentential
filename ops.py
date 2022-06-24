@@ -1,7 +1,6 @@
-from functools import wraps
 import json
 import os
-from typing import Dict, List, Optional
+from typing import Optional
 from pathlib import Path, PosixPath
 from os import makedirs
 from os.path import exists
@@ -13,7 +12,8 @@ from pydantic import BaseModel, validator
 from jinja2 import Environment, FileSystemLoader, Template
 import requests
 from requests import HTTPError
-
+from shutil import which
+from subprocess import run as shell
 
 class PathConfig(BaseModel):
     root: PosixPath
@@ -80,13 +80,6 @@ class BoilerPlate:
         if not exists(Path(self.config.path.src)):
             makedirs(self.config.path.src)
 
-    def write(self, template: Template, write_to: PosixPath) -> PosixPath:
-        if not exists(write_to):
-            with open(write_to, "w+") as f:
-                f.writelines(template.render(config=self.config))
-
-        return write_to
-
     def all(self, runtime: str):
         self.dockerfile(runtime)
         self.wrapper()
@@ -94,14 +87,20 @@ class BoilerPlate:
 
     def dockerfile(self, image: str):
         self.config.runtime = image
-        self.write(self.jinja.get_template("Dockerfile"), self.config.path.dockerfile)
+        self._write(self.jinja.get_template("Dockerfile"), self.config.path.dockerfile)
 
     def wrapper(self):
-        self.write(self.jinja.get_template("wrapper.sh"), self.config.path.wrapper)
+        self._write(self.jinja.get_template("wrapper.sh"), self.config.path.wrapper)
 
     def policy(self):
-        self.write(self.jinja.get_template("policy.json"), self.config.path.policy)
+        self._write(self.jinja.get_template("policy.json"), self.config.path.policy)
 
+    def _write(self, template: Template, write_to: PosixPath) -> PosixPath:
+        if not exists(write_to):
+            with open(write_to, "w+") as f:
+                f.writelines(template.render(config=self.config))
+
+        return write_to
 
 def retry_with_login(func):
     def wrap(self, *args, **kwargs):
@@ -114,6 +113,25 @@ def retry_with_login(func):
 
     return wrap
 
+class ChamberWrapper:
+    def __init__(self, config: Config):
+        self.config = config
+        if which("chamber") is None:
+            raise SystemExit("please install chamber")
+    
+    def create(self, key, value):
+        shell(["chamber", "write", self.config.function, key, value])
+
+    update = create
+
+    def read(self, key=None):
+        if key is None:
+            shell(["chamber", "list", self.config.function])
+        else:
+            shell(["chamber", "read", self.config.function, key])
+
+    def delete(self, key):
+        shell(["chamber", "delete", self.config.function, key])
 
 class Sentential:
     def __init__(self, config: Config) -> None:
@@ -193,11 +211,19 @@ class Sentential:
         response.raise_for_status()
         return response
 
+# config = Config(function="kaixo")
 
-config = Config(function="kaixo")
-sentential = Sentential(config)
-sentential.init("amazon/aws-lambda-ruby")
-sentential.build()
-sentential.test()
-sentential.publish()
-print(sentential.deploy())
+# Container / Templating
+# sentential = Sentential(config)
+# sentential.init("amazon/aws-lambda-ruby")
+# sentential.build()
+# sentential.test()
+# sentential.publish()
+# print(sentential.deploy())
+
+# Secrets Mgmt
+# chamber = ChamberWrapper(config)
+# chamber.read()
+# chamber.create("secret", "sooperdoopersecret")
+# chamber.update("secret", "justanaliasforcreate")
+# chamber.delete("secret")
