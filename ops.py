@@ -29,6 +29,7 @@ class Config(BaseModel):
     path: Optional[PathConfig]
     region: str = boto3.session.Session().region_name
     account_id: str = boto3.client("sts").get_caller_identity().get("Account")
+    kms_key_alias: str = "aws/ssm"
     kms_key_id: str = [
         ssm_key["TargetKeyId"]
         for ssm_key in boto3.client("kms").list_aliases()["Aliases"]
@@ -77,10 +78,10 @@ class BoilerPlate:
     def __init__(self, config: Config):
         self.config = config
         self.jinja = Environment(loader=FileSystemLoader("templates"))
-        if not exists(Path(self.config.path.src)):
-            makedirs(self.config.path.src)
 
     def all(self, runtime: str):
+        if not exists(Path(self.config.path.src)):
+            makedirs(self.config.path.src)
         self.dockerfile(runtime)
         self.wrapper()
         self.policy()
@@ -118,11 +119,10 @@ class ChamberWrapper:
         self.config = config
         if which("chamber") is None:
             raise SystemExit("please install chamber")
+        os.environ["CHAMBER_KMS_KEY_ALIAS"]=self.config.kms_key_alias
     
-    def create(self, key, value):
+    def write(self, key, value):
         shell(["chamber", "write", self.config.function, key, value])
-
-    update = create
 
     def read(self, key=None):
         if key is None:
@@ -194,7 +194,17 @@ class Sentential:
         response = self._ecr_api_get(
             f"https://{self.config.registry_url}/v2/{self.config.function}/blobs/{digest}"
         )
-        return json.dumps(response.json()["config"]["Labels"])
+        policy = (
+            b64decode(response.json()["config"]["Labels"]["spec.policy"])
+            .decode("utf-8")
+            .replace("\n", "")
+        )
+        prefix = response.json()["config"]["Labels"]["spec.prefix"]
+        pass_through = {}
+        pass_through['spec.prefix'] = prefix
+        pass_through['spec.policy'] = policy
+        pass_through['uri'] = f"{self.config.repository_url}:{version}"
+        return json.dumps(pass_through)
 
     def _ecr_api_get(self, url: str):
         config_json = json.loads(
@@ -211,10 +221,12 @@ class Sentential:
         response.raise_for_status()
         return response
 
-# config = Config(function="kaixo")
+# Function config
+config = Config(function="kaixo")
 
 # Container / Templating
-# sentential = Sentential(config)
+sentential = Sentential(config)
+
 # sentential.init("amazon/aws-lambda-ruby")
 # sentential.build()
 # sentential.test()
@@ -224,6 +236,7 @@ class Sentential:
 # Secrets Mgmt
 # chamber = ChamberWrapper(config)
 # chamber.read()
-# chamber.create("secret", "sooperdoopersecret")
-# chamber.update("secret", "justanaliasforcreate")
+# chamber.write("secret", "sooperdoopersecret")
 # chamber.delete("secret")
+
+# import code; code.interact(local=dict(globals(), **locals()))
