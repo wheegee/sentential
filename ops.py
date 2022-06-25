@@ -15,6 +15,7 @@ from requests import HTTPError
 from shutil import which
 from subprocess import run as shell
 
+
 class PathConfig(BaseModel):
     root: PosixPath
     src: PosixPath
@@ -103,6 +104,7 @@ class BoilerPlate:
 
         return write_to
 
+
 def retry_with_login(func):
     def wrap(self, *args, **kwargs):
         try:
@@ -113,6 +115,7 @@ def retry_with_login(func):
             return func(self, *args, **kwargs)
 
     return wrap
+
 
 class ChamberWrapper:
     def __init__(self, config: Config):
@@ -132,6 +135,7 @@ class ChamberWrapper:
 
     def delete(self, key):
         shell(["chamber", "delete", self.config.function, key])
+
 
 class Sentential:
     def __init__(self, config: Config) -> None:
