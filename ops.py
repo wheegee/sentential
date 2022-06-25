@@ -122,8 +122,8 @@ class ChamberWrapper:
         self.config = config
         if which("chamber") is None:
             raise SystemExit("please install chamber")
-        os.environ["CHAMBER_KMS_KEY_ALIAS"]=self.config.kms_key_alias
-    
+        os.environ["CHAMBER_KMS_KEY_ALIAS"] = self.config.kms_key_alias
+
     def write(self, key, value):
         shell(["chamber", "write", self.config.function, key, value])
 
@@ -205,9 +205,9 @@ class Sentential:
         )
         prefix = response.json()["config"]["Labels"]["spec.prefix"]
         pass_through = {}
-        pass_through['spec.prefix'] = prefix
-        pass_through['spec.policy'] = policy
-        pass_through['uri'] = f"{self.config.repository_url}:{version}"
+        pass_through["spec.prefix"] = prefix
+        pass_through["spec.policy"] = policy
+        pass_through["uri"] = f"{self.config.repository_url}:{version}"
         return json.dumps(pass_through)
 
     def _ecr_api_get(self, url: str):
@@ -224,6 +224,7 @@ class Sentential:
         )
         response.raise_for_status()
         return response
+
 
 # Function config
 config = Config(function="kaixo")
