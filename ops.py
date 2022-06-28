@@ -41,7 +41,7 @@ class Config(BaseModel):
         return [
             ssm_key["TargetKeyId"]
             for ssm_key in boto3.client("kms").list_aliases()["Aliases"]
-            if values['kms_key_alias'] in ssm_key["AliasName"]
+            if values["kms_key_alias"] in ssm_key["AliasName"]
         ][0]
 
     @validator("repository_url", always=True)
@@ -230,5 +230,6 @@ class Sentential:
         response.raise_for_status()
         return response
 
-if __name__ == '__main__':
-  fire.Fire(Sentential)
+
+if __name__ == "__main__":
+    fire.Fire(Sentential)
