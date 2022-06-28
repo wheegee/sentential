@@ -5,6 +5,7 @@ from pathlib import Path, PosixPath
 from os import makedirs
 from os.path import exists
 from base64 import b64decode, b64encode
+import fire
 from python_on_whales import docker
 from python_on_whales.exceptions import DockerException
 import boto3
@@ -31,13 +32,17 @@ class Config(BaseModel):
     region: str = boto3.session.Session().region_name
     account_id: str = boto3.client("sts").get_caller_identity().get("Account")
     kms_key_alias: str = "aws/ssm"
-    kms_key_id: str = [
-        ssm_key["TargetKeyId"]
-        for ssm_key in boto3.client("kms").list_aliases()["Aliases"]
-        if ssm_key["AliasName"] == "alias/aws/ssm"
-    ][0]
+    kms_key_id: Optional[str]
     repository_url: Optional[str]
     registry_url: Optional[str]
+
+    @validator("kms_key_id")
+    def lookup_kms_key_id(cls, v, values) -> str:
+        return [
+            ssm_key["TargetKeyId"]
+            for ssm_key in boto3.client("kms").list_aliases()["Aliases"]
+            if values['kms_key_alias'] in ssm_key["AliasName"]
+        ][0]
 
     @validator("repository_url", always=True)
     def assemble_repository_url(cls, v, values) -> str:
@@ -138,8 +143,8 @@ class ChamberWrapper:
 
 
 class Sentential:
-    def __init__(self, config: Config) -> None:
-        self.config = config
+    def __init__(self, function: str) -> None:
+        self.config = Config(function=function)
         self.client = Clients()
         self.template = BoilerPlate(self.config)
 
@@ -225,23 +230,5 @@ class Sentential:
         response.raise_for_status()
         return response
 
-
-# Function config
-config = Config(function="kaixo")
-
-# Container / Templating
-sentential = Sentential(config)
-
-# sentential.init("amazon/aws-lambda-ruby")
-# sentential.build()
-# sentential.test()
-# sentential.publish()
-# print(sentential.deploy())
-
-# Secrets Mgmt
-# chamber = ChamberWrapper(config)
-# chamber.read()
-# chamber.write("secret", "sooperdoopersecret")
-# chamber.delete("secret")
-
-# import code; code.interact(local=dict(globals(), **locals()))
+if __name__ == '__main__':
+  fire.Fire(Sentential)
