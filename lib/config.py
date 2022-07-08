@@ -1,8 +1,8 @@
-
 from pydantic import BaseModel, validator
 from pathlib import Path, PosixPath
 from typing import Optional
 import boto3
+
 
 class PathConfig(BaseModel):
     root: PosixPath
@@ -28,7 +28,7 @@ class Config(BaseModel):
         return [
             ssm_key["TargetKeyId"]
             for ssm_key in boto3.client("kms").list_aliases()["Aliases"]
-            if values['kms_key_alias'] in ssm_key["AliasName"]
+            if values["kms_key_alias"] in ssm_key["AliasName"]
         ][0]
 
     @validator("repository_url", always=True)

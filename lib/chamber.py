@@ -3,6 +3,7 @@ from os import environ
 from lib.config import Config
 from subprocess import run as shell
 
+
 class ChamberWrapper:
     def __init__(self, repository_name: str):
         self.config = Config(repository_name=repository_name)

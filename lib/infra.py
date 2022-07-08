@@ -4,14 +4,15 @@ from lib.spec import AWSPolicyDocument, AWSPolicyStatement, Spec
 from lib.clients import clients
 
 LAMBDA_ROLE_POLICY = AWSPolicyDocument(
-    Statement=[AWSPolicyStatement(
-        Effect = "Allow",
-        Principal = {
-            "Service": "lambda.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
-    )]
+    Statement=[
+        AWSPolicyStatement(
+            Effect="Allow",
+            Principal={"Service": "lambda.amazonaws.com"},
+            Action="sts:AssumeRole",
+        )
+    ]
 )
+
 
 class Infra:
     def __init__(self, event: ECREvent) -> None:
@@ -19,7 +20,9 @@ class Infra:
         self.registry_url = f"{event.account}.dkr.ecr.{event.region}.amazonaws.com"
         self.repository_url = f"{self.registry_url}/{event.detail.repository_name}"
         self.spec = ECR(self.repository_url, event.detail.image_tag).fetch_spec()
-        self.policy_arn = f"arn:aws:iam::{self.event.account}:policy/{self.spec.policy_name}"
+        self.policy_arn = (
+            f"arn:aws:iam::{self.event.account}:policy/{self.spec.policy_name}"
+        )
 
     def _put_role(self):
         try:
@@ -28,7 +31,7 @@ class Infra:
                 AssumeRolePolicyDocument=LAMBDA_ROLE_POLICY.json(exclude_none=True),
             )
             print("waiting for role to exist")
-            clients.iam.get_waiter('role_exists').wait(RoleName=self.spec.role_name)
+            clients.iam.get_waiter("role_exists").wait(RoleName=self.spec.role_name)
             return role
         except clients.iam.exceptions.EntityAlreadyExistsException:
             return clients.iam.get_role(RoleName=self.spec.role_name)
@@ -36,24 +39,25 @@ class Infra:
     def _put_policy(self):
         try:
             policy = clients.iam.create_policy(
-                        PolicyName=self.spec.policy_name,
-                        PolicyDocument=self.spec.policy.json(exclude_none=True, by_alias=True),
-                    )
+                PolicyName=self.spec.policy_name,
+                PolicyDocument=self.spec.policy.json(exclude_none=True, by_alias=True),
+            )
             print("waiting for policy to exist")
-            clients.iam.get_waiter('policy_exists').wait(PolicyArn=self.policy_arn)
+            clients.iam.get_waiter("policy_exists").wait(PolicyArn=self.policy_arn)
             return policy
         except clients.iam.exceptions.EntityAlreadyExistsException:
-            versions = clients.iam.list_policy_versions(PolicyArn=self.policy_arn)['Versions']
-            if len(versions) >= 5: 
+            versions = clients.iam.list_policy_versions(PolicyArn=self.policy_arn)[
+                "Versions"
+            ]
+            if len(versions) >= 5:
                 clients.iam.delete_policy_version(
-                    PolicyArn=self.policy_arn,
-                    VersionId=versions[-1]['VersionId']
+                    PolicyArn=self.policy_arn, VersionId=versions[-1]["VersionId"]
                 )
 
             clients.iam.create_policy_version(
                 PolicyArn=self.policy_arn,
                 PolicyDocument=self.spec.policy.json(exclude_none=True, by_alias=True),
-                SetAsDefault=True
+                SetAsDefault=True,
             )
 
             return clients.iam.get_policy(PolicyArn=self.policy_arn)
@@ -62,40 +66,41 @@ class Infra:
         role = self._put_role()
         policy = self._put_policy()
         clients.iam.attach_role_policy(
-            RoleName=role['Role']['RoleName'],
-            PolicyArn=policy['Policy']['Arn']
+            RoleName=role["Role"]["RoleName"], PolicyArn=policy["Policy"]["Arn"]
         )
 
     def _configure_lambda(self):
-        role_arn = clients.iam.get_role(RoleName=self.spec.role_name)['Role']['Arn']
+        role_arn = clients.iam.get_role(RoleName=self.spec.role_name)["Role"]["Arn"]
         sleep(10)
         try:
             return clients.lmb.create_function(
-                        FunctionName=self.event.detail.repository_name,
-                        Role=role_arn,
-                        PackageType='Image',
-                        Code={ 'ImageUri': f"{self.repository_url}:{self.event.detail.image_tag}" },
-                        Description=f"sententially deployed {self.event.detail.repository_name}:{self.event.detail.image_tag}",
-                        Environment={
-                            "Variables":{
-                                "PREFIX": self.event.detail.repository_name
-                            }
-                        })
+                FunctionName=self.event.detail.repository_name,
+                Role=role_arn,
+                PackageType="Image",
+                Code={
+                    "ImageUri": f"{self.repository_url}:{self.event.detail.image_tag}"
+                },
+                Description=f"sententially deployed {self.event.detail.repository_name}:{self.event.detail.image_tag}",
+                Environment={
+                    "Variables": {"PREFIX": self.event.detail.repository_name}
+                },
+            )
         except clients.lmb.exceptions.ResourceConflictException:
             clients.lmb.update_function_configuration(
-                    FunctionName=self.event.detail.repository_name,
-                    Role=role_arn,
-                    Description=f"sententially deployed {self.event.detail.repository_name}:{self.event.detail.image_tag}",
-                    Environment={
-                        "Variables":{
-                            "PREFIX": self.event.detail.repository_name
-                        }
-                    })
-            clients.lmb.get_waiter('function_updated_v2').wait(FunctionName=self.event.detail.repository_name)
+                FunctionName=self.event.detail.repository_name,
+                Role=role_arn,
+                Description=f"sententially deployed {self.event.detail.repository_name}:{self.event.detail.image_tag}",
+                Environment={
+                    "Variables": {"PREFIX": self.event.detail.repository_name}
+                },
+            )
+            clients.lmb.get_waiter("function_updated_v2").wait(
+                FunctionName=self.event.detail.repository_name
+            )
             clients.lmb.update_function_code(
                 FunctionName=self.event.detail.repository_name,
                 ImageUri=f"{self.repository_url}:{self.event.detail.image_tag}",
-                Publish=True
+                Publish=True,
             )
 
     def ensure(self):
@@ -108,20 +113,20 @@ class Infra:
         except clients.lmb.exceptions.ResourceNotFoundException:
             print(f"lambda does not exist")
 
-        try:        
+        try:
             clients.iam.detach_role_policy(
-                PolicyArn=self.policy_arn,
-                RoleName=self.spec.role_name
+                PolicyArn=self.policy_arn, RoleName=self.spec.role_name
             )
 
-            policy_versions = clients.iam.list_policy_versions(PolicyArn=self.policy_arn)['Versions']
+            policy_versions = clients.iam.list_policy_versions(
+                PolicyArn=self.policy_arn
+            )["Versions"]
             for policy_version in policy_versions:
-                if not policy_version['IsDefaultVersion']:
+                if not policy_version["IsDefaultVersion"]:
                     clients.iam.delete_policy_version(
-                        PolicyArn=self.policy_arn,
-                        VersionId=policy_version['VersionId']
+                        PolicyArn=self.policy_arn, VersionId=policy_version["VersionId"]
                     )
-            
+
             clients.iam.delete_policy(PolicyArn=self.policy_arn)
         except clients.iam.exceptions.NoSuchEntityException:
             print(f"policy does not exist")

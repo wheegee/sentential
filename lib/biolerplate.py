@@ -15,6 +15,7 @@ class Runtimes(Enum):
     provided = "provided"
     ruby = "ruby"
 
+
 class BoilerPlate:
     def __init__(self, repository_name: str):
         self.config = Config(repository_name=repository_name)
