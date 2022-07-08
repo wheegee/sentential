@@ -10,8 +10,8 @@
                 "kms:Decrypt"
             ],
             "Resource": [
-                "arn:aws:ssm:us-west-2:{{ config.account_id }}:parameter/{{ config.function }}",
-                "arn:aws:ssm:us-west-2:{{ config.account_id }}:parameter/{{ config.function }}/*",
+                "arn:aws:ssm:us-west-2:{{ config.account_id }}:parameter/{{ config.repository_name }}",
+                "arn:aws:ssm:us-west-2:{{ config.account_id }}:parameter/{{ config.repository_name }}/*",
                 "arn:aws:kms:us-west-2:{{ config.account_id }}:key/{{ config.kms_key_id }}"
             ]
         },
