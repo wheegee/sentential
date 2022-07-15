@@ -10,9 +10,10 @@ root = typer.Typer()
 secrets = typer.Typer()
 
 try:
-    Lambdas = Enum('Lambdas', { name:name for name in os.listdir("lambdas")})
+    Lambdas = Enum("Lambdas", {name: name for name in os.listdir("lambdas")})
 except FileNotFoundError:
-    Lambdas = Enum('lambdas', {})
+    Lambdas = Enum("lambdas", {})
+
 
 @root.command()
 def init(repository: str, runtime: Runtimes):
@@ -66,6 +67,7 @@ def write(repository: Lambdas, key: str, value: str):
 def delete(repository: Lambdas, key: str):
     """secrets for {repository} lambda"""
     ChamberWrapper(repository.value).delete(key)
+
 
 root.add_typer(secrets, name="secrets", help="for {repository}")
 
