@@ -70,27 +70,27 @@ class Infra:
             return clients.iam.get_policy(PolicyArn=self.policy_arn)
 
     def _put_url(self):
-        try: 
+        try:
             clients.lmb.create_function_url_config(
-                    FunctionName=self.event.detail.repository_name,
-                    AuthType='NONE',
-                    Cors={
-                        'AllowHeaders': ['*'],
-                        'AllowMethods': ['*'],
-                        'AllowOrigins': ['*'],
-                        'ExposeHeaders': ['*'],
-                    }
-                )
+                FunctionName=self.event.detail.repository_name,
+                AuthType="NONE",
+                Cors={
+                    "AllowHeaders": ["*"],
+                    "AllowMethods": ["*"],
+                    "AllowOrigins": ["*"],
+                    "ExposeHeaders": ["*"],
+                },
+            )
         except clients.lmb.exceptions.ResourceConflictException:
             clients.lmb.update_function_url_config(
-                    FunctionName=self.event.detail.repository_name,
-                    AuthType='NONE',
-                    Cors={
-                        'AllowHeaders': ['*'],
-                        'AllowMethods': ['*'],
-                        'AllowOrigins': ['*'],
-                        'ExposeHeaders': ['*'],
-                    }
+                FunctionName=self.event.detail.repository_name,
+                AuthType="NONE",
+                Cors={
+                    "AllowHeaders": ["*"],
+                    "AllowMethods": ["*"],
+                    "AllowOrigins": ["*"],
+                    "ExposeHeaders": ["*"],
+                },
             )
 
     def _configure_perms(self):
@@ -119,10 +119,10 @@ class Infra:
 
             clients.lmb.add_permission(
                 FunctionName=self.event.detail.repository_name,
-                StatementId='FunctionURLAllowPublicAccess',
-                Action='lambda:InvokeFunctionUrl',
-                Principal='*',
-                FunctionUrlAuthType='NONE'
+                StatementId="FunctionURLAllowPublicAccess",
+                Action="lambda:InvokeFunctionUrl",
+                Principal="*",
+                FunctionUrlAuthType="NONE",
             )
 
             return function
@@ -135,7 +135,7 @@ class Infra:
                     "Variables": {"PREFIX": self.event.detail.repository_name}
                 },
             )
-            
+
             clients.lmb.get_waiter("function_updated_v2").wait(
                 FunctionName=self.event.detail.repository_name
             )
@@ -149,17 +149,17 @@ class Infra:
             try:
                 clients.lmb.remove_permission(
                     FunctionName=self.event.detail.repository_name,
-                    StatementId='FunctionURLAllowPublicAccess'
+                    StatementId="FunctionURLAllowPublicAccess",
                 )
             except clients.lmb.exceptions.ResourceNotFoundException:
                 print(f"lambda permission does not exist")
 
             clients.lmb.add_permission(
                 FunctionName=self.event.detail.repository_name,
-                StatementId='FunctionURLAllowPublicAccess',
-                Action='lambda:InvokeFunctionUrl',
-                Principal='*',
-                FunctionUrlAuthType='NONE'
+                StatementId="FunctionURLAllowPublicAccess",
+                Action="lambda:InvokeFunctionUrl",
+                Principal="*",
+                FunctionUrlAuthType="NONE",
             )
 
             return function
@@ -168,10 +168,12 @@ class Infra:
         self._configure_perms()
         self._configure_lambda()
         self._put_url()
-        
+
     def destroy(self):
         try:
-            clients.lmb.delete_function_url_config(FunctionName=self.event.detail.repository_name)
+            clients.lmb.delete_function_url_config(
+                FunctionName=self.event.detail.repository_name
+            )
         except clients.lmb.exceptions.ResourceNotFoundException:
             print(f"lambda url does not exist")
 
