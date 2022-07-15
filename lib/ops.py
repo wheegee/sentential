@@ -8,7 +8,6 @@ from lib.spec import AWSPolicyDocument, Spec
 from lib.clients import clients
 from lib.ecr import ECR, ECREvent
 
-
 class Ops:
     def __init__(self, repository_name: str) -> None:
         self.config = Config(repository_name=repository_name)
@@ -41,6 +40,14 @@ class Ops:
     def emulate(self, tag: str = "latest"):
         event = self._generate_ecr_event(tag)
         clients.docker.remove(["sentential"], force=True, volumes=True)
+        clients.docker.remove(["sentential-gw"], force=True, volumes=True)
+        try:
+            clients.docker.network.remove(["sentential-bridge"])
+        except:
+            print("no docker network to remove")
+
+        clients.docker.network.create("sentential-bridge")
+
         image = clients.docker.image.inspect(
             f"{event.detail.repository_name}:{event.detail.image_tag}"
         )
@@ -51,13 +58,28 @@ class Ops:
             "PREFIX": event.detail.repository_name,
         }
 
-        clients.docker.container.run(
+        clients.docker.run(
             f"{event.detail.repository_name}:{event.detail.image_tag}",
-            name=f"sentential",
+            name="sentential",
+            hostname="sentential",
+            networks=["sentential-bridge"],
             detach=True,
             remove=False,
             publish=[("9000", "8080")],
             envs={**default_env, **credentials},
+        )
+
+        clients.docker.run(
+            "ghcr.io/bkeane/sentential-gw:latest",
+            name="sentential-gw",
+            hostname="sentential-gw",
+            networks=["sentential-bridge"],
+            detach=True,
+            remove=False,
+            publish=[("8081", "8081")],
+            envs={
+                "LAMBDA_ENDPOINT": "http://sentential:8080"
+            },
         )
 
     def _get_federation_token(self, policy: AWSPolicyDocument):
