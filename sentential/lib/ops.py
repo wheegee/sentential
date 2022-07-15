@@ -8,6 +8,7 @@ from sentential.lib.spec import AWSPolicyDocument, Spec
 from sentential.lib.clients import clients
 from sentential.lib.ecr import ECR, ECREvent
 
+
 class Ops:
     def __init__(self, repository_name: str) -> None:
         self.config = Config(repository_name=repository_name)
@@ -77,9 +78,7 @@ class Ops:
             detach=True,
             remove=False,
             publish=[("8081", "8081")],
-            envs={
-                "LAMBDA_ENDPOINT": "http://sentential:8080"
-            },
+            envs={"LAMBDA_ENDPOINT": "http://sentential:8080"},
         )
 
     def _get_federation_token(self, policy: AWSPolicyDocument):

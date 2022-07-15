@@ -55,7 +55,9 @@ def retry_with_login(func):
 
 
 class ECR:
-    def __init__(self, repository_url: str, tag: str = "latest", fetch_metadata: bool = True) -> None:
+    def __init__(
+        self, repository_url: str, tag: str = "latest", fetch_metadata: bool = True
+    ) -> None:
         self.tag = tag
         self.repository_url = repository_url
         self.repository_name = repository_url.split("/")[-1]

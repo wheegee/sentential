@@ -71,5 +71,6 @@ def delete(repository: Lambdas, key: str):
 
 root.add_typer(secrets, name="secrets", help="for {repository}")
 
+
 def main():
     root()
