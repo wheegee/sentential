@@ -7,8 +7,8 @@ import requests
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from lib.clients import clients
-from lib.spec import Spec
+from sentential.lib.clients import clients
+from sentential.lib.spec import Spec
 
 #
 # ECR Event
@@ -55,15 +55,16 @@ def retry_with_login(func):
 
 
 class ECR:
-    def __init__(self, repository_url: str, tag: str = "latest") -> None:
+    def __init__(self, repository_url: str, tag: str = "latest", fetch_metadata: bool = True) -> None:
         self.tag = tag
         self.repository_url = repository_url
         self.repository_name = repository_url.split("/")[-1]
         self.registry_url = repository_url.split("/")[-2]
         self.registry_api_url = f"https://{self.registry_url}/v2/{self.repository_name}"
-        self.response = self._fetch_metadata()
-        self.image_digest = self.response[0]
-        self.inspect = self.response[1]
+        if fetch_metadata:
+            self.response = self._fetch_metadata()
+            self.image_digest = self.response[0]
+            self.inspect = self.response[1]
 
     @retry_with_login
     def push(self):

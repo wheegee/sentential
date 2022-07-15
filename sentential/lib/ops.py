@@ -2,11 +2,11 @@ import json
 from uuid import uuid4
 import ast
 
-from lib.config import Config
-from lib.infra import Infra
-from lib.spec import AWSPolicyDocument, Spec
-from lib.clients import clients
-from lib.ecr import ECR, ECREvent
+from sentential.lib.config import Config
+from sentential.lib.infra import Infra
+from sentential.lib.spec import AWSPolicyDocument, Spec
+from sentential.lib.clients import clients
+from sentential.lib.ecr import ECR, ECREvent
 
 class Ops:
     def __init__(self, repository_name: str) -> None:
@@ -27,7 +27,7 @@ class Ops:
         )
 
     def publish(self, tag: str = "latest"):
-        ECR(self.config.repository_url, tag).push()
+        ECR(self.config.repository_url, tag, False).push()
 
     def deploy(self, tag: str = "latest"):
         event = self._generate_ecr_event(tag)

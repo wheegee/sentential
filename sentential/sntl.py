@@ -1,16 +1,16 @@
 from enum import Enum
 import os
 import typer
-from lib.biolerplate import BoilerPlate
-from lib.ops import Ops
-from lib.biolerplate import Runtimes
-from lib.chamber import ChamberWrapper
+from sentential.lib.biolerplate import BoilerPlate
+from sentential.lib.ops import Ops
+from sentential.lib.biolerplate import Runtimes
+from sentential.lib.chamber import ChamberWrapper
 
 root = typer.Typer()
 secrets = typer.Typer()
 
 try:
-    Lambdas = Enum('Lambdas', { name:name for name in os.listdir("lambdas")})
+    Lambdas = Enum('Lambdas', { name:name for name in os.listdir(f"lambdas")})
 except FileNotFoundError:
     Lambdas = Enum('lambdas', {})
 
@@ -69,5 +69,8 @@ def delete(repository: Lambdas, key: str):
 
 root.add_typer(secrets, name="secrets", help="for {repository}")
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
+#     root()
+
+def main():
     root()

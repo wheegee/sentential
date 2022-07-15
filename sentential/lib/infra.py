@@ -1,8 +1,8 @@
 from pyclbr import Function
 from time import sleep
-from lib.ecr import ECR, ECREvent
-from lib.spec import AWSPolicyDocument, AWSPolicyStatement, Spec
-from lib.clients import clients
+from sentential.lib.ecr import ECR, ECREvent
+from sentential.lib.spec import AWSPolicyDocument, AWSPolicyStatement, Spec
+from sentential.lib.clients import clients
 
 LAMBDA_ROLE_POLICY = AWSPolicyDocument(
     Statement=[

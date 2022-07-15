@@ -1,9 +1,12 @@
+import os
 from jinja2 import Environment, FileSystemLoader, Template
 from os import makedirs
 from os.path import exists
 from pathlib import PosixPath, Path
-from lib.config import Config
+from sentential.lib.config import Config
 from enum import Enum
+
+PACKAGE_PATH=os.path.dirname(os.path.abspath(__file__))
 
 # https://gallery.ecr.aws/lambda?page=1
 class Runtimes(Enum):
@@ -19,7 +22,7 @@ class Runtimes(Enum):
 class BoilerPlate:
     def __init__(self, repository_name: str):
         self.config = Config(repository_name=repository_name)
-        self.jinja = Environment(loader=FileSystemLoader("templates"))
+        self.jinja = Environment(loader=FileSystemLoader(f"{PACKAGE_PATH}/../templates"))
 
     def ensure(self, runtime_image: str):
         if not exists(Path(self.config.path.src)):

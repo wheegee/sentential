@@ -1,6 +1,6 @@
 from shutil import which
 from os import environ
-from lib.config import Config
+from sentential.lib.config import Config
 from subprocess import run as shell
 
 
