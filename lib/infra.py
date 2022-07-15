@@ -1,3 +1,4 @@
+from pyclbr import Function
 from time import sleep
 from lib.ecr import ECR, ECREvent
 from lib.spec import AWSPolicyDocument, AWSPolicyStatement, Spec
@@ -34,7 +35,13 @@ class Infra:
             clients.iam.get_waiter("role_exists").wait(RoleName=self.spec.role_name)
             return role
         except clients.iam.exceptions.EntityAlreadyExistsException:
-            return clients.iam.get_role(RoleName=self.spec.role_name)
+            clients.iam.update_assume_role_policy(
+                RoleName=self.spec.role_name,
+                PolicyDocument=LAMBDA_ROLE_POLICY.json(exclude_none=True),
+            )
+            clients.iam.get_waiter("role_exists").wait(RoleName=self.spec.role_name)
+            role = clients.iam.get_role(RoleName=self.spec.role_name)
+            return role
 
     def _put_policy(self):
         try:
@@ -59,8 +66,32 @@ class Infra:
                 PolicyDocument=self.spec.policy.json(exclude_none=True, by_alias=True),
                 SetAsDefault=True,
             )
-
+            clients.iam.get_waiter("policy_exists").wait(PolicyArn=self.policy_arn)
             return clients.iam.get_policy(PolicyArn=self.policy_arn)
+
+    def _put_url(self):
+        try: 
+            clients.lmb.create_function_url_config(
+                    FunctionName=self.event.detail.repository_name,
+                    AuthType='NONE',
+                    Cors={
+                        'AllowHeaders': ['*'],
+                        'AllowMethods': ['*'],
+                        'AllowOrigins': ['*'],
+                        'ExposeHeaders': ['*'],
+                    }
+                )
+        except clients.lmb.exceptions.ResourceConflictException:
+            clients.lmb.update_function_url_config(
+                    FunctionName=self.event.detail.repository_name,
+                    AuthType='NONE',
+                    Cors={
+                        'AllowHeaders': ['*'],
+                        'AllowMethods': ['*'],
+                        'AllowOrigins': ['*'],
+                        'ExposeHeaders': ['*'],
+                    }
+            )
 
     def _configure_perms(self):
         role = self._put_role()
@@ -73,7 +104,7 @@ class Infra:
         role_arn = clients.iam.get_role(RoleName=self.spec.role_name)["Role"]["Arn"]
         sleep(10)
         try:
-            return clients.lmb.create_function(
+            function = clients.lmb.create_function(
                 FunctionName=self.event.detail.repository_name,
                 Role=role_arn,
                 PackageType="Image",
@@ -85,8 +116,18 @@ class Infra:
                     "Variables": {"PREFIX": self.event.detail.repository_name}
                 },
             )
+
+            clients.lmb.add_permission(
+                FunctionName=self.event.detail.repository_name,
+                StatementId='FunctionURLAllowPublicAccess',
+                Action='lambda:InvokeFunctionUrl',
+                Principal='*',
+                FunctionUrlAuthType='NONE'
+            )
+
+            return function
         except clients.lmb.exceptions.ResourceConflictException:
-            clients.lmb.update_function_configuration(
+            function = clients.lmb.update_function_configuration(
                 FunctionName=self.event.detail.repository_name,
                 Role=role_arn,
                 Description=f"sententially deployed {self.event.detail.repository_name}:{self.event.detail.image_tag}",
@@ -94,20 +135,46 @@ class Infra:
                     "Variables": {"PREFIX": self.event.detail.repository_name}
                 },
             )
+            
             clients.lmb.get_waiter("function_updated_v2").wait(
                 FunctionName=self.event.detail.repository_name
             )
+
             clients.lmb.update_function_code(
                 FunctionName=self.event.detail.repository_name,
                 ImageUri=f"{self.repository_url}:{self.event.detail.image_tag}",
                 Publish=True,
             )
 
+            try:
+                clients.lmb.remove_permission(
+                    FunctionName=self.event.detail.repository_name,
+                    StatementId='FunctionURLAllowPublicAccess'
+                )
+            except clients.lmb.exceptions.ResourceNotFoundException:
+                print(f"lambda permission does not exist")
+
+            clients.lmb.add_permission(
+                FunctionName=self.event.detail.repository_name,
+                StatementId='FunctionURLAllowPublicAccess',
+                Action='lambda:InvokeFunctionUrl',
+                Principal='*',
+                FunctionUrlAuthType='NONE'
+            )
+
+            return function
+
     def ensure(self):
         self._configure_perms()
         self._configure_lambda()
-
+        self._put_url()
+        
     def destroy(self):
+        try:
+            clients.lmb.delete_function_url_config(FunctionName=self.event.detail.repository_name)
+        except clients.lmb.exceptions.ResourceNotFoundException:
+            print(f"lambda url does not exist")
+
         try:
             clients.lmb.delete_function(FunctionName=self.event.detail.repository_name)
         except clients.lmb.exceptions.ResourceNotFoundException:
