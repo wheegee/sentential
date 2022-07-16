@@ -64,6 +64,7 @@ class ECR:
         self.registry_url = repository_url.split("/")[-2]
         self.registry_api_url = f"https://{self.registry_url}/v2/{self.repository_name}"
         if fetch_metadata:
+            self.ecr_token = clients.ecr.get_authorization_token()['authorizationData'][0]['authorizationToken']
             self.response = self._fetch_metadata()
             self.image_digest = self.response[0]
             self.inspect = self.response[1]
@@ -79,10 +80,6 @@ class ECR:
         data = ast.literal_eval(self._fetch_metadata()[1]["config"]["Labels"]["spec"])
         return Spec.parse_obj(data)
 
-    def fetch_id(self):
-        return self._fetch_metadata()[0]
-
-    @retry_with_login
     def _fetch_metadata(self):
         image = clients.ecr.describe_images(
             repositoryName=self.repository_name, imageIds=[{"imageTag": self.tag}]
@@ -100,10 +97,7 @@ class ECR:
         return [image_digest, inspect]
 
     def _ecr_api_get(self, url: str):
-        config_json = json.loads(
-            open(os.path.expanduser("~/.docker/config.json")).read()
-        )
-        auth = f"Basic {config_json['auths'][self.registry_url]['auth']}"
+        auth = f"Basic {self.ecr_token}"
         response = requests.get(
             url,
             headers={
