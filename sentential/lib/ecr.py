@@ -64,7 +64,9 @@ class ECR:
         self.registry_url = repository_url.split("/")[-2]
         self.registry_api_url = f"https://{self.registry_url}/v2/{self.repository_name}"
         if fetch_metadata:
-            self.ecr_token = clients.ecr.get_authorization_token()['authorizationData'][0]['authorizationToken']
+            self.ecr_token = clients.ecr.get_authorization_token()["authorizationData"][
+                0
+            ]["authorizationToken"]
             self.response = self._fetch_metadata()
             self.image_digest = self.response[0]
             self.inspect = self.response[1]
