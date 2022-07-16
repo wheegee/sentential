@@ -24,6 +24,7 @@ class Ops:
         clients.docker.build(
             f"{self.config.path.root}",
             labels={"spec": spec.json(exclude_none=True, by_alias=True)},
+            load=True,
             tags=[f"{self.config.repository_name}:{tag}"],
         )
 
