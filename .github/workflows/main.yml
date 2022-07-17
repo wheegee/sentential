@@ -24,7 +24,7 @@ jobs:
 
     - name: Semantic release
       run: |
-        pip install python semantic-release
+        pip install python-semantic-release
         git config user.name "sentential[release-bot]"
         git config user.email "release-bot@sentential"
         semantic-release publish -D commit_author="release-bot <release-bot@sentential>"
