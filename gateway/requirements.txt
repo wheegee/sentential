@@ -1,5 +1,0 @@
-pyhumps==3.5.3
-starlette==0.20.0
-uvicorn==0.17.6
-boto3==1.22.9
-pydantic==1.9.0

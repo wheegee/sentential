@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "sentential"
+version = "0.1.4"
+description = "because lambdas are good"
+authors = ["Brendan Keane <btkeane@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+typer = "^0.6.1"
+boto3 = "^1.24.31"
+python-on-whales = "^0.49.0"
+pydantic = "^1.9.1"
+Jinja2 = "^3.1.2"
+
+[tool.poetry.dev-dependencies]
+ipython = "^8.4.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+sntl = "sentential.sntl:main"
