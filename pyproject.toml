@@ -15,6 +15,7 @@ Jinja2 = "^3.1.2"
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.4.0"
+python-semantic-release = "^7.29.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -22,3 +23,13 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 sntl = "sentential.sntl:main"
+
+[tool.semantic_release]
+version_variable = [
+  "sentential/__init__.py:__version__",
+  "pyproject.toml:version",
+]
+branch = "master"
+upload_to_pypi = true
+upload_to_release = true
+build_command = "pip install poetry && poetry build"

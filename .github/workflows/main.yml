@@ -1,0 +1,33 @@
+name: Main
+
+on:
+  pull_request:
+    branches:
+    - master
+  push:
+    branches:
+    - master
+
+jobs:
+  release:
+    name: Release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master' && !contains(github.event.head_commit.message, 'chore(release):')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+
+    - name: Semantic release
+      run: |
+        pip install python semantic-release
+        git config user.name "sentential[release-bot]"
+        git config user.email "release-bot@sentential"
+        semantic-release publish -D commit_author="release-bot <release-bot@sentential>"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        REPOSITORY_PASSWORD: ${{ secrets.PYPI_TOKEN }}
