@@ -1,3 +1,4 @@
+import json
 from pyclbr import Function
 from time import sleep
 from sentential.lib.ecr import ECR, ECREvent
@@ -20,6 +21,11 @@ class Infra:
         self.event = event
         self.registry_url = f"{event.account}.dkr.ecr.{event.region}.amazonaws.com"
         self.repository_url = f"{self.registry_url}/{event.detail.repository_name}"
+        self.image_manifest = json.loads(clients.ecr.batch_get_image(
+            repositoryName=event.detail.repository_name,
+            imageIds=[{"imageTag": event.detail.image_tag}],
+            acceptedMediaTypes=["application/vnd.docker.distribution.manifest.v1+json"],
+        )["images"][0]["imageManifest"])
         self.spec = ECR(self.repository_url, event.detail.image_tag).fetch_spec()
         self.policy_arn = (
             f"arn:aws:iam::{self.event.account}:policy/{self.spec.policy_name}"
@@ -115,6 +121,7 @@ class Infra:
                 Environment={
                     "Variables": {"PREFIX": self.event.detail.repository_name}
                 },
+                Architectures=[self.image_manifest["architecture"]],
             )
 
             clients.lmb.add_permission(
