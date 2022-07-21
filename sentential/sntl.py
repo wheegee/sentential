@@ -4,16 +4,16 @@ import typer
 from sentential.lib.biolerplate import BoilerPlate
 from sentential.lib.ops import Ops
 from sentential.lib.biolerplate import Runtimes
-from sentential.lib.chamber import ChamberWrapper
+from IPython import embed
 
 root = typer.Typer()
 secrets = typer.Typer()
+config = typer.Typer()
 
 try:
     Lambdas = Enum("Lambdas", {name: name for name in os.listdir("lambdas")})
 except FileNotFoundError:
     Lambdas = Enum("lambdas", {})
-
 
 @root.command()
 def init(repository: str, runtime: Runtimes):
@@ -54,23 +54,39 @@ def destroy(repository: Lambdas, tag: str = "latest"):
 @secrets.command()
 def read(repository: Lambdas):
     """secrets for {repository} lambda"""
-    ChamberWrapper(repository.value).read()
+    Ops(repository.value).secret.read()
 
 
 @secrets.command()
 def write(repository: Lambdas, key: str, value: str):
     """secrets for {repository} lambda"""
-    ChamberWrapper(repository.value).write(key, value)
+    Ops(repository.value).secret.write(key,value)
 
 
 @secrets.command()
 def delete(repository: Lambdas, key: str):
     """secrets for {repository} lambda"""
-    ChamberWrapper(repository.value).delete(key)
+    Ops(repository.value).secret.delete(key)
+
+@config.command()
+def read(repository: Lambdas):
+    """config for {repository} lambda"""
+    Ops(repository.value).config.read()
 
 
-root.add_typer(secrets, name="secrets", help="for {repository}")
+@config.command()
+def write(repository: Lambdas, key: str, value: str):
+    """config for {repository} lambda"""
+    Ops(repository.value).config.write(key, value)
 
+
+@config.command()
+def delete(repository: Lambdas, key: str):
+    """config for {repository} lambda"""
+    Ops(repository.value).config.delete(key)
+
+root.add_typer(secrets, name="secret", help="for {repository}")
+root.add_typer(config, name="config", help="for {repository}")
 
 def main():
     root()

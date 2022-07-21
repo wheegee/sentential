@@ -3,7 +3,7 @@ from jinja2 import Environment, FileSystemLoader, Template
 from os import makedirs
 from os.path import exists
 from pathlib import PosixPath, Path
-from sentential.lib.config import Config
+from sentential.lib.facts import Facts
 from enum import Enum
 
 PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +21,7 @@ class Runtimes(Enum):
 
 class BoilerPlate:
     def __init__(self, repository_name: str):
-        self.config = Config(repository_name=repository_name)
+        self.config = Facts(repository_name=repository_name)
         self.jinja = Environment(
             loader=FileSystemLoader(f"{PACKAGE_PATH}/../templates")
         )
