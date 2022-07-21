@@ -113,8 +113,8 @@ class Infra:
     def _configure_lambda(self):
         role_arn = clients.iam.get_role(RoleName=self.spec.role_name)["Role"]["Arn"]
         arch = None
-        if self.image_manifest['architecture'] == 'amd64':
-            arch = 'x86_64'
+        if self.image_manifest["architecture"] == "amd64":
+            arch = "x86_64"
         else:
             arch = "arm64"
         sleep(10)
