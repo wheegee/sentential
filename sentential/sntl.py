@@ -15,6 +15,7 @@ try:
 except FileNotFoundError:
     Lambdas = Enum("lambdas", {})
 
+
 @root.command()
 def init(repository: str, runtime: Runtimes):
     """lambdas/{repository}"""
@@ -60,13 +61,14 @@ def read(repository: Lambdas):
 @secrets.command()
 def write(repository: Lambdas, key: str, value: str):
     """secrets for {repository} lambda"""
-    Ops(repository.value).secret.write(key,value)
+    Ops(repository.value).secret.write(key, value)
 
 
 @secrets.command()
 def delete(repository: Lambdas, key: str):
     """secrets for {repository} lambda"""
     Ops(repository.value).secret.delete(key)
+
 
 @config.command()
 def read(repository: Lambdas):
@@ -85,8 +87,10 @@ def delete(repository: Lambdas, key: str):
     """config for {repository} lambda"""
     Ops(repository.value).config.delete(key)
 
+
 root.add_typer(secrets, name="secret", help="for {repository}")
 root.add_typer(config, name="config", help="for {repository}")
+
 
 def main():
     root()

@@ -9,6 +9,7 @@ from sentential.lib.clients import clients
 from sentential.lib.ecr import ECR, ECREvent
 from sentential.lib.store import SecretStore, ConfigStore
 
+
 class Ops:
     def __init__(self, repository_name: str) -> None:
         self.facts = Facts(repository_name=repository_name)
@@ -25,7 +26,9 @@ class Ops:
 
         clients.docker.build(
             f"{self.facts.path.root}",
-            labels={"spec": spec.json(exclude_none=True,exclude=['store'], by_alias=True)},
+            labels={
+                "spec": spec.json(exclude_none=True, exclude=["store"], by_alias=True)
+            },
             load=True,
             tags=[f"{self.facts.repository_name}:{tag}"],
         )
@@ -109,4 +112,3 @@ class Ops:
                 },
             }
         )
-
