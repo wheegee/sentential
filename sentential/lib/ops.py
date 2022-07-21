@@ -27,7 +27,7 @@ class Ops:
         clients.docker.build(
             f"{self.facts.path.root}",
             labels={
-                "spec": spec.json(exclude_none=True, exclude=["store"], by_alias=True)
+                "spec": spec.json(exclude_none=True, exclude={"store"}, by_alias=True)
             },
             load=True,
             tags=[f"{self.facts.repository_name}:{tag}"],

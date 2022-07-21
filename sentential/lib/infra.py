@@ -112,6 +112,11 @@ class Infra:
 
     def _configure_lambda(self):
         role_arn = clients.iam.get_role(RoleName=self.spec.role_name)["Role"]["Arn"]
+        arch = None
+        if self.image_manifest['architecture'] == 'amd64':
+            arch = 'x86_64'
+        else:
+            arch = "arm64"
         sleep(10)
         try:
             function = clients.lmb.create_function(
@@ -125,7 +130,7 @@ class Infra:
                 Environment={
                     "Variables": {"PREFIX": self.event.detail.repository_name}
                 },
-                Architectures=[self.image_manifest["architecture"]],
+                Architectures=[arch],
             )
 
             clients.lmb.add_permission(
