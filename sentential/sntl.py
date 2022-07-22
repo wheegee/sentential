@@ -12,7 +12,7 @@ config = typer.Typer()
 
 repository_name = None
 try:
-    repository_name = safe_load(open("./sentential.yml"))['repository_name']
+    repository_name = safe_load(open("./sentential.yml"))["repository_name"]
 except:
     pass
 
@@ -21,6 +21,7 @@ except:
 def init(repository_name: str, runtime: Runtimes):
     """lambdas/{repository}"""
     BoilerPlate(repository_name).ensure(runtime)
+
 
 @root.command()
 def build(tag: str = "latest"):
@@ -61,7 +62,7 @@ def read():
 @secrets.command()
 def write(key: str, value: str):
     """secrets for {repository} lambda"""
-    Ops(repository_name).secret.write(key,value)
+    Ops(repository_name).secret.write(key, value)
 
 
 @secrets.command()

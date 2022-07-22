@@ -14,6 +14,7 @@ class Paths(BaseModel):
     wrapper: PosixPath
     policy: PosixPath
 
+
 class Facts(BaseModel):
     repository_name: str
     runtime: Optional[str]

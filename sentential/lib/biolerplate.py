@@ -37,7 +37,9 @@ class BoilerPlate:
         self.policy()
 
     def sentential_file(self):
-        self._write(self.jinja.get_template("sentential.yml"), self.facts.path.sentential_file)
+        self._write(
+            self.jinja.get_template("sentential.yml"), self.facts.path.sentential_file
+        )
 
     def dockerfile(self):
         self._write(self.jinja.get_template("Dockerfile"), self.facts.path.dockerfile)
