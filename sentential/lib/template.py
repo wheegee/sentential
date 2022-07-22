@@ -9,6 +9,7 @@ from sentential.lib.facts import Facts
 
 PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 
+
 class InitTime:
     def __init__(self, repository_name: str):
         self.facts = Facts(repository_name=repository_name)
@@ -45,6 +46,7 @@ class InitTime:
                 f.writelines(template.render(facts=self.facts))
 
         return write_to
+
 
 class BuildTime:
     def __init__(self, facts: Facts):
