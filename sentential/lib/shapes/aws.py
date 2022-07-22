@@ -53,9 +53,11 @@ class AWSPolicyDocument(BaseModel):
     Version: str = "2012-10-17"
     Statement: List[AWSPolicyStatement]
 
+
 #
 # Lambda
 #
+
 
 class Runtimes(Enum):
     """https://gallery.ecr.aws/lambda?page=1"""
@@ -68,12 +70,15 @@ class Runtimes(Enum):
     provided = "provided"
     ruby = "ruby"
 
-LAMBDA_ROLE_POLICY_JSON = (AWSPolicyDocument(
-    Statement=[
-        AWSPolicyStatement(
-            Effect="Allow",
-            Principal={"Service": "lambda.amazonaws.com"},
-            Action="sts:AssumeRole",
-        )
-    ]
-)).json(exclude_none=True)
+
+LAMBDA_ROLE_POLICY_JSON = (
+    AWSPolicyDocument(
+        Statement=[
+            AWSPolicyStatement(
+                Effect="Allow",
+                Principal={"Service": "lambda.amazonaws.com"},
+                Action="sts:AssumeRole",
+            )
+        ]
+    )
+).json(exclude_none=True)

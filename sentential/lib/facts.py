@@ -6,6 +6,7 @@ from sentential.lib.clients import clients
 from sentential.lib.store import ConfigStore
 from sentential.lib.shapes.internal import Paths
 
+
 class Facts(BaseModel):
     repository_name: str
     runtime: Optional[str]

@@ -9,6 +9,7 @@ from sentential.lib.shapes.internal import Spec
 # ECR
 #
 
+
 class ECR:
     def __init__(self, event: ECREvent) -> None:
         self.event = event
@@ -29,9 +30,11 @@ class ECR:
         response.raise_for_status()
         return response
 
+
 #
 # ECR Image
 #
+
 
 class Image(ECR):
     def __init__(self, event: ECREvent) -> None:
@@ -40,26 +43,32 @@ class Image(ECR):
         self.tag = event.detail.image_tag
         self.uri = f"{self.repository_url}:{self.tag}"
         self.ecr_token_response = clients.ecr.get_authorization_token()
-        self.ecr_token = self.ecr_token_response["authorizationData"][0]["authorizationToken"]
-        self.metadata_v1 = self._fetch_image_metadata("application/vnd.docker.distribution.manifest.v1+json")
-        self.metadata_v2 = self._fetch_image_metadata("application/vnd.docker.distribution.manifest.v2+json")
-        self.digest = self.metadata_v2['imageId']['imageDigest']
+        self.ecr_token = self.ecr_token_response["authorizationData"][0][
+            "authorizationToken"
+        ]
+        self.metadata_v1 = self._fetch_image_metadata(
+            "application/vnd.docker.distribution.manifest.v1+json"
+        )
+        self.metadata_v2 = self._fetch_image_metadata(
+            "application/vnd.docker.distribution.manifest.v2+json"
+        )
+        self.digest = self.metadata_v2["imageId"]["imageDigest"]
         self.manifest_v1 = self._parse_image_manifest(self.metadata_v1)
         self.manifest_v2 = self._parse_image_manifest(self.metadata_v2)
-        self.manifest_digest = self.manifest_v2['config']['digest']
+        self.manifest_digest = self.manifest_v2["config"]["digest"]
         self.inspect = self._fetch_image_inspect()
         self.spec = self._parse_image_spec()
         self.architecture = self._parse_architecture()
 
     def _fetch_image_metadata(self, media_type: str) -> dict:
         return clients.ecr.batch_get_image(
-                repositoryName=self.name, 
-                imageIds=[{"imageTag": self.tag}], 
-                acceptedMediaTypes=[media_type]
-            )['images'][0]
+            repositoryName=self.name,
+            imageIds=[{"imageTag": self.tag}],
+            acceptedMediaTypes=[media_type],
+        )["images"][0]
 
     def _parse_image_manifest(self, metadata: dict) -> dict:
-        return json.loads(metadata['imageManifest'])
+        return json.loads(metadata["imageManifest"])
 
     def _fetch_image_inspect(self) -> dict:
         return self._ecr_api_get(
@@ -75,9 +84,3 @@ class Image(ECR):
             return "x86_64"
         else:
             return "arm64"
-
-
-
-
-
-

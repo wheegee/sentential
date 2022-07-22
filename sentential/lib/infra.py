@@ -3,6 +3,7 @@ from sentential.lib.ecr import Image
 from sentential.lib.clients import clients
 from sentential.lib.shapes.aws import ECREvent, LAMBDA_ROLE_POLICY_JSON
 
+
 class Infra:
     def __init__(self, event: ECREvent) -> None:
         self.image = Image(event)
@@ -17,14 +18,18 @@ class Infra:
                 AssumeRolePolicyDocument=LAMBDA_ROLE_POLICY_JSON,
             )
             print("waiting for role to exist")
-            clients.iam.get_waiter("role_exists").wait(RoleName=self.image.spec.role_name)
+            clients.iam.get_waiter("role_exists").wait(
+                RoleName=self.image.spec.role_name
+            )
             return role
         except clients.iam.exceptions.EntityAlreadyExistsException:
             clients.iam.update_assume_role_policy(
                 RoleName=self.image.spec.role_name,
                 PolicyDocument=LAMBDA_ROLE_POLICY_JSON,
             )
-            clients.iam.get_waiter("role_exists").wait(RoleName=self.image.spec.role_name)
+            clients.iam.get_waiter("role_exists").wait(
+                RoleName=self.image.spec.role_name
+            )
             role = clients.iam.get_role(RoleName=self.image.spec.role_name)
             return role
 
@@ -32,7 +37,9 @@ class Infra:
         try:
             policy = clients.iam.create_policy(
                 PolicyName=self.image.spec.policy_name,
-                PolicyDocument=self.image.spec.policy.json(exclude_none=True, by_alias=True),
+                PolicyDocument=self.image.spec.policy.json(
+                    exclude_none=True, by_alias=True
+                ),
             )
             print("waiting for policy to exist")
             clients.iam.get_waiter("policy_exists").wait(PolicyArn=self.policy_arn)
@@ -48,7 +55,9 @@ class Infra:
 
             clients.iam.create_policy_version(
                 PolicyArn=self.policy_arn,
-                PolicyDocument=self.image.spec.policy.json(exclude_none=True, by_alias=True),
+                PolicyDocument=self.image.spec.policy.json(
+                    exclude_none=True, by_alias=True
+                ),
                 SetAsDefault=True,
             )
             clients.iam.get_waiter("policy_exists").wait(PolicyArn=self.policy_arn)
@@ -78,9 +87,9 @@ class Infra:
                 },
             )
 
-        return clients.lmb.get_function_url_config(
-            FunctionName=self.image.name
-        )["FunctionUrl"]
+        return clients.lmb.get_function_url_config(FunctionName=self.image.name)[
+            "FunctionUrl"
+        ]
 
     def _configure_perms(self):
         role = self._put_role()
@@ -90,20 +99,18 @@ class Infra:
         )
 
     def _configure_lambda(self):
-        role_arn = clients.iam.get_role(RoleName=self.image.spec.role_name)["Role"]["Arn"]
+        role_arn = clients.iam.get_role(RoleName=self.image.spec.role_name)["Role"][
+            "Arn"
+        ]
         sleep(10)
         try:
             function = clients.lmb.create_function(
                 FunctionName=self.image.name,
                 Role=role_arn,
                 PackageType="Image",
-                Code={
-                    "ImageUri": self.image.uri
-                },
+                Code={"ImageUri": self.image.uri},
                 Description=f"sententially deployed {self.image.name}:{self.image.tag}",
-                Environment={
-                    "Variables": {"PREFIX": self.image.name}
-                },
+                Environment={"Variables": {"PREFIX": self.image.name}},
                 Architectures=[self.image.architecture],
             )
 
@@ -121,9 +128,7 @@ class Infra:
                 FunctionName=self.image.name,
                 Role=role_arn,
                 Description=f"sententially deployed {self.image.name}:{self.image.tag}",
-                Environment={
-                    "Variables": {"PREFIX": self.image.name}
-                },
+                Environment={"Variables": {"PREFIX": self.image.name}},
             )
 
             clients.lmb.get_waiter("function_updated_v2").wait(
@@ -161,9 +166,7 @@ class Infra:
 
     def destroy(self):
         try:
-            clients.lmb.delete_function_url_config(
-                FunctionName=self.image.name
-            )
+            clients.lmb.delete_function_url_config(FunctionName=self.image.name)
         except clients.lmb.exceptions.ResourceNotFoundException:
             print(f"lambda url does not exist")
 

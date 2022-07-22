@@ -11,6 +11,7 @@ from sentential.lib.store import SecretStore, ConfigStore
 from sentential.lib.template import BuildTime as Template
 from sentential.lib.shapes.aws import AWSPolicyDocument, ECREvent
 
+
 def retry_after_docker_login(func):
     def wrap(self, *args, **kwargs):
         try:
@@ -21,6 +22,7 @@ def retry_after_docker_login(func):
             return func(self, *args, **kwargs)
 
     return wrap
+
 
 class Ops:
     def __init__(self, repository_name: str) -> None:
