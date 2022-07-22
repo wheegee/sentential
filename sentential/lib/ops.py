@@ -1,15 +1,26 @@
 import ast
 from uuid import uuid4
 
+from python_on_whales import DockerException
+
 from sentential.lib.facts import Facts
 from sentential.lib.infra import Infra
-from sentential.lib.ecr import ECR
 from sentential.lib.clients import clients
 from sentential.lib.shapes.internal import Spec
 from sentential.lib.store import SecretStore, ConfigStore
 from sentential.lib.template import BuildTime as Template
 from sentential.lib.shapes.aws import AWSPolicyDocument, ECREvent
 
+def retry_after_docker_login(func):
+    def wrap(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except (DockerException) as e:
+            print("retrying after ecr login")
+            clients.docker.login_ecr()
+            return func(self, *args, **kwargs)
+
+    return wrap
 
 class Ops:
     def __init__(self, repository_name: str) -> None:
@@ -34,8 +45,12 @@ class Ops:
             tags=[f"{self.facts.repository_name}:{tag}"],
         )
 
+    @retry_after_docker_login
     def publish(self, tag: str = "latest"):
-        ECR(self.facts.repository_url, tag, False).push()
+        clients.docker.image.tag(
+            f"{self.facts.repository_name}:{tag}", f"{self.facts.repository_url}:{tag}"
+        )
+        clients.docker.image.push(f"{self.facts.repository_url}:{tag}")
 
     def deploy(self, tag: str = "latest"):
         event = self._generate_ecr_event(tag)

@@ -1,62 +1,38 @@
-import json
 from time import sleep
-from sentential.lib.ecr import ECR
+from sentential.lib.ecr import Image
 from sentential.lib.clients import clients
-from sentential.lib.shapes.aws import ECREvent, AWSPolicyDocument, AWSPolicyStatement
-
-LAMBDA_ROLE_POLICY = AWSPolicyDocument(
-    Statement=[
-        AWSPolicyStatement(
-            Effect="Allow",
-            Principal={"Service": "lambda.amazonaws.com"},
-            Action="sts:AssumeRole",
-        )
-    ]
-)
-
+from sentential.lib.shapes.aws import ECREvent, LAMBDA_ROLE_POLICY_JSON
 
 class Infra:
     def __init__(self, event: ECREvent) -> None:
-        self.event = event
-        self.registry_url = f"{event.account}.dkr.ecr.{event.region}.amazonaws.com"
-        self.repository_url = f"{self.registry_url}/{event.detail.repository_name}"
-        self.image_manifest = json.loads(
-            clients.ecr.batch_get_image(
-                repositoryName=event.detail.repository_name,
-                imageIds=[{"imageTag": event.detail.image_tag}],
-                acceptedMediaTypes=[
-                    "application/vnd.docker.distribution.manifest.v1+json"
-                ],
-            )["images"][0]["imageManifest"]
-        )
-        self.spec = ECR(self.repository_url, event.detail.image_tag).fetch_spec()
+        self.image = Image(event)
         self.policy_arn = (
-            f"arn:aws:iam::{self.event.account}:policy/{self.spec.policy_name}"
+            f"arn:aws:iam::{event.account}:policy/{self.image.spec.policy_name}"
         )
 
     def _put_role(self):
         try:
             role = clients.iam.create_role(
-                RoleName=self.spec.role_name,
-                AssumeRolePolicyDocument=LAMBDA_ROLE_POLICY.json(exclude_none=True),
+                RoleName=self.image.spec.role_name,
+                AssumeRolePolicyDocument=LAMBDA_ROLE_POLICY_JSON,
             )
             print("waiting for role to exist")
-            clients.iam.get_waiter("role_exists").wait(RoleName=self.spec.role_name)
+            clients.iam.get_waiter("role_exists").wait(RoleName=self.image.spec.role_name)
             return role
         except clients.iam.exceptions.EntityAlreadyExistsException:
             clients.iam.update_assume_role_policy(
-                RoleName=self.spec.role_name,
-                PolicyDocument=LAMBDA_ROLE_POLICY.json(exclude_none=True),
+                RoleName=self.image.spec.role_name,
+                PolicyDocument=LAMBDA_ROLE_POLICY_JSON,
             )
-            clients.iam.get_waiter("role_exists").wait(RoleName=self.spec.role_name)
-            role = clients.iam.get_role(RoleName=self.spec.role_name)
+            clients.iam.get_waiter("role_exists").wait(RoleName=self.image.spec.role_name)
+            role = clients.iam.get_role(RoleName=self.image.spec.role_name)
             return role
 
     def _put_policy(self):
         try:
             policy = clients.iam.create_policy(
-                PolicyName=self.spec.policy_name,
-                PolicyDocument=self.spec.policy.json(exclude_none=True, by_alias=True),
+                PolicyName=self.image.spec.policy_name,
+                PolicyDocument=self.image.spec.policy.json(exclude_none=True, by_alias=True),
             )
             print("waiting for policy to exist")
             clients.iam.get_waiter("policy_exists").wait(PolicyArn=self.policy_arn)
@@ -72,7 +48,7 @@ class Infra:
 
             clients.iam.create_policy_version(
                 PolicyArn=self.policy_arn,
-                PolicyDocument=self.spec.policy.json(exclude_none=True, by_alias=True),
+                PolicyDocument=self.image.spec.policy.json(exclude_none=True, by_alias=True),
                 SetAsDefault=True,
             )
             clients.iam.get_waiter("policy_exists").wait(PolicyArn=self.policy_arn)
@@ -81,7 +57,7 @@ class Infra:
     def _put_url(self):
         try:
             clients.lmb.create_function_url_config(
-                FunctionName=self.event.detail.repository_name,
+                FunctionName=self.image.name,
                 AuthType="NONE",
                 Cors={
                     "AllowHeaders": ["*"],
@@ -92,7 +68,7 @@ class Infra:
             )
         except clients.lmb.exceptions.ResourceConflictException:
             clients.lmb.update_function_url_config(
-                FunctionName=self.event.detail.repository_name,
+                FunctionName=self.image.name,
                 AuthType="NONE",
                 Cors={
                     "AllowHeaders": ["*"],
@@ -103,7 +79,7 @@ class Infra:
             )
 
         return clients.lmb.get_function_url_config(
-            FunctionName=self.event.detail.repository_name
+            FunctionName=self.image.name
         )["FunctionUrl"]
 
     def _configure_perms(self):
@@ -114,30 +90,25 @@ class Infra:
         )
 
     def _configure_lambda(self):
-        role_arn = clients.iam.get_role(RoleName=self.spec.role_name)["Role"]["Arn"]
-        arch = None
-        if self.image_manifest["architecture"] == "amd64":
-            arch = "x86_64"
-        else:
-            arch = "arm64"
+        role_arn = clients.iam.get_role(RoleName=self.image.spec.role_name)["Role"]["Arn"]
         sleep(10)
         try:
             function = clients.lmb.create_function(
-                FunctionName=self.event.detail.repository_name,
+                FunctionName=self.image.name,
                 Role=role_arn,
                 PackageType="Image",
                 Code={
-                    "ImageUri": f"{self.repository_url}:{self.event.detail.image_tag}"
+                    "ImageUri": self.image.uri
                 },
-                Description=f"sententially deployed {self.event.detail.repository_name}:{self.event.detail.image_tag}",
+                Description=f"sententially deployed {self.image.name}:{self.image.tag}",
                 Environment={
-                    "Variables": {"PREFIX": self.event.detail.repository_name}
+                    "Variables": {"PREFIX": self.image.name}
                 },
-                Architectures=[arch],
+                Architectures=[self.image.architecture],
             )
 
             clients.lmb.add_permission(
-                FunctionName=self.event.detail.repository_name,
+                FunctionName=self.image.name,
                 StatementId="FunctionURLAllowPublicAccess",
                 Action="lambda:InvokeFunctionUrl",
                 Principal="*",
@@ -147,34 +118,34 @@ class Infra:
             return function
         except clients.lmb.exceptions.ResourceConflictException:
             function = clients.lmb.update_function_configuration(
-                FunctionName=self.event.detail.repository_name,
+                FunctionName=self.image.name,
                 Role=role_arn,
-                Description=f"sententially deployed {self.event.detail.repository_name}:{self.event.detail.image_tag}",
+                Description=f"sententially deployed {self.image.name}:{self.image.tag}",
                 Environment={
-                    "Variables": {"PREFIX": self.event.detail.repository_name}
+                    "Variables": {"PREFIX": self.image.name}
                 },
             )
 
             clients.lmb.get_waiter("function_updated_v2").wait(
-                FunctionName=self.event.detail.repository_name
+                FunctionName=self.image.name
             )
 
             clients.lmb.update_function_code(
-                FunctionName=self.event.detail.repository_name,
-                ImageUri=f"{self.repository_url}:{self.event.detail.image_tag}",
+                FunctionName=self.image.name,
+                ImageUri=self.image.uri,
                 Publish=True,
             )
 
             try:
                 clients.lmb.remove_permission(
-                    FunctionName=self.event.detail.repository_name,
+                    FunctionName=self.image.name,
                     StatementId="FunctionURLAllowPublicAccess",
                 )
             except clients.lmb.exceptions.ResourceNotFoundException:
                 print(f"lambda permission does not exist")
 
             clients.lmb.add_permission(
-                FunctionName=self.event.detail.repository_name,
+                FunctionName=self.image.name,
                 StatementId="FunctionURLAllowPublicAccess",
                 Action="lambda:InvokeFunctionUrl",
                 Principal="*",
@@ -191,19 +162,19 @@ class Infra:
     def destroy(self):
         try:
             clients.lmb.delete_function_url_config(
-                FunctionName=self.event.detail.repository_name
+                FunctionName=self.image.name
             )
         except clients.lmb.exceptions.ResourceNotFoundException:
             print(f"lambda url does not exist")
 
         try:
-            clients.lmb.delete_function(FunctionName=self.event.detail.repository_name)
+            clients.lmb.delete_function(FunctionName=self.image.name)
         except clients.lmb.exceptions.ResourceNotFoundException:
             print(f"lambda does not exist")
 
         try:
             clients.iam.detach_role_policy(
-                PolicyArn=self.policy_arn, RoleName=self.spec.role_name
+                PolicyArn=self.policy_arn, RoleName=self.image.spec.role_name
             )
 
             policy_versions = clients.iam.list_policy_versions(
@@ -220,6 +191,6 @@ class Infra:
             print(f"policy does not exist")
 
         try:
-            clients.iam.delete_role(RoleName=self.spec.role_name)
+            clients.iam.delete_role(RoleName=self.image.spec.role_name)
         except clients.iam.exceptions.NoSuchEntityException:
             print(f"role does not exist")

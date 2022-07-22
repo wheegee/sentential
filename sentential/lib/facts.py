@@ -4,16 +4,7 @@ from pydantic import BaseModel, validator
 from typing import Optional, Any
 from sentential.lib.clients import clients
 from sentential.lib.store import ConfigStore
-
-
-class Paths(BaseModel):
-    root: PosixPath
-    src: PosixPath
-    sentential_file: PosixPath
-    dockerfile: PosixPath
-    wrapper: PosixPath
-    policy: PosixPath
-
+from sentential.lib.shapes.internal import Paths
 
 class Facts(BaseModel):
     repository_name: str
