@@ -5,6 +5,7 @@
 from pydantic import BaseModel
 from sentential.lib.shapes.aws import AWSPolicyDocument
 
+
 class Spec(BaseModel):
     prefix: str
     policy: AWSPolicyDocument

@@ -102,7 +102,9 @@ class Infra:
                 },
             )
 
-        return clients.lmb.get_function_url_config(FunctionName=self.event.detail.repository_name)['FunctionUrl']
+        return clients.lmb.get_function_url_config(
+            FunctionName=self.event.detail.repository_name
+        )["FunctionUrl"]
 
     def _configure_perms(self):
         role = self._put_role()
