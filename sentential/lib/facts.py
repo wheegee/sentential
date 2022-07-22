@@ -42,14 +42,14 @@ class Facts(BaseModel):
     @validator("registry_url", always=True)
     def assemble_registry_url(cls, v, values) -> str:
         return f"{values['account_id']}.dkr.ecr.{values['region']}.amazonaws.com"
-    
+
     @validator("config", always=True)
     def assemble_config(cls, v, values) -> Any:
-        return ConfigStore(values['repository_name']).parameters()
+        return ConfigStore(values["repository_name"]).parameters()
 
     @validator("secrets", always=True)
     def assemble_secrets(cls, v, values) -> Any:
-        return SecretStore(values['repository_name'], values['kms_key_id']).parameters()
+        return SecretStore(values["repository_name"], values["kms_key_id"]).parameters()
 
     @validator("path", always=True)
     def assemble_path(cls, v, values) -> str:

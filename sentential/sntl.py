@@ -16,6 +16,7 @@ try:
 except:
     pass
 
+
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
     """lambdas/{repository}"""
@@ -68,6 +69,7 @@ def delete(key: str):
     """secrets for {repository} lambda"""
     Ops(repository_name).secret.delete(key)
 
+
 @config.command()
 def read():
     """config for {repository} lambda"""
@@ -85,8 +87,10 @@ def delete(key: str):
     """config for {repository} lambda"""
     Ops(repository_name).config.delete(key)
 
+
 root.add_typer(secrets, name="secret", help="for {repository}")
 root.add_typer(config, name="config", help="for {repository}")
+
 
 def main():
     root()
