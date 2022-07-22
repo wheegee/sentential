@@ -1,9 +1,8 @@
 import json
-from pyclbr import Function
 from time import sleep
-from sentential.lib.ecr import ECR, ECREvent
-from sentential.lib.spec import AWSPolicyDocument, AWSPolicyStatement, Spec
+from sentential.lib.ecr import ECR
 from sentential.lib.clients import clients
+from sentential.lib.shapes.aws import ECREvent, AWSPolicyDocument, AWSPolicyStatement
 
 LAMBDA_ROLE_POLICY = AWSPolicyDocument(
     Statement=[
@@ -103,6 +102,8 @@ class Infra:
                 },
             )
 
+        return clients.lmb.get_function_url_config(FunctionName=self.event.detail.repository_name)['FunctionUrl']
+
     def _configure_perms(self):
         role = self._put_role()
         policy = self._put_policy()
@@ -183,7 +184,7 @@ class Infra:
     def ensure(self):
         self._configure_perms()
         self._configure_lambda()
-        self._put_url()
+        print(self._put_url())
 
     def destroy(self):
         try:

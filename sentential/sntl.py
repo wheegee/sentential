@@ -2,7 +2,8 @@ import os
 import typer
 from yaml import safe_load
 from sentential.lib.ops import Ops
-from sentential.lib.biolerplate import BoilerPlate, Runtimes
+from sentential.lib.template import InitTime
+from sentential.lib.shapes.aws import Runtimes
 
 root = typer.Typer()
 secrets = typer.Typer()
@@ -18,7 +19,7 @@ except:
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
     """lambdas/{repository}"""
-    BoilerPlate(repository_name).ensure(f"public.ecr.aws/lambda/{runtime.value}:latest")
+    InitTime(repository_name).ensure(f"public.ecr.aws/lambda/{runtime.value}:latest")
 
 
 @root.command()

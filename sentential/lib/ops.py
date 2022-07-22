@@ -1,15 +1,14 @@
-import json
 import ast
 from uuid import uuid4
 
 from sentential.lib.facts import Facts
 from sentential.lib.infra import Infra
-from sentential.lib.render import Render
-from sentential.lib.spec import AWSPolicyDocument, Spec
+from sentential.lib.template import BuildTime
+from sentential.lib.shapes.internal import Spec
 from sentential.lib.clients import clients
-from sentential.lib.ecr import ECR, ECREvent
+from sentential.lib.ecr import ECR
 from sentential.lib.store import SecretStore, ConfigStore
-from sentential.lib.biolerplate import BoilerPlate
+from sentential.lib.shapes.aws import AWSPolicyDocument, ECREvent
 
 
 class Ops:
@@ -21,7 +20,7 @@ class Ops:
     def build(self, tag: str = "latest"):
         spec = Spec(
             prefix=self.facts.repository_name,
-            policy=Render(self.facts).policy(),
+            policy=BuildTime(self.facts).policy(),
             role_name=self.facts.repository_name,
             policy_name=self.facts.repository_name,
         )
@@ -88,6 +87,7 @@ class Ops:
             publish=[("8081", "8081")],
             envs={"LAMBDA_ENDPOINT": "http://sentential:8080"},
         )
+        print("http://localhost:8081")
 
     def _get_federation_token(self, policy: AWSPolicyDocument):
         token = clients.sts.get_federation_token(

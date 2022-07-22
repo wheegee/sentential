@@ -1,9 +1,9 @@
-from pathlib import Path, PosixPath
 import boto3
+from pathlib import Path, PosixPath
 from pydantic import BaseModel, validator
 from typing import Optional, Any
 from sentential.lib.clients import clients
-from sentential.lib.store import ConfigStore, SecretStore
+from sentential.lib.store import ConfigStore
 
 
 class Paths(BaseModel):

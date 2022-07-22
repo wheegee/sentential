@@ -1,42 +1,13 @@
 import ast
-import json
-import os
-from python_on_whales import DockerException
-from requests import HTTPError
 import requests
-from datetime import datetime
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from requests import HTTPError
+from python_on_whales import DockerException
 from sentential.lib.clients import clients
-from sentential.lib.spec import Spec
-
-#
-# ECR Event
-# source: https://docs.aws.amazon.com/AmazonECR/latest/userguide/ecr-eventbridge.html
-
-
-class ECREventDetail(BaseModel):
-    result: str = "SUCCESS"
-    repository_name: str = Field(alias="repository-name")
-    image_digest: Optional[str] = Field(alias="image-digest")
-    action_type: Optional[str] = Field(alias="action-type")
-    image_tag: str = Field(alias="image-tag")
-
-
-class ECREvent(BaseModel):
-    version: int
-    id: str
-    detail_type: str = Field("ECR Image Action", const=True)
-    source: str = Field("aws.ecr", const=True)
-    account: str
-    time: datetime = Field(datetime.now().isoformat(timespec="seconds"))
-    region: str
-    resources: List = []
-    detail: ECREventDetail
+from sentential.lib.shapes.internal import Spec
 
 
 #
-# ECR Api helper
+# ECR Rest API helper
 #
 
 

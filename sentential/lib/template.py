@@ -1,26 +1,15 @@
 import os
-from jinja2 import Environment, FileSystemLoader, Template
+import json
+from shutil import copy
 from os import makedirs
 from os.path import exists
-from pathlib import PosixPath, Path
+from pathlib import PosixPath
+from jinja2 import Environment, FileSystemLoader, Template
 from sentential.lib.facts import Facts
-from enum import Enum
-from shutil import copy
 
 PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-# https://gallery.ecr.aws/lambda?page=1
-class Runtimes(Enum):
-    python = "python"
-    dotnet = "dotnet"
-    java = "java"
-    go = "go"
-    nodejs = "nodejs"
-    provided = "provided"
-    ruby = "ruby"
-
-
-class BoilerPlate:
+class InitTime:
     def __init__(self, repository_name: str):
         self.facts = Facts(repository_name=repository_name)
         self.jinja = Environment(
@@ -56,3 +45,14 @@ class BoilerPlate:
                 f.writelines(template.render(facts=self.facts))
 
         return write_to
+
+class BuildTime:
+    def __init__(self, facts: Facts):
+        self.facts = facts
+        self.jinja = Environment(loader=FileSystemLoader("."))
+
+    def policy(self) -> dict:
+        return json.loads(self.template(str(self.facts.path.policy)))
+
+    def template(self, template: PosixPath) -> str:
+        return self.jinja.get_template(template).render(facts=self.facts)
