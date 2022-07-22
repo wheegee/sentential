@@ -11,6 +11,7 @@ from sentential.lib.ecr import ECR, ECREvent
 from sentential.lib.store import SecretStore, ConfigStore
 from sentential.lib.biolerplate import BoilerPlate
 
+
 class Ops:
     def __init__(self, repository_name: str) -> None:
         self.facts = Facts(repository_name=repository_name)
