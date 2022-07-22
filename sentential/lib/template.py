@@ -16,7 +16,7 @@ class InitTime:
             loader=FileSystemLoader(f"{PACKAGE_PATH}/../templates")
         )
 
-    def ensure(self, runtime_image: str):
+    def scaffold(self, runtime_image: str):
         self.facts.runtime = runtime_image
         if not exists(self.facts.path.src):
             makedirs(self.facts.path.src)

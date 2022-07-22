@@ -1,8 +1,7 @@
-import os
 import typer
 from yaml import safe_load
 from sentential.lib.ops import Ops
-from sentential.lib.template import InitTime
+from sentential.lib.template import InitTime as Template
 from sentential.lib.shapes.aws import Runtimes
 
 root = typer.Typer()
@@ -19,7 +18,7 @@ except:
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
     """lambdas/{repository}"""
-    InitTime(repository_name).ensure(f"public.ecr.aws/lambda/{runtime.value}:latest")
+    Template(repository_name).scaffold(f"public.ecr.aws/lambda/{runtime.value}:latest")
 
 
 @root.command()

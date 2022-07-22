@@ -3,11 +3,11 @@ from uuid import uuid4
 
 from sentential.lib.facts import Facts
 from sentential.lib.infra import Infra
-from sentential.lib.template import BuildTime
-from sentential.lib.shapes.internal import Spec
-from sentential.lib.clients import clients
 from sentential.lib.ecr import ECR
+from sentential.lib.clients import clients
+from sentential.lib.shapes.internal import Spec
 from sentential.lib.store import SecretStore, ConfigStore
+from sentential.lib.template import BuildTime as Template
 from sentential.lib.shapes.aws import AWSPolicyDocument, ECREvent
 
 
@@ -20,7 +20,7 @@ class Ops:
     def build(self, tag: str = "latest"):
         spec = Spec(
             prefix=self.facts.repository_name,
-            policy=BuildTime(self.facts).policy(),
+            policy=Template(self.facts).policy(),
             role_name=self.facts.repository_name,
             policy_name=self.facts.repository_name,
         )
