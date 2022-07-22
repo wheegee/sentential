@@ -1,24 +1,24 @@
-from pydantic import BaseModel, validator
 from pathlib import Path, PosixPath
+import boto3
+from pydantic import BaseModel, validator
 from typing import Optional, Any
 from sentential.lib.clients import clients
-import boto3
-
 from sentential.lib.store import ConfigStore, SecretStore
 
-class PathConfig(BaseModel):
+
+class Paths(BaseModel):
     root: PosixPath
     src: PosixPath
+    sentential_file: PosixPath
     dockerfile: PosixPath
     wrapper: PosixPath
     policy: PosixPath
 
-
 class Facts(BaseModel):
     repository_name: str
     runtime: Optional[str]
-    path: Optional[PathConfig]
     region: str = boto3.session.Session().region_name
+    path: Optional[Paths]
     account_id: str = clients.sts.get_caller_identity().get("Account")
     kms_key_alias: str = "aws/ssm"
     kms_key_id: Optional[str]
@@ -53,10 +53,11 @@ class Facts(BaseModel):
 
     @validator("path", always=True)
     def assemble_path(cls, v, values) -> str:
-        root = Path(f"lambdas/{values['repository_name']}")
-        return PathConfig(
+        root = Path(".")
+        return Paths(
             root=root,
             src=Path(f"{root}/src"),
+            sentential_file=Path(f"{root}/sentential.yml"),
             dockerfile=Path(f"{root}/Dockerfile"),
             wrapper=Path(f"{root}/wrapper.sh"),
             policy=Path(f"{root}/policy.json"),
