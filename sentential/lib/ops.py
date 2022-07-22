@@ -1,15 +1,15 @@
 import json
-from uuid import uuid4
 import ast
+from uuid import uuid4
 
 from sentential.lib.facts import Facts
 from sentential.lib.infra import Infra
+from sentential.lib.render import Render
 from sentential.lib.spec import AWSPolicyDocument, Spec
 from sentential.lib.clients import clients
 from sentential.lib.ecr import ECR, ECREvent
 from sentential.lib.store import SecretStore, ConfigStore
 from sentential.lib.biolerplate import BoilerPlate
-
 
 class Ops:
     def __init__(self, repository_name: str) -> None:
@@ -20,7 +20,7 @@ class Ops:
     def build(self, tag: str = "latest"):
         spec = Spec(
             prefix=self.facts.repository_name,
-            policy=json.loads(self.facts.path.policy.read_text()),
+            policy=Render(self.facts).policy(),
             role_name=self.facts.repository_name,
             policy_name=self.facts.repository_name,
         )

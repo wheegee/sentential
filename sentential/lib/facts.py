@@ -26,7 +26,6 @@ class Facts(BaseModel):
     repository_url: Optional[str]
     registry_url: Optional[str]
     config: Optional[Any]
-    secrets: Optional[Any]
 
     @validator("kms_key_id", always=True)
     def lookup_kms_key_id(cls, v, values) -> str:
@@ -47,10 +46,6 @@ class Facts(BaseModel):
     @validator("config", always=True)
     def assemble_config(cls, v, values) -> Any:
         return ConfigStore(values["repository_name"]).parameters()
-
-    @validator("secrets", always=True)
-    def assemble_secrets(cls, v, values) -> Any:
-        return SecretStore(values["repository_name"], values["kms_key_id"]).parameters()
 
     @validator("path", always=True)
     def assemble_path(cls, v, values) -> str:

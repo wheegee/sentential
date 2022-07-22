@@ -36,7 +36,7 @@ class Store:
     def read(self):
         parameters = self.fetch()
         data = [
-            [p["Name"], p["Value"], p["Version"], p["LastModifiedDate"], p["Type"]]
+            [p["Name"].replace(f"/{self.repository_name}/", ""), p["Value"], p["Version"], p["LastModifiedDate"], p["Type"]]
             for p in parameters
             if self.type == p["Type"]
         ]
