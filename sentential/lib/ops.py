@@ -1,35 +1,58 @@
-import json
-from uuid import uuid4
 import ast
+from uuid import uuid4
 
-from sentential.lib.config import Config
+from python_on_whales import DockerException
+
+from sentential.lib.facts import Facts
 from sentential.lib.infra import Infra
-from sentential.lib.spec import AWSPolicyDocument, Spec
 from sentential.lib.clients import clients
-from sentential.lib.ecr import ECR, ECREvent
+from sentential.lib.shapes.internal import Spec
+from sentential.lib.store import SecretStore, ConfigStore
+from sentential.lib.template import BuildTime as Template
+from sentential.lib.shapes.aws import AWSPolicyDocument, ECREvent
+
+
+def retry_after_docker_login(func):
+    def wrap(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except (DockerException) as e:
+            print("retrying after ecr login")
+            clients.docker.login_ecr()
+            return func(self, *args, **kwargs)
+
+    return wrap
 
 
 class Ops:
     def __init__(self, repository_name: str) -> None:
-        self.config = Config(repository_name=repository_name)
+        self.facts = Facts(repository_name=repository_name)
+        self.config = ConfigStore(self.facts.repository_name)
+        self.secret = SecretStore(self.facts.repository_name, self.facts.kms_key_id)
 
     def build(self, tag: str = "latest"):
         spec = Spec(
-            prefix=self.config.repository_name,
-            policy=json.loads(self.config.path.policy.read_text()),
-            role_name=self.config.repository_name,
-            policy_name=self.config.repository_name,
+            prefix=self.facts.repository_name,
+            policy=Template(self.facts).policy(),
+            role_name=self.facts.repository_name,
+            policy_name=self.facts.repository_name,
         )
 
         clients.docker.build(
-            f"{self.config.path.root}",
-            labels={"spec": spec.json(exclude_none=True, by_alias=True)},
+            f"{self.facts.path.root}",
+            labels={
+                "spec": spec.json(exclude_none=True, exclude={"store"}, by_alias=True)
+            },
             load=True,
-            tags=[f"{self.config.repository_name}:{tag}"],
+            tags=[f"{self.facts.repository_name}:{tag}"],
         )
 
+    @retry_after_docker_login
     def publish(self, tag: str = "latest"):
-        ECR(self.config.repository_url, tag, False).push()
+        clients.docker.image.tag(
+            f"{self.facts.repository_name}:{tag}", f"{self.facts.repository_url}:{tag}"
+        )
+        clients.docker.image.push(f"{self.facts.repository_url}:{tag}")
 
     def deploy(self, tag: str = "latest"):
         event = self._generate_ecr_event(tag)
@@ -81,10 +104,11 @@ class Ops:
             publish=[("8081", "8081")],
             envs={"LAMBDA_ENDPOINT": "http://sentential:8080"},
         )
+        print("http://localhost:8081")
 
     def _get_federation_token(self, policy: AWSPolicyDocument):
         token = clients.sts.get_federation_token(
-            Name=f"{self.config.repository_name}-spec-policy",
+            Name=f"{self.facts.repository_name}-spec-policy",
             Policy=policy.json(exclude_none=True, by_alias=True),
         )["Credentials"]
 
@@ -99,10 +123,10 @@ class Ops:
             {
                 "version": 0,
                 "id": str(uuid4()),
-                "account": self.config.account_id,
-                "region": self.config.region,
+                "account": self.facts.account_id,
+                "region": self.facts.region,
                 "detail": {
-                    "repository-name": self.config.repository_name,
+                    "repository-name": self.facts.repository_name,
                     "image-tag": tag,
                 },
             }

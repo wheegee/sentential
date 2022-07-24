@@ -1,75 +1,94 @@
-from enum import Enum
-import os
 import typer
-from sentential.lib.biolerplate import BoilerPlate
+from yaml import safe_load
 from sentential.lib.ops import Ops
-from sentential.lib.biolerplate import Runtimes
-from sentential.lib.chamber import ChamberWrapper
+from sentential.lib.template import InitTime as Template
+from sentential.lib.shapes.aws import Runtimes
 
 root = typer.Typer()
 secrets = typer.Typer()
+config = typer.Typer()
 
+repository_name = None
 try:
-    Lambdas = Enum("Lambdas", {name: name for name in os.listdir("lambdas")})
-except FileNotFoundError:
-    Lambdas = Enum("lambdas", {})
+    repository_name = safe_load(open("./sentential.yml"))["repository_name"]
+except:
+    pass
 
 
 @root.command()
-def init(repository: str, runtime: Runtimes):
+def init(repository_name: str, runtime: Runtimes):
     """lambdas/{repository}"""
-    BoilerPlate(repository).ensure(f"public.ecr.aws/lambda/{runtime.value}:latest")
+    Template(repository_name).scaffold(f"public.ecr.aws/lambda/{runtime.value}:latest")
 
 
 @root.command()
-def build(repository: Lambdas, tag: str = "latest"):
+def build(tag: str = "latest"):
     """lambdas/{repository} with {tag}"""
-    Ops(repository.value).build(tag)
+    Ops(repository_name).build(tag)
 
 
 @root.command()
-def emulate(repository: Lambdas, tag: str = "latest"):
+def emulate(tag: str = "latest"):
     """lambdas/{repository} locally"""
-    Ops(repository.value).emulate(tag)
+    Ops(repository_name).emulate(tag)
 
 
 @root.command()
-def publish(repository: Lambdas, tag: str = "latest"):
+def publish(tag: str = "latest"):
     """lambdas/{repository} to ecr with {tag}"""
-    Ops(repository.value).publish(tag)
+    Ops(repository_name).publish(tag)
 
 
 @root.command()
-def deploy(repository: Lambdas, tag: str = "latest"):
+def deploy(tag: str = "latest"):
     """{repository}:{tag} from ecr as {repository} to aws"""
-    Ops(repository.value).deploy(tag)
+    Ops(repository_name).deploy(tag)
 
 
 @root.command()
-def destroy(repository: Lambdas, tag: str = "latest"):
+def destroy(tag: str = "latest"):
     """{repository} lambda in aws"""
-    Ops(repository.value).destroy(tag)
+    Ops(repository_name).destroy(tag)
 
 
 @secrets.command()
-def read(repository: Lambdas):
+def read():
     """secrets for {repository} lambda"""
-    ChamberWrapper(repository.value).read()
+    Ops(repository_name).secret.read()
 
 
 @secrets.command()
-def write(repository: Lambdas, key: str, value: str):
+def write(key: str, value: str):
     """secrets for {repository} lambda"""
-    ChamberWrapper(repository.value).write(key, value)
+    Ops(repository_name).secret.write(key, value)
 
 
 @secrets.command()
-def delete(repository: Lambdas, key: str):
+def delete(key: str):
     """secrets for {repository} lambda"""
-    ChamberWrapper(repository.value).delete(key)
+    Ops(repository_name).secret.delete(key)
 
 
-root.add_typer(secrets, name="secrets", help="for {repository}")
+@config.command()
+def read():
+    """config for {repository} lambda"""
+    Ops(repository_name).config.read()
+
+
+@config.command()
+def write(key: str, value: str):
+    """config for {repository} lambda"""
+    Ops(repository_name).config.write(key, value)
+
+
+@config.command()
+def delete(key: str):
+    """config for {repository} lambda"""
+    Ops(repository_name).config.delete(key)
+
+
+root.add_typer(secrets, name="secret", help="for {repository}")
+root.add_typer(config, name="config", help="for {repository}")
 
 
 def main():
