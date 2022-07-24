@@ -95,7 +95,7 @@ class Ops:
         )
 
         clients.docker.run(
-            "ghcr.io/bkeane/sentential-gw:latest",
+            "ghcr.io/wheegee/sentential-gw:latest",
             name="sentential-gw",
             hostname="sentential-gw",
             networks=["sentential-bridge"],
