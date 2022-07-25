@@ -18,19 +18,31 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: 3.9
 
-    - name: Semantic release
+    - name: Configure semantic release
       run: |
         pip install python-semantic-release
         git config user.name "sentential[release-bot]"
         git config user.email "release-bot@sentential"
-        semantic-release publish -D commit_author="release-bot <release-bot@sentential>"
+
+    - name: Configure version outputs
+      id: versions
+      continue-on-error: true
+      run: |
+        CURRENT_VERSION=$(semantic-release print-version --current)
+        NEW_RELEASE_VERSION=$(semantic-release print-version)
+        echo "::set-output name=current_version::$CURRENT_VERSION"
+        echo "::set-output name=new_release_version::$NEW_RELEASE_VERSION"
+
+    - name: Release
+      run: semantic-release publish -D commit_author="release-bot <release-bot@sentential>"
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         REPOSITORY_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-      continue-on-error: true
