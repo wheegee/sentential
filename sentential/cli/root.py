@@ -5,6 +5,7 @@ from sentential.lib.local import Image, Repository
 
 root = typer.Typer()
 
+
 @root.command()
 def build(tag: str = "latest"):
     Image.build(tag)

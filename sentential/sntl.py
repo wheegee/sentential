@@ -10,5 +10,6 @@ root.add_typer(aws, name="aws", help="ops for {repository}")
 root.add_typer(secret, name="secret", help="for {repository}")
 root.add_typer(config, name="config", help="for {repository}")
 
+
 def main():
     root()

@@ -8,7 +8,8 @@ from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON, AWSPolicyDocument
 from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import facts
 from sentential.lib.store import ConfigStore
-    
+
+
 class Image:
     def __init__(self, tag: str = "latest") -> None:
         self.repository_name = facts.repository_name
@@ -16,7 +17,7 @@ class Image:
 
     def spec(self) -> Spec:
         metadata = self._fetch_metadata()
-        spec_data = json.loads(metadata['config']['Labels']['spec'])
+        spec_data = json.loads(metadata["config"]["Labels"]["spec"])
         return Spec(**spec_data)
 
     def arch(self) -> str:
@@ -26,16 +27,17 @@ class Image:
         else:
             return metadata["architecture"]
 
-    @lru_cache(maxsize=1)    
+    @lru_cache(maxsize=1)
     def _fetch_metadata(self) -> dict:
         image = clients.ecr.batch_get_image(
             repositoryName=facts.repository_name,
             imageIds=[{"imageTag": self.tag}],
             acceptedMediaTypes=["application/vnd.docker.distribution.manifest.v1+json"],
         )["images"][0]
-        image_manifest = json.loads(image['imageManifest'])
-        metadata = image_manifest['history'][0]['v1Compatibility']
+        image_manifest = json.loads(image["imageManifest"])
+        metadata = image_manifest["history"][0]["v1Compatibility"]
         return json.loads(metadata)
+
 
 class Lambda:
     def __init__(self, image: Image) -> None:
@@ -46,16 +48,17 @@ class Lambda:
 
     def deploy(self):
         clients.iam.attach_role_policy(
-            RoleName=self._put_role()["Role"]["RoleName"], 
-            PolicyArn=self._put_policy()["Policy"]["Arn"]
+            RoleName=self._put_role()["Role"]["RoleName"],
+            PolicyArn=self._put_policy()["Policy"]["Arn"],
         )
         self._put_lambda()
         print(self._put_url()['ResponseMetadata']['FunctionUrl'])
 
-
     def destroy(self):
         try:
-            clients.lmb.delete_function_url_config(FunctionName=self.image.repository_name)
+            clients.lmb.delete_function_url_config(
+                FunctionName=self.image.repository_name
+            )
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
 
@@ -106,27 +109,26 @@ class Lambda:
                 PolicyDocument=LAMBDA_ROLE_POLICY_JSON,
             )
 
-        clients.iam.get_waiter("role_exists").wait(
-            RoleName=self.image.spec().role_name
-        )
+        clients.iam.get_waiter("role_exists").wait(RoleName=self.image.spec().role_name)
 
         return role
 
     def _put_policy(self) -> object:
-        policy_json = Template(self.image.spec().policy.json(exclude_none=True)).render(facts=facts, config=ConfigStore().parameters())
+        policy_json = Template(self.image.spec().policy.json(exclude_none=True)).render(
+            facts=facts, config=ConfigStore().parameters()
+        )
         try:
             policy = clients.iam.create_policy(
-                PolicyName=self.image.spec().policy_name,
-                PolicyDocument=policy_json
+                PolicyName=self.image.spec().policy_name, PolicyDocument=policy_json
             )
-        
+
         except clients.iam.exceptions.EntityAlreadyExistsException:
             policy = clients.iam.get_policy(PolicyArn=self.policy_arn)
-            
+
             versions = clients.iam.list_policy_versions(PolicyArn=self.policy_arn)[
                 "Versions"
             ]
-            
+
             if len(versions) >= 5:
                 clients.iam.delete_policy_version(
                     PolicyArn=self.policy_arn, VersionId=versions[-1]["VersionId"]
@@ -150,7 +152,7 @@ class Lambda:
                 "AllowMethods": ["*"],
                 "AllowOrigins": ["*"],
                 "ExposeHeaders": ["*"],
-            }
+            },
         }
 
         try:
@@ -158,10 +160,14 @@ class Lambda:
         except clients.lmb.exceptions.ResourceConflictException:
             clients.lmb.update_function_url_config(**config)
 
-        return clients.lmb.get_function_url_config(FunctionName=self.image.repository_name)
+        return clients.lmb.get_function_url_config(
+            FunctionName=self.image.repository_name
+        )
 
     def _put_lambda(self):
-        role_arn = clients.iam.get_role(RoleName=self.image.spec().role_name)["Role"]["Arn"]
+        role_arn = clients.iam.get_role(RoleName=self.image.spec().role_name)["Role"][
+            "Arn"
+        ]
         image_uri = f"{facts.repository_url}:{self.image.tag}"
         sleep(10)
         try:
@@ -169,7 +175,7 @@ class Lambda:
                 FunctionName=self.image.repository_name,
                 Role=role_arn,
                 PackageType="Image",
-                Code={"ImageUri": image_uri },
+                Code={"ImageUri": image_uri},
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
                 Environment={"Variables": {"PREFIX": self.image.repository_name}},
                 Architectures=[self.image.arch()],
@@ -226,10 +232,12 @@ class Repository:
         pass
 
     def images(self) -> List[Image]:
-        images = clients.ecr.describe_images(repositoryName=facts.repository_name)["imageDetails"]
+        images = clients.ecr.describe_images(repositoryName=facts.repository_name)[
+            "imageDetails"
+        ]
         filtered = []
         for image in images:
-            if 'imageTags' in image:
-                for tag in image['imageTags']:
+            if "imageTags" in image:
+                for tag in image["imageTags"]:
                     filtered.append(Image(tag))
         return filtered
