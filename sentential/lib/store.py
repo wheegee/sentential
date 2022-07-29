@@ -1,11 +1,12 @@
 from sentential.lib.clients import clients
 from types import SimpleNamespace
+from sentential.lib.facts import facts
 from tabulate import tabulate
 
 
 class Store:
-    def __init__(self, repository_name: str, kms_key_id: str = None):
-        self.repository_name = repository_name
+    def __init__(self, kms_key_id: str = None):
+        self.repository_name = facts.repository_name
         self.kms_key_id = kms_key_id
         if kms_key_id is not None:
             self.type = "SecureString"
@@ -67,10 +68,10 @@ class Store:
 
 
 class ConfigStore(Store):
-    def __init__(self, repository_name: str):
-        super().__init__(repository_name, None)
+    def __init__(self):
+        super().__init__(None)
 
 
 class SecretStore(Store):
-    def __init__(self, repository_name: str, kms_key_id: str):
-        super().__init__(repository_name, kms_key_id)
+    def __init__(self):
+        super().__init__(facts.kms_key_id)
