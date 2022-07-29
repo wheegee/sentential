@@ -92,7 +92,7 @@ class Lambda:
             clients.docker.network.remove(["sentential-bridge"])
         except:
             pass
-        
+
     def _get_federation_token(self):
         token = clients.sts.get_federation_token(
             Name=f"{self.image.repository_name}-spec-policy",
