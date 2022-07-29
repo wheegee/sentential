@@ -1,4 +1,3 @@
-
 import boto3
 from yaml import safe_load
 from pathlib import Path
@@ -7,11 +6,13 @@ from typing import Optional, Any
 from sentential.lib.clients import clients
 from sentential.lib.shapes.internal import Paths
 
+
 def find_sentential():
     try:
         return safe_load(open("./sentential.yml"))["repository_name"]
     except:
         return None
+
 
 class Facts(BaseModel):
     repository_name: str = find_sentential()
@@ -51,5 +52,6 @@ class Facts(BaseModel):
             wrapper=Path(f"{root}/wrapper.sh"),
             policy=Path(f"{root}/policy.json"),
         )
+
 
 facts = Facts()

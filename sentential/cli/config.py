@@ -3,6 +3,7 @@ from sentential.lib.store import ConfigStore
 
 config = typer.Typer()
 
+
 @config.command()
 def read():
     """config for {repository} lambda"""
@@ -12,7 +13,7 @@ def read():
 @config.command()
 def write(key: str, value: str):
     """config for {repository} lambda"""
-    ConfigStore().write(key,value)
+    ConfigStore().write(key, value)
 
 
 @config.command()

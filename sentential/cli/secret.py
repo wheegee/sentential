@@ -3,6 +3,7 @@ from sentential.lib.store import SecretStore
 
 secret = typer.Typer()
 
+
 @secret.command()
 def read():
     """secrets for {repository} lambda"""

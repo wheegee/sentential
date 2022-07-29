@@ -3,10 +3,11 @@ import requests
 from python_on_whales import docker
 from functools import lru_cache
 
-class ECRApi():
+
+class ECRApi:
     def __init__(self) -> None:
         pass
-    
+
     @lru_cache(maxsize=1)
     def api_token(self) -> str:
         return self.ecr_token_response["authorizationData"][0]["authorizationToken"]
@@ -33,8 +34,6 @@ class Clients:
         self.ecr_api = ECRApi()
         self.ssm = boto3.client("ssm")
         self.docker = docker
-    
-
 
 
 clients = Clients()

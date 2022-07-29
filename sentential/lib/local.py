@@ -17,7 +17,7 @@ class Image:
 
     def spec(self) -> Spec:
         metadata = self._fetch_metadata()
-        spec_data = json.loads(metadata.config.labels['spec'])
+        spec_data = json.loads(metadata.config.labels["spec"])
         return Spec(**spec_data)
 
     def arch(self) -> str:
@@ -46,6 +46,7 @@ class Image:
             tags=[f"{facts.repository_name}:{tag}"],
         )
         return cls(tag)
+
 
 class Lambda:
     def __init__(self, image: Image) -> None:
@@ -82,7 +83,7 @@ class Lambda:
             envs={"LAMBDA_ENDPOINT": "http://sentential:8080"},
         )
 
-        print("http://localhost:8081")       
+        print("http://localhost:8081")
 
     def destroy(self):
         clients.docker.remove(["sentential"], force=True, volumes=True)
@@ -95,7 +96,9 @@ class Lambda:
     def _get_federation_token(self):
         token = clients.sts.get_federation_token(
             Name=f"{self.image.repository_name}-spec-policy",
-            Policy=Template(self.image.spec().policy.json(exclude_none=True)).render(facts=facts, config=ConfigStore().parameters())
+            Policy=Template(self.image.spec().policy.json(exclude_none=True)).render(
+                facts=facts, config=ConfigStore().parameters()
+            ),
         )["Credentials"]
 
         return {
@@ -103,6 +106,7 @@ class Lambda:
             "AWS_SECRET_ACCESS_KEY": token["SecretAccessKey"],
             "AWS_SESSION_TOKEN": token["SessionToken"],
         }
+
 
 def retry_after_docker_login(func):
     def wrap(self, *args, **kwargs):
@@ -115,12 +119,13 @@ def retry_after_docker_login(func):
 
     return wrap
 
+
 class Repository:
     def __init__(self, image: Image) -> None:
         self.image = image
 
     def images(self) -> List:
-        images = clients.docker.image.list({ "label": "spec" })
+        images = clients.docker.image.list({"label": "spec"})
         filtered = []
         for image in images:
             for repo_tag in image.repo_tags:
@@ -132,6 +137,7 @@ class Repository:
     @retry_after_docker_login
     def publish(self):
         clients.docker.image.tag(
-            f"{facts.repository_name}:{self.image.tag}", f"{facts.repository_url}:{self.image.tag}"
+            f"{facts.repository_name}:{self.image.tag}",
+            f"{facts.repository_url}:{self.image.tag}",
         )
         clients.docker.image.push(f"{facts.repository_url}:{self.image.tag}")

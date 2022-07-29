@@ -4,6 +4,7 @@ from sentential.lib.template import InitTime
 
 root = typer.Typer()
 
+
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
     """{repository}"""
