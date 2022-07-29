@@ -9,7 +9,6 @@ from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import facts
 from sentential.lib.store import ConfigStore
 
-
 class Image:
     def __init__(self, tag: str = "latest") -> None:
         self.repository_name = facts.repository_name
@@ -52,7 +51,7 @@ class Lambda:
             PolicyArn=self._put_policy()["Policy"]["Arn"],
         )
         self._put_lambda()
-        print(self._put_url()['ResponseMetadata']['FunctionUrl'])
+        print(self._put_url()['FunctionUrl'])
 
     def destroy(self):
         try:
