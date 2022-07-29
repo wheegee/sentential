@@ -5,7 +5,7 @@ from os import makedirs
 from os.path import exists
 from pathlib import PosixPath
 from jinja2 import Environment, FileSystemLoader, Template
-from sentential.lib.facts import Facts, facts
+from sentential.lib.facts import Facts
 
 PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 

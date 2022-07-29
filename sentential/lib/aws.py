@@ -1,13 +1,12 @@
-from functools import lru_cache
 import json
 from time import sleep
+from functools import lru_cache
 from typing import List
+from jinja2 import Template
 from sentential.lib.clients import clients
 from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON, AWSPolicyDocument
 from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import facts
-from jinja2 import Template
-from IPython import embed
 from sentential.lib.store import ConfigStore
     
 class Image:
@@ -51,7 +50,7 @@ class Lambda:
             PolicyArn=self._put_policy()["Policy"]["Arn"]
         )
         self._put_lambda()
-        print(self._put_url())
+        print(self._put_url()['ResponseMetadata']['FunctionUrl'])
 
 
     def destroy(self):
