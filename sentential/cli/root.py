@@ -8,11 +8,13 @@ root = typer.Typer()
 
 @root.command()
 def build(tag: str = "latest"):
+    """{repository} with {tag}"""
     Image.build(tag)
 
 
 @root.command()
 def publish(tag: str = "latest"):
+    """{repository} with {tag}"""
     Repository(Image(tag)).publish()
 
 
