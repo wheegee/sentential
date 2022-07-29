@@ -10,9 +10,11 @@ root = typer.Typer()
 def build(tag: str = "latest"):
     Image.build(tag)
 
+
 @root.command()
 def publish(tag: str = "latest"):
     Repository(Image(tag)).publish()
+
 
 @root.command()
 def init(repository_name: str, runtime: Runtimes):

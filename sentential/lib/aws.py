@@ -52,7 +52,7 @@ class Lambda:
             PolicyArn=self._put_policy()["Policy"]["Arn"],
         )
         self._put_lambda()
-        print(self._put_url()['ResponseMetadata']['FunctionUrl'])
+        print(self._put_url()["ResponseMetadata"]["FunctionUrl"])
 
     def destroy(self):
         try:
