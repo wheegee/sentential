@@ -13,10 +13,10 @@ def read():
 @secret.command()
 def write(key: str, value: str):
     """secrets for {repository} lambda"""
-    SecretStore.write(key, value)
+    SecretStore().write(key, value)
 
 
 @secret.command()
 def delete(key: str):
     """secrets for {repository} lambda"""
-    SecretStore.delete(key)
+    SecretStore().delete(key)
