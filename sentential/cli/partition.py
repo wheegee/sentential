@@ -7,6 +7,7 @@ aws = typer.Typer()
 def add(partition: str):
     pass
 
+
 @aws.command()
 def remove(partition: str):
     pass

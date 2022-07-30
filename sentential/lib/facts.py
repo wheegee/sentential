@@ -7,21 +7,29 @@ from types import SimpleNamespace
 
 SNTL_FILE = SimpleNamespace(**safe_load(open("./.sntl/sentential.yml")))
 
+
 def lazy_property(fn):
-    '''Decorator that makes a property lazy-evaluated.'''
-    attr_name = '_lazy_' + fn.__name__
+    """Decorator that makes a property lazy-evaluated."""
+    attr_name = "_lazy_" + fn.__name__
 
     @property
     def _lazy_property(self):
         if not hasattr(self, attr_name):
             setattr(self, attr_name, fn(self))
         return getattr(self, attr_name)
+
     return _lazy_property
 
 
 class Facts:
     """Most properties in this object are lazy loaded, don't get the data if the data isn't needed"""
-    def __init__(self, repository_name: str = SNTL_FILE.repository_name , runtime: str = None, kms_key_alias: str = "aws/ssm") -> None:
+
+    def __init__(
+        self,
+        repository_name: str = SNTL_FILE.repository_name,
+        runtime: str = None,
+        kms_key_alias: str = "aws/ssm",
+    ) -> None:
         self.repository_name = repository_name
         self.runtime = runtime
         self.kms_key_alias = kms_key_alias
@@ -30,7 +38,7 @@ class Facts:
     def region(self):
         print("this should not have happened")
         return boto3.session.Session().region_name
-    
+
     @lazy_property
     def path(self):
         root = Path(".")
@@ -63,5 +71,6 @@ class Facts:
     @lazy_property
     def registry_url(self):
         return f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com"
+
 
 facts = Facts()
