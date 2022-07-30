@@ -21,6 +21,8 @@ class InitTime:
         self.facts.runtime = runtime_image
         if not exists(self.facts.path.src):
             makedirs(self.facts.path.src)
+        if not exists(self.facts.path.sntl):
+            makedirs(self.facts.path.sntl)
         self.sentential_file()
         self.dockerfile()
         self.wrapper()

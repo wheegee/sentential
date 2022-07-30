@@ -9,7 +9,7 @@ from sentential.lib.shapes.internal import Paths
 
 def find_sentential():
     try:
-        return safe_load(open("./sentential.yml"))["repository_name"]
+        return safe_load(open("./.sntl/sentential.yml"))["repository_name"]
     except:
         return None
 
@@ -46,10 +46,11 @@ class Facts(BaseModel):
         root = Path(".")
         return Paths(
             root=root,
+            sntl=f"{root}/.sntl",
             src=Path(f"{root}/src"),
-            sentential_file=Path(f"{root}/sentential.yml"),
+            sentential_file=Path(f"{root}/.sntl/sentential.yml"),
             dockerfile=Path(f"{root}/Dockerfile"),
-            wrapper=Path(f"{root}/wrapper.sh"),
+            wrapper=Path(f"{root}/.sntl/wrapper.sh"),
             policy=Path(f"{root}/policy.json"),
         )
 
