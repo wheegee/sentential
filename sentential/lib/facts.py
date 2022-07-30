@@ -1,14 +1,21 @@
 import boto3
-from pathlib import Path, PosixPath
+from yaml import safe_load
+from pathlib import Path
 from pydantic import BaseModel, validator
 from typing import Optional, Any
 from sentential.lib.clients import clients
-from sentential.lib.store import ConfigStore
 from sentential.lib.shapes.internal import Paths
 
 
+def find_sentential():
+    try:
+        return safe_load(open("./.sntl/sentential.yml"))["repository_name"]
+    except:
+        return None
+
+
 class Facts(BaseModel):
-    repository_name: str
+    repository_name: str = find_sentential()
     runtime: Optional[str]
     region: str = boto3.session.Session().region_name
     path: Optional[Paths]
@@ -17,7 +24,6 @@ class Facts(BaseModel):
     kms_key_id: Optional[str]
     repository_url: Optional[str]
     registry_url: Optional[str]
-    config: Optional[Any]
 
     @validator("kms_key_id", always=True)
     def lookup_kms_key_id(cls, v, values) -> str:
@@ -35,18 +41,18 @@ class Facts(BaseModel):
     def assemble_registry_url(cls, v, values) -> str:
         return f"{values['account_id']}.dkr.ecr.{values['region']}.amazonaws.com"
 
-    @validator("config", always=True)
-    def assemble_config(cls, v, values) -> Any:
-        return ConfigStore(values["repository_name"]).parameters()
-
     @validator("path", always=True)
     def assemble_path(cls, v, values) -> str:
         root = Path(".")
         return Paths(
             root=root,
+            sntl=f"{root}/.sntl",
             src=Path(f"{root}/src"),
-            sentential_file=Path(f"{root}/sentential.yml"),
+            sentential_file=Path(f"{root}/.sntl/sentential.yml"),
             dockerfile=Path(f"{root}/Dockerfile"),
-            wrapper=Path(f"{root}/wrapper.sh"),
+            wrapper=Path(f"{root}/.sntl/wrapper.sh"),
             policy=Path(f"{root}/policy.json"),
         )
+
+
+facts = Facts()

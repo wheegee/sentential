@@ -21,6 +21,8 @@ class InitTime:
         self.facts.runtime = runtime_image
         if not exists(self.facts.path.src):
             makedirs(self.facts.path.src)
+        if not exists(self.facts.path.sntl):
+            makedirs(self.facts.path.sntl)
         self.sentential_file()
         self.dockerfile()
         self.wrapper()
@@ -48,13 +50,14 @@ class InitTime:
         return write_to
 
 
-class BuildTime:
-    def __init__(self, facts: Facts):
-        self.facts = facts
+# TODO: Turn this into a Spec deploy time templating system, extract from duplicate locations
+# where it's currently implemented inline (local.py and aws.py)
+class DeployTime:
+    def __init__(self):
         self.jinja = Environment(loader=FileSystemLoader("."))
 
-    def policy(self) -> dict:
-        return json.loads(self.template(str(self.facts.path.policy)))
+    # def policy(self) -> str:
+    #     return json.dumps(json.loads(self.template(str(facts.path.policy))))
 
-    def template(self, template: PosixPath) -> str:
-        return self.jinja.get_template(template).render(facts=self.facts)
+    # def template(self, template: PosixPath) -> str:
+    #     return self.jinja.get_template(template).render(facts=facts, config=)

@@ -21,6 +21,7 @@ class Spec(BaseModel):
 
 class Paths(BaseModel):
     root: PosixPath
+    sntl: PosixPath
     src: PosixPath
     sentential_file: PosixPath
     dockerfile: PosixPath
