@@ -6,6 +6,7 @@ from sentential.lib.facts import require_sntl_file
 
 root = typer.Typer()
 
+
 @root.command()
 def build(tag: str = typer.Argument("latest", envvar="TAG")):
     """{repository} with {tag}"""

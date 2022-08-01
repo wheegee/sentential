@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from sentential.lib.facts import facts
 from tabulate import tabulate
 
+
 class Store:
     def __init__(self, partition: str, kms_key_id: str = None):
         self.repository_name = facts.repository_name
@@ -13,8 +14,6 @@ class Store:
             self.type = "SecureString"
         else:
             self.type = "String"
-
-
 
     def write(self, key: str, value: str):
         kwargs = {

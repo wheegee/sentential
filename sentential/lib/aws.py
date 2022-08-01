@@ -48,28 +48,24 @@ class Lambda:
         self.image_uri = f"{facts.repository_url}:{self.image.tag}"
         self.role_name = f"{self.partition}.{self.image.repository_name}"
         self.policy_name = f"{self.partition}.{self.image.repository_name}"
-        self.policy_arn = (
-            f"arn:aws:iam::{facts.account_id}:policy/{self.policy_name}"
-        )
+        self.policy_arn = f"arn:aws:iam::{facts.account_id}:policy/{self.policy_name}"
 
     def deploy(self, http: bool):
         clients.iam.attach_role_policy(
             RoleName=self._put_role()["Role"]["RoleName"],
             PolicyArn=self._put_policy()["Policy"]["Arn"],
         )
-        
+
         function = self._put_lambda()
-        
+
         if http:
             print(self._put_url()["FunctionUrl"])
         else:
-            print(function['FunctionArn'])
+            print(function["FunctionArn"])
 
     def destroy(self):
         try:
-            clients.lmb.delete_function_url_config(
-                FunctionName=self.function_name
-            )
+            clients.lmb.delete_function_url_config(FunctionName=self.function_name)
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
 
@@ -108,9 +104,7 @@ class Lambda:
                 AssumeRolePolicyDocument=LAMBDA_ROLE_POLICY_JSON,
             )
 
-            clients.iam.get_waiter("role_exists").wait(
-                RoleName=self.role_name
-            )
+            clients.iam.get_waiter("role_exists").wait(RoleName=self.role_name)
 
         except clients.iam.exceptions.EntityAlreadyExistsException:
             clients.iam.update_assume_role_policy(
@@ -124,7 +118,9 @@ class Lambda:
 
     def _put_policy(self) -> object:
         policy_json = Template(facts.path.policy.read_text()).render(
-            partition=self.partition, facts=facts, config=ConfigStore(self.partition).parameters()
+            partition=self.partition,
+            facts=facts,
+            config=ConfigStore(self.partition).parameters(),
         )
         try:
             policy = clients.iam.create_policy(
@@ -169,14 +165,10 @@ class Lambda:
         except clients.lmb.exceptions.ResourceConflictException:
             clients.lmb.update_function_url_config(**config)
 
-        return clients.lmb.get_function_url_config(
-            FunctionName=self.function_name
-        )
+        return clients.lmb.get_function_url_config(FunctionName=self.function_name)
 
     def _put_lambda(self):
-        role_arn = clients.iam.get_role(RoleName=self.role_name)["Role"][
-            "Arn"
-        ]
+        role_arn = clients.iam.get_role(RoleName=self.role_name)["Role"]["Arn"]
         sleep(10)
         try:
             function = clients.lmb.create_function(
@@ -185,7 +177,11 @@ class Lambda:
                 PackageType="Image",
                 Code={"ImageUri": self.image_uri},
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
-                Environment={"Variables": {"PARTITION": f"{self.partition}/{self.image.repository_name}"}},
+                Environment={
+                    "Variables": {
+                        "PARTITION": f"{self.partition}/{self.image.repository_name}"
+                    }
+                },
                 Architectures=[self.image.arch()],
             )
 
@@ -203,7 +199,11 @@ class Lambda:
                 FunctionName=self.function_name,
                 Role=role_arn,
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
-                Environment={"Variables": {"PARTITION": f"{self.partition}/{self.image.repository_name}"}},
+                Environment={
+                    "Variables": {
+                        "PARTITION": f"{self.partition}/{self.image.repository_name}"
+                    }
+                },
             )
 
             clients.lmb.get_waiter("function_updated_v2").wait(

@@ -73,7 +73,7 @@ class Lambda:
             publish=[("9000", "8080")],
             envs={**default_env, **credentials},
         )
-        
+
         if http:
             clients.docker.run(
                 "ghcr.io/wheegee/sentential-gw:latest",
@@ -85,12 +85,11 @@ class Lambda:
                 publish=[("8081", "8081")],
                 envs={"LAMBDA_ENDPOINT": "http://sentential:8080"},
             )
-        
+
         if http:
             print("gateway: http://localhost:8081")
         else:
             print("lambda: http://localhost:9000")
-        
 
     def destroy(self):
         clients.docker.remove(["sentential"], force=True, volumes=True)
@@ -102,13 +101,15 @@ class Lambda:
 
     def _get_federation_token(self):
         policy_json = Template(facts.path.policy.read_text()).render(
-                partition=self.partition, facts=facts, config=ConfigStore(self.partition).parameters()
-            )
+            partition=self.partition,
+            facts=facts,
+            config=ConfigStore(self.partition).parameters(),
+        )
         token = clients.sts.get_federation_token(
             Name=f"{self.image.repository_name}-spec-policy",
             Policy=policy_json,
         )["Credentials"]
-        
+
         print(policy_json)
 
         return {

@@ -82,4 +82,3 @@ LAMBDA_ROLE_POLICY_JSON = (
         ]
     )
 ).json(exclude_none=True)
-

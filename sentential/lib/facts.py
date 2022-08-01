@@ -11,6 +11,7 @@ try:
 except:
     SNTL_FILE = SntlFile()
 
+
 def require_sntl_file():
     if SNTL_FILE.repository_name is False:
         raise typer.BadParameter("no .sntl folder present, run init first")
@@ -31,7 +32,13 @@ def lazy_property(fn):
 
 class Facts:
     """Most properties in this object are lazy loaded, don't get the data if the data isn't needed"""
-    def __init__(self, repository_name: str = SNTL_FILE.repository_name, runtime: str = None, kms_key_alias: str = "aws/ssm") -> None:
+
+    def __init__(
+        self,
+        repository_name: str = SNTL_FILE.repository_name,
+        runtime: str = None,
+        kms_key_alias: str = "aws/ssm",
+    ) -> None:
         self.repository_name = repository_name
         self.runtime = runtime
         self.kms_key_alias = kms_key_alias
@@ -66,7 +73,7 @@ class Facts:
 
     @lazy_property
     def caller_id(self):
-        return clients.sts.get_caller_identity().get('UserId')
+        return clients.sts.get_caller_identity().get("UserId")
 
     @lazy_property
     def kms_key_id(self):
@@ -91,8 +98,8 @@ class Facts:
         # )
         # paths = [ list(filter(None, path['Name'].split("/"))) for path in matches['Parameters'] ]
         # partitions = { path[0]:path[0] for path in paths if path[1] == self.repository_name }
-        partitions = { name:name for name in SNTL_FILE.partitions }
-        partitions["default"]=self.caller_id.lower()
+        partitions = {name: name for name in SNTL_FILE.partitions}
+        partitions["default"] = self.caller_id.lower()
         return partitions
 
     @lazy_property
@@ -103,5 +110,6 @@ class Facts:
     def registry_url(self):
         return f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com"
 
+
 facts = Facts()
-Partitions = Enum('Partitions', facts.partitions)
+Partitions = Enum("Partitions", facts.partitions)
