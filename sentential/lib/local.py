@@ -1,3 +1,4 @@
+import typer
 import json
 from python_on_whales import DockerException
 from pipes import Template
@@ -34,14 +35,14 @@ class Image:
     def build(cls, tag: str = "latest") -> None:
         clients.docker.build(
             f"{facts.path.root}",
-            labels={
-                "spec": Spec(
-                    prefix=facts.repository_name,
-                    policy=json.loads(facts.path.policy.read_text()),
-                    role_name=facts.repository_name,
-                    policy_name=facts.repository_name,
-                ).json(exclude_none=True)
-            },
+            # labels={
+            #     "spec": Spec(
+            #         prefix=facts.repository_name,
+            #         policy=json.loads(facts.path.policy.read_text()),
+            #         role_name=facts.repository_name,
+            #         policy_name=facts.repository_name,
+            #     ).json(exclude_none=True)
+            # },
             load=True,
             tags=[f"{facts.repository_name}:{tag}"],
         )
@@ -49,16 +50,17 @@ class Image:
 
 
 class Lambda:
-    def __init__(self, image: Image) -> None:
+    def __init__(self, image: Image, partition: str) -> None:
         self.image = image
+        self.partition = partition
 
-    def deploy(self):
+    def deploy(self, http: bool = True):
         self.destroy()
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
         default_env = {
             "AWS_REGION": facts.region,
-            "PREFIX": self.image.repository_name,
+            "PARTITION": f"{self.partition}/{self.image.repository_name}",
         }
 
         clients.docker.run(
@@ -71,19 +73,24 @@ class Lambda:
             publish=[("9000", "8080")],
             envs={**default_env, **credentials},
         )
-
-        clients.docker.run(
-            "ghcr.io/wheegee/sentential-gw:latest",
-            name="sentential-gw",
-            hostname="sentential-gw",
-            networks=["sentential-bridge"],
-            detach=True,
-            remove=False,
-            publish=[("8081", "8081")],
-            envs={"LAMBDA_ENDPOINT": "http://sentential:8080"},
-        )
-
-        print("http://localhost:8081")
+        
+        if http:
+            clients.docker.run(
+                "ghcr.io/wheegee/sentential-gw:latest",
+                name="sentential-gw",
+                hostname="sentential-gw",
+                networks=["sentential-bridge"],
+                detach=True,
+                remove=False,
+                publish=[("8081", "8081")],
+                envs={"LAMBDA_ENDPOINT": "http://sentential:8080"},
+            )
+        
+        if http:
+            print("gateway: http://localhost:8081")
+        else:
+            print("lambda: http://localhost:9000")
+        
 
     def destroy(self):
         clients.docker.remove(["sentential"], force=True, volumes=True)
@@ -94,12 +101,15 @@ class Lambda:
             pass
 
     def _get_federation_token(self):
+        policy_json = Template(facts.path.policy.read_text()).render(
+                partition=self.partition, facts=facts, config=ConfigStore(self.partition).parameters()
+            )
         token = clients.sts.get_federation_token(
             Name=f"{self.image.repository_name}-spec-policy",
-            Policy=Template(self.image.spec().policy.json(exclude_none=True)).render(
-                facts=facts, config=ConfigStore().parameters()
-            ),
+            Policy=policy_json,
         )["Credentials"]
+        
+        print(policy_json)
 
         return {
             "AWS_ACCESS_KEY_ID": token["AccessKeyId"],

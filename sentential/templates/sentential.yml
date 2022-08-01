@@ -1,1 +1,4 @@
 repository_name: {{ facts.repository_name }}
+partitions:
+  - qa
+  - prod

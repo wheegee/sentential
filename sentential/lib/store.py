@@ -3,19 +3,22 @@ from types import SimpleNamespace
 from sentential.lib.facts import facts
 from tabulate import tabulate
 
-
 class Store:
-    def __init__(self, kms_key_id: str = None):
+    def __init__(self, partition: str, kms_key_id: str = None):
         self.repository_name = facts.repository_name
+        self.partition = partition
+        self.path = f"/{self.partition}/{self.repository_name}/"
         self.kms_key_id = kms_key_id
         if kms_key_id is not None:
             self.type = "SecureString"
         else:
             self.type = "String"
 
+
+
     def write(self, key: str, value: str):
         kwargs = {
-            "Name": f"/{self.repository_name}/{key.lower()}",
+            "Name": f"{self.path}{key.lower()}",
             "Value": value,
             "Type": self.type,
             "Overwrite": True,
@@ -29,7 +32,7 @@ class Store:
 
     def fetch(self):
         return clients.ssm.get_parameters_by_path(
-            Path=f"/{self.repository_name}/",
+            Path=self.path,
             Recursive=True,
             WithDecryption=(self.kms_key_id is not None),
         )["Parameters"]
@@ -38,7 +41,7 @@ class Store:
         parameters = self.fetch()
         data = [
             [
-                p["Name"].replace(f"/{self.repository_name}/", ""),
+                p["Name"].replace(self.path, ""),
                 p["Value"],
                 p["Version"],
                 p["LastModifiedDate"],
@@ -57,21 +60,21 @@ class Store:
 
     def parameters(self):
         data = {
-            p["Name"].replace(f"/{self.repository_name}/", ""): p["Value"]
+            p["Name"].replace(self.path, ""): p["Value"]
             for p in self.fetch()
             if self.type == p["Type"]
         }
         return SimpleNamespace(**data)
 
     def delete(self, key: str):
-        return clients.ssm.delete_parameter(Name=f"/{self.repository_name}/{key}")
+        return clients.ssm.delete_parameter(Name=f"{self.path}{key}")
 
 
 class ConfigStore(Store):
-    def __init__(self):
-        super().__init__(None)
+    def __init__(self, partition: str):
+        super().__init__(partition, None)
 
 
 class SecretStore(Store):
-    def __init__(self):
-        super().__init__(facts.kms_key_id)
+    def __init__(self, partition: str):
+        super().__init__(partition, facts.kms_key_id)
