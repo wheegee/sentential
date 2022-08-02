@@ -109,8 +109,6 @@ class Lambda:
             Policy=policy_json,
         )["Credentials"]
         
-        print(policy_json)
-
         return {
             "AWS_ACCESS_KEY_ID": token["AccessKeyId"],
             "AWS_SECRET_ACCESS_KEY": token["SecretAccessKey"],

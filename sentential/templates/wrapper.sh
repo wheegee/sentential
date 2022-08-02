@@ -1,3 +1,3 @@
 #!/bin/bash
 
-chamber exec $PREFIX -- $@
+chamber exec $PARTITION -- $@
