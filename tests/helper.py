@@ -7,8 +7,10 @@ runner = CliRunner()
 home = getcwd()
 repo_dir = tempfile.TemporaryDirectory()
 
+
 def teardown_module(module):
     repo_dir.cleanup()
+
 
 @pytest.fixture(autouse=True)
 def chdir(monkeypatch):
