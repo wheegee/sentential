@@ -7,6 +7,7 @@ from sentential.lib.shapes.aws import AWSPolicyDocument
 # Spec
 #
 
+
 class Spec(BaseModel):
     prefix: str
     policy: AWSPolicyDocument
@@ -28,9 +29,11 @@ class Paths(BaseModel):
     wrapper: PosixPath
     policy: PosixPath
 
+
 #
 # SNTL_FILE
 #
+
 
 class SntlFile(BaseModel):
     repository_name: str = None
