@@ -12,6 +12,7 @@ def init(repository_name: str, runtime: Runtimes):
     """{repository}"""
     InitTime(repository_name).scaffold(f"public.ecr.aws/lambda/{runtime.value}:latest")
 
+
 @root.command()
 def build(tag: str = typer.Argument("latest", envvar="TAG")):
     """{repository} with {tag}"""

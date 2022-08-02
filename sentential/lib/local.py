@@ -109,7 +109,7 @@ class Lambda:
             Name=f"{self.image.repository_name}-spec-policy",
             Policy=policy_json,
         )["Credentials"]
-        
+
         return {
             "AWS_ACCESS_KEY_ID": token["AccessKeyId"],
             "AWS_SECRET_ACCESS_KEY": token["SecretAccessKey"],
