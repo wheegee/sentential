@@ -1,10 +1,11 @@
+from pathlib import PosixPath
+from typing import List, Optional
+from pydantic import BaseModel
+from sentential.lib.shapes.aws import AWSPolicyDocument
+
 #
 # Spec
 #
-
-from pathlib import PosixPath
-from pydantic import BaseModel
-from sentential.lib.shapes.aws import AWSPolicyDocument
 
 
 class Spec(BaseModel):
@@ -27,3 +28,13 @@ class Paths(BaseModel):
     dockerfile: PosixPath
     wrapper: PosixPath
     policy: PosixPath
+
+
+#
+# SNTL_FILE
+#
+
+
+class SntlFile(BaseModel):
+    repository_name: str = None
+    partitions: List[str] = []

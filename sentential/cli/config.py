@@ -1,22 +1,36 @@
 import typer
 from sentential.lib.store import ConfigStore
+from sentential.lib.facts import Partitions
 
 config = typer.Typer()
 
 
 @config.command()
-def read():
+def read(
+    partition: Partitions = typer.Argument(Partitions.default.value, envvar="PARTITION")
+):
     """config for {repository} lambda"""
-    ConfigStore().read()
+    ConfigStore(partition.value).read()
 
 
 @config.command()
-def write(key: str, value: str):
+def write(
+    key: str,
+    value: str,
+    partition: Partitions = typer.Argument(
+        Partitions.default.value, envvar="PARTITION"
+    ),
+):
     """config for {repository} lambda"""
-    ConfigStore().write(key, value)
+    ConfigStore(partition.value).write(key, value)
 
 
 @config.command()
-def delete(key: str):
+def delete(
+    key: str,
+    partition: Partitions = typer.Argument(
+        Partitions.default.value, envvar="PARTITION"
+    ),
+):
     """config for {repository} lambda"""
-    ConfigStore().delete(key)
+    ConfigStore(partition.value).delete(key)
