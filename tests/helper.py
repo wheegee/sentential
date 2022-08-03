@@ -4,16 +4,16 @@ import tempfile
 from os import getcwd
 
 runner = CliRunner()
-home = getcwd()
-repo_dir = tempfile.TemporaryDirectory()
+project = getcwd()
+repo = tempfile.TemporaryDirectory()
 
 
 def teardown_module(module):
-    repo_dir.cleanup()
+    repo.cleanup()
 
 
 @pytest.fixture(autouse=True)
-def chdir(monkeypatch):
-    monkeypatch.chdir(repo_dir.name)
+def run_in_tmp_dir(monkeypatch):
+    monkeypatch.chdir(repo.name)
     yield
-    monkeypatch.chdir(home)
+    monkeypatch.chdir(project)
