@@ -1,4 +1,4 @@
-from pathlib import PosixPath
+from pathlib import PosixPath, Path
 from typing import List, Optional
 from pydantic import BaseModel
 from sentential.lib.shapes.aws import AWSPolicyDocument
@@ -28,6 +28,17 @@ class Paths(BaseModel):
     dockerfile: PosixPath
     wrapper: PosixPath
     policy: PosixPath
+
+def derive_paths(root: PosixPath = Path(".")):
+    return Paths(
+        root=root,
+        sntl=Path(f"{root}/.sntl"),
+        src=Path(f"{root}/src"),
+        sentential_file=Path(f"{root}/.sntl/sentential.yml"),
+        dockerfile=Path(f"{root}/Dockerfile"),
+        wrapper=Path(f"{root}/.sntl/wrapper.sh"),
+        policy=Path(f"{root}/policy.json"),
+    )
 
 
 #

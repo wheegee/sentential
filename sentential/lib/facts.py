@@ -2,18 +2,18 @@ import typer
 import boto3
 from enum import Enum
 from yaml import safe_load
-from pathlib import Path
 from sentential.lib.clients import clients
-from sentential.lib.shapes.internal import Paths, SntlFile
+from sentential.lib.shapes.internal import SntlFile, derive_paths
 
-try:
-    SNTL_FILE = SntlFile(**safe_load(open("./.sntl/sentential.yml")))
-except:
-    SNTL_FILE = SntlFile()
 
+def parse_sntl_file():
+    try:
+        return SntlFile(**safe_load(open(f"./.sntl/sentential.yml")))
+    except:
+        return SntlFile()
 
 def require_sntl_file():
-    if SNTL_FILE.repository_name is False:
+    if (parse_sntl_file()).repository_name is None:
         raise typer.BadParameter("no .sntl folder present, run init first")
 
 
@@ -29,26 +29,20 @@ def lazy_property(fn):
 
     return _lazy_property
 
-
 class Facts:
     """Most properties in this object are lazy loaded, don't get the data if the data isn't needed"""
 
     def __init__(
         self,
-        repository_name: str = SNTL_FILE.repository_name,
         runtime: str = None,
         kms_key_alias: str = "aws/ssm",
     ) -> None:
-        self.repository_name = repository_name
         self.runtime = runtime
         self.kms_key_alias = kms_key_alias
 
     @lazy_property
-    def ready(self):
-        if self.repository_name is False:
-            return False
-        else:
-            return True
+    def repository_name(self):
+        return parse_sntl_file().repository_name
 
     @lazy_property
     def region(self):
@@ -56,16 +50,7 @@ class Facts:
 
     @lazy_property
     def path(self):
-        root = Path(".")
-        return Paths(
-            root=root,
-            sntl=f"{root}/.sntl",
-            src=Path(f"{root}/src"),
-            sentential_file=Path(f"{root}/.sntl/sentential.yml"),
-            dockerfile=Path(f"{root}/Dockerfile"),
-            wrapper=Path(f"{root}/.sntl/wrapper.sh"),
-            policy=Path(f"{root}/policy.json"),
-        )
+        return derive_paths()
 
     @lazy_property
     def account_id(self):
@@ -85,20 +70,9 @@ class Facts:
 
     @lazy_property
     def partitions(self):
-        # matches = clients.ssm.describe_parameters(
-        #     ParameterFilters=[
-        #         {
-        #             'Key': 'Name',
-        #             'Option': 'Contains',
-        #             'Values': [
-        #                 f"/{self.repository_name}/",
-        #             ]
-        #         },
-        #     ],
-        # )
-        # paths = [ list(filter(None, path['Name'].split("/"))) for path in matches['Parameters'] ]
-        # partitions = { path[0]:path[0] for path in paths if path[1] == self.repository_name }
-        partitions = {name: name for name in SNTL_FILE.partitions}
+        # TODO: reimplement partitions other than caller
+        # partitions = {name: name for name in SNTL_FILE.partitions}
+        partitions = {}
         partitions["default"] = self.caller_id.lower()
         return partitions
 
@@ -111,5 +85,10 @@ class Facts:
         return f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com"
 
 
-facts = Facts()
-Partitions = Enum("Partitions", facts.partitions)
+class Factual:
+    def __init__(self) -> None:
+        self.facts = Facts()
+    
+
+# TODO: this will still work, but this init-at-bottom-of-file pattern is decidedly bad for testing. So remove it.
+Partitions = Enum("Partitions", Facts().partitions)

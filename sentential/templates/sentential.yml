@@ -1,4 +1,4 @@
-repository_name: {{ facts.repository_name }}
+repository_name: {{ repository_name }}
 partitions:
   - qa
   - prod

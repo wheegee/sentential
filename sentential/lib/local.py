@@ -1,19 +1,18 @@
-import typer
 import json
 from python_on_whales import DockerException
 from pipes import Template
 from typing import List
 from sentential.lib.clients import clients
-from sentential.lib.shapes.aws import AWSPolicyDocument
 from sentential.lib.shapes.internal import Spec
-from sentential.lib.facts import facts
+from sentential.lib.facts import Factual, Facts
 from jinja2 import Template
 from sentential.lib.store import ConfigStore
+from IPython import embed  
 
-
-class Image:
+class Image(Factual):
     def __init__(self, tag: str) -> None:
-        self.repository_name = facts.repository_name
+        super().__init__()
+        self.repository_name = self.facts.repository_name
         self.tag = tag
 
     def spec(self) -> Spec:
@@ -29,18 +28,20 @@ class Image:
             return metadata.architecture
 
     def _fetch_metadata(self):
-        return clients.docker.image.inspect(f"{facts.repository_name}:{self.tag}")
+        return clients.docker.image.inspect(f"{self.facts.repository_name}:{self.tag}")
 
     @classmethod
     def build(cls, tag: str = "latest") -> None:
+        facts = Facts()
         clients.docker.build(
             f"{facts.path.root}",
+            # TODO: replace labels with github metadata?
             # labels={
             #     "spec": Spec(
-            #         prefix=facts.repository_name,
-            #         policy=json.loads(facts.path.policy.read_text()),
-            #         role_name=facts.repository_name,
-            #         policy_name=facts.repository_name,
+            #         prefix=self.facts.repository_name,
+            #         policy=json.loads(self.facts.path.policy.read_text()),
+            #         role_name=self.facts.repository_name,
+            #         policy_name=self.facts.repository_name,
             #     ).json(exclude_none=True)
             # },
             load=True,
@@ -49,8 +50,9 @@ class Image:
         return cls(tag)
 
 
-class Lambda:
+class Lambda(Factual):
     def __init__(self, image: Image, partition: str) -> None:
+        super().__init__()
         self.image = image
         self.partition = partition
 
@@ -59,7 +61,7 @@ class Lambda:
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
         default_env = {
-            "AWS_REGION": facts.region,
+            "AWS_REGION": self.facts.region,
             "PARTITION": f"{self.partition}/{self.image.repository_name}",
         }
 
@@ -100,9 +102,9 @@ class Lambda:
             pass
 
     def _get_federation_token(self):
-        policy_json = Template(facts.path.policy.read_text()).render(
+        policy_json = Template(self.facts.path.policy.read_text()).render(
             partition=self.partition,
-            facts=facts,
+            facts=self.facts,
             config=ConfigStore(self.partition).parameters(),
         )
         token = clients.sts.get_federation_token(
@@ -129,8 +131,9 @@ def retry_after_docker_login(func):
     return wrap
 
 
-class Repository:
+class Repository(Factual):
     def __init__(self, image: Image) -> None:
+        super().__init__()
         self.image = image
 
     def images(self) -> List:
@@ -139,14 +142,14 @@ class Repository:
         for image in images:
             for repo_tag in image.repo_tags:
                 repository_name, tag = repo_tag.split(":")
-                if repository_name == facts.repository_name:
+                if repository_name == self.facts.repository_name:
                     filtered.append(Image(repository_name, tag))
         return filtered
 
     @retry_after_docker_login
     def publish(self):
         clients.docker.image.tag(
-            f"{facts.repository_name}:{self.image.tag}",
-            f"{facts.repository_url}:{self.image.tag}",
+            f"{self.facts.repository_name}:{self.image.tag}",
+            f"{self.facts.repository_url}:{self.image.tag}",
         )
-        clients.docker.image.push(f"{facts.repository_url}:{self.image.tag}")
+        clients.docker.image.push(f"{self.facts.repository_url}:{self.image.tag}")

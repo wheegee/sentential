@@ -1,11 +1,11 @@
 import typer
+from yaml import parse
 from sentential.lib.shapes.aws import Runtimes
 from sentential.lib.template import InitTime
 from sentential.lib.local import Image, Repository
 from sentential.lib.facts import require_sntl_file
 
 root = typer.Typer()
-
 
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
