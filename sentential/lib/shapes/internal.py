@@ -29,6 +29,7 @@ class Paths(BaseModel):
     wrapper: PosixPath
     policy: PosixPath
 
+
 def derive_paths(root: PosixPath = Path(".")):
     return Paths(
         root=root,

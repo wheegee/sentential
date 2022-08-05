@@ -7,7 +7,8 @@ from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual, Facts
 from jinja2 import Template
 from sentential.lib.store import ConfigStore
-from IPython import embed  
+from IPython import embed
+
 
 class Image(Factual):
     def __init__(self, tag: str) -> None:

@@ -46,7 +46,13 @@ class InitTime:
     def _write(self, template: Template, write_to: PosixPath) -> PosixPath:
         if not exists(write_to):
             with open(write_to, "w+") as f:
-                f.writelines(template.render(repository_name=self.repository_name, runtime=self.runtime, paths=self.path))
+                f.writelines(
+                    template.render(
+                        repository_name=self.repository_name,
+                        runtime=self.runtime,
+                        paths=self.path,
+                    )
+                )
 
         return write_to
 
@@ -57,8 +63,8 @@ class InitTime:
 #     def __init__(self):
 #         self.jinja = Environment(loader=FileSystemLoader("."))
 
-    # def policy(self) -> str:
-    #     return json.dumps(json.loads(self.template(str(facts.path.policy))))
+# def policy(self) -> str:
+#     return json.dumps(json.loads(self.template(str(facts.path.policy))))
 
-    # def template(self, template: PosixPath) -> str:
-    #     return self.jinja.get_template(template).render(facts=facts, config=)
+# def template(self, template: PosixPath) -> str:
+#     return self.jinja.get_template(template).render(facts=facts, config=)

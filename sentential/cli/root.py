@@ -7,6 +7,7 @@ from sentential.lib.facts import require_sntl_file
 
 root = typer.Typer()
 
+
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
     """{repository}"""

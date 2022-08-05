@@ -12,6 +12,7 @@ def parse_sntl_file():
     except:
         return SntlFile()
 
+
 def require_sntl_file():
     if (parse_sntl_file()).repository_name is None:
         raise typer.BadParameter("no .sntl folder present, run init first")
@@ -28,6 +29,7 @@ def lazy_property(fn):
         return getattr(self, attr_name)
 
     return _lazy_property
+
 
 class Facts:
     """Most properties in this object are lazy loaded, don't get the data if the data isn't needed"""
@@ -88,7 +90,7 @@ class Facts:
 class Factual:
     def __init__(self) -> None:
         self.facts = Facts()
-    
+
 
 # TODO: this will still work, but this init-at-bottom-of-file pattern is decidedly bad for testing. So remove it.
 Partitions = Enum("Partitions", Facts().partitions)

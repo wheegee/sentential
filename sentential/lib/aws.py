@@ -9,6 +9,7 @@ from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual
 from sentential.lib.store import ConfigStore
 
+
 class Image(Factual):
     def __init__(self, tag: str = "latest") -> None:
         super().__init__()
@@ -48,7 +49,9 @@ class Lambda(Factual):
         self.image_uri = f"{self.facts.repository_url}:{self.image.tag}"
         self.role_name = f"{self.partition}.{self.image.repository_name}"
         self.policy_name = f"{self.partition}.{self.image.repository_name}"
-        self.policy_arn = f"arn:aws:iam::{self.facts.account_id}:policy/{self.policy_name}"
+        self.policy_arn = (
+            f"arn:aws:iam::{self.facts.account_id}:policy/{self.policy_name}"
+        )
 
     def deploy(self, http: bool):
         clients.iam.attach_role_policy(
