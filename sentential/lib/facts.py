@@ -5,6 +5,10 @@ from yaml import safe_load
 from sentential.lib.clients import clients
 from sentential.lib.shapes.internal import SntlFile, derive_paths
 
+try:
+    SNTL_FILE = SntlFile(**safe_load(open("./.sntl/sentential.yml")))
+except:
+    SNTL_FILE = SntlFile()
 
 def parse_sntl_file():
     try:
