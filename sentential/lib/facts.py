@@ -10,6 +10,7 @@ try:
 except:
     SNTL_FILE = SntlFile()
 
+
 def parse_sntl_file():
     try:
         return SntlFile(**safe_load(open(f"./.sntl/sentential.yml")))
