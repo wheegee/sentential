@@ -4,16 +4,16 @@ from functools import lru_cache
 from typing import List
 from jinja2 import Template
 from sentential.lib.clients import clients
-from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON, AWSPolicyDocument
+from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON
 from sentential.lib.shapes.internal import Spec
-import typer
-from sentential.lib.facts import facts
+from sentential.lib.facts import Factual
 from sentential.lib.store import ConfigStore
 
 
-class Image:
+class Image(Factual):
     def __init__(self, tag: str = "latest") -> None:
-        self.repository_name = facts.repository_name
+        super().__init__()
+        self.repository_name = self.facts.repository_name
         self.tag = tag
 
     def spec(self) -> Spec:
@@ -31,7 +31,7 @@ class Image:
     @lru_cache(maxsize=1)
     def _fetch_metadata(self) -> dict:
         image = clients.ecr.batch_get_image(
-            repositoryName=facts.repository_name,
+            repositoryName=self.facts.repository_name,
             imageIds=[{"imageTag": self.tag}],
             acceptedMediaTypes=["application/vnd.docker.distribution.manifest.v1+json"],
         )["images"][0]
@@ -40,15 +40,18 @@ class Image:
         return json.loads(metadata)
 
 
-class Lambda:
+class Lambda(Factual):
     def __init__(self, image: Image, partition: str) -> None:
+        super().__init__()
         self.image = image
         self.partition = partition
         self.function_name = f"{self.partition}-{self.image.repository_name}"
-        self.image_uri = f"{facts.repository_url}:{self.image.tag}"
+        self.image_uri = f"{self.facts.repository_url}:{self.image.tag}"
         self.role_name = f"{self.partition}.{self.image.repository_name}"
         self.policy_name = f"{self.partition}.{self.image.repository_name}"
-        self.policy_arn = f"arn:aws:iam::{facts.account_id}:policy/{self.policy_name}"
+        self.policy_arn = (
+            f"arn:aws:iam::{self.facts.account_id}:policy/{self.policy_name}"
+        )
 
     def deploy(self, http: bool):
         clients.iam.attach_role_policy(
@@ -117,7 +120,7 @@ class Lambda:
         return clients.iam.get_role(RoleName=self.role_name)
 
     def _put_policy(self) -> object:
-        policy_json = Template(facts.path.policy.read_text()).render(
+        policy_json = Template(self.facts.path.policy.read_text()).render(
             partition=self.partition,
             facts=facts,
             config=ConfigStore(self.partition).parameters(),
@@ -235,12 +238,13 @@ class Lambda:
             return function
 
 
-class Repository:
+class Repository(Factual):
     def __init__(self) -> None:
+        super().__init__()
         pass
 
     def images(self) -> List[Image]:
-        images = clients.ecr.describe_images(repositoryName=facts.repository_name)[
+        images = clients.ecr.describe_images(repositoryName=self.facts.repository_name)[
             "imageDetails"
         ]
         filtered = []

@@ -1,12 +1,13 @@
 from sentential.lib.clients import clients
 from types import SimpleNamespace
-from sentential.lib.facts import facts
+from sentential.lib.facts import Facts, Factual
 from tabulate import tabulate
 
 
-class Store:
+class Store(Factual):
     def __init__(self, partition: str, kms_key_id: str = None):
-        self.repository_name = facts.repository_name
+        super().__init__()
+        self.repository_name = self.facts.repository_name
         self.partition = partition
         self.path = f"/{self.partition}/{self.repository_name}/"
         self.kms_key_id = kms_key_id
@@ -76,4 +77,5 @@ class ConfigStore(Store):
 
 class SecretStore(Store):
     def __init__(self, partition: str):
-        super().__init__(partition, facts.kms_key_id)
+        # TODO: this Facts() usage is muy backwards, needs to be more like Partitions when Partitions is corrected
+        super().__init__(partition, Facts().kms_key_id)
