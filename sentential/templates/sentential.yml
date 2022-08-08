@@ -1,4 +1,0 @@
-repository_name: {{ repository_name }}
-partitions:
-  - qa
-  - prod

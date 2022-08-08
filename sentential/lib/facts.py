@@ -1,9 +1,9 @@
+import re
 import typer
 import boto3
 from enum import Enum
-from yaml import safe_load
 from sentential.lib.clients import clients
-from sentential.lib.shapes.internal import SntlFile, derive_paths
+from sentential.lib.shapes.internal import SntlMeta, derive_paths
 
 try:
     SNTL_FILE = SntlFile(**safe_load(open("./.sntl/sentential.yml")))
@@ -11,16 +11,16 @@ except:
     SNTL_FILE = SntlFile()
 
 
-def parse_sntl_file():
+def dockerfile_meta():
+    r = re.compile(r"^ENV\s([a-z].*)=(.*)", re.MULTILINE)
     try:
-        return SntlFile(**safe_load(open(f"./.sntl/sentential.yml")))
-    except:
-        return SntlFile()
-
-
-def require_sntl_file():
-    if (parse_sntl_file()).repository_name is None:
-        raise typer.BadParameter("no .sntl folder present, run init first")
+        with open("./Dockerfile") as file:
+            dockerfile = file.read()
+        meta = {match.group(1): match.group(2) for match in r.finditer(dockerfile)}
+        return SntlMeta(**meta)
+    except IOError:
+        print("no Dockerfile present, run `sntl init` first")
+        raise typer.Exit(code=1)
 
 
 def lazy_property(fn):
@@ -49,7 +49,7 @@ class Facts:
 
     @lazy_property
     def repository_name(self):
-        return parse_sntl_file().repository_name
+        return dockerfile_meta().repository_name
 
     @lazy_property
     def region(self):
@@ -78,7 +78,7 @@ class Facts:
     @lazy_property
     def partitions(self):
         # TODO: reimplement partitions other than caller
-        # partitions = {name: name for name in SNTL_FILE.partitions}
+        # partitions = {name: name for name in SNTL_META.partitions}
         partitions = {}
         partitions["default"] = self.caller_id.lower()
         return partitions

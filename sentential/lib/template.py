@@ -24,15 +24,9 @@ class InitTime:
             makedirs(self.path.src)
         if not exists(self.path.sntl):
             makedirs(self.path.sntl)
-        self.sentential_file()
         self.dockerfile()
         self.wrapper()
         self.policy()
-
-    def sentential_file(self):
-        self._write(
-            self.jinja.get_template("sentential.yml"), self.path.sentential_file
-        )
 
     def dockerfile(self):
         self._write(self.jinja.get_template("Dockerfile"), self.path.dockerfile)
