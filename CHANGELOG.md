@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.2.1 (2022-08-08)
+### Fix
+* Remove unused code ([`9f331d5`](https://github.com/wheegee/sentential/commit/9f331d5c023c7f5047dae75c2ac73acf9fe04049))
+
 ## v0.2.0 (2022-08-08)
 ### Feature
 * YAML to ENV, auto-build, and more ([#41](https://github.com/wheegee/sentential/issues/41)) ([`8d7d1ee`](https://github.com/wheegee/sentential/commit/8d7d1eef7014e3e7fbbe8440d62eb260efd91340))
