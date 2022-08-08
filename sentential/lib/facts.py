@@ -5,11 +5,6 @@ from enum import Enum
 from sentential.lib.clients import clients
 from sentential.lib.shapes.internal import SntlMeta, derive_paths
 
-try:
-    SNTL_FILE = SntlFile(**safe_load(open("./.sntl/sentential.yml")))
-except:
-    SNTL_FILE = SntlFile()
-
 
 def dockerfile_meta():
     r = re.compile(r"^ENV\s([a-z].*)=(.*)", re.MULTILINE)
