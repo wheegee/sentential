@@ -2,7 +2,6 @@ import typer
 from sentential.lib.aws import Image, Lambda
 from sentential.lib.facts import Partitions
 
-
 aws = typer.Typer()
 
 

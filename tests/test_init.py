@@ -1,9 +1,8 @@
+import in_place
 from os.path import exists
 from tests.helper import *
-import in_place
 from shutil import copyfile
 from sentential.sntl import root as sntl
-from IPython import embed
 
 
 def test_init():
@@ -15,13 +14,12 @@ def test_files_exist():
     for file in [
         "Dockerfile",
         "policy.json",
-        ".sntl/sentential.yml",
         ".sntl/wrapper.sh",
     ]:
         assert exists(file)
 
 
-def test_build():
+def test_local_deploy():
     copyfile(f"{project}/tests/fixtures/app.py", f"{repo.name}/src/app.py")
     copyfile(
         f"{project}/tests/fixtures/requirements.txt",
@@ -34,11 +32,6 @@ def test_build():
             else:
                 fp.write(line)
 
-    result = runner.invoke(sntl, ["build"])
-    assert result.exit_code == 0
-
-
-def test_local_deploy():
     result = runner.invoke(sntl, ["local", "deploy"])
     assert result.exit_code == 0
 

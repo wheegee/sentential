@@ -6,8 +6,6 @@ from datetime import datetime
 #
 # ECR
 #
-
-
 class ECREventDetail(BaseModel):
     """https://docs.aws.amazon.com/AmazonECR/latest/userguide/ecr-eventbridge.html"""
 
@@ -35,8 +33,6 @@ class ECREvent(BaseModel):
 #
 # IAM
 #
-
-
 class AWSPolicyStatement(BaseModel):
     """https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_statement.html"""
 
@@ -57,8 +53,6 @@ class AWSPolicyDocument(BaseModel):
 #
 # Lambda
 #
-
-
 class Runtimes(Enum):
     """https://gallery.ecr.aws/lambda?page=1"""
 

@@ -8,7 +8,6 @@ from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual, Facts
 from jinja2 import Template
 from sentential.lib.store import ConfigStore
-from IPython import embed
 
 
 class Image(Factual):
@@ -60,6 +59,7 @@ class Lambda(Factual):
 
     def deploy(self, http: bool = True):
         self.destroy()
+        self.image.build()
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
         default_env = {
@@ -150,6 +150,7 @@ class Repository(Factual):
 
     @retry_after_docker_login
     def publish(self):
+        self.image.build()
         clients.docker.image.tag(
             f"{self.facts.repository_name}:{self.image.tag}",
             f"{self.facts.repository_url}:{self.image.tag}",

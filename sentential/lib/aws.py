@@ -122,7 +122,7 @@ class Lambda(Factual):
     def _put_policy(self) -> object:
         policy_json = Template(self.facts.path.policy.read_text()).render(
             partition=self.partition,
-            facts=facts,
+            facts=self.facts,
             config=ConfigStore(self.partition).parameters(),
         )
         try:

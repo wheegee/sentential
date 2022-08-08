@@ -1,7 +1,7 @@
 import pytest
-from typer.testing import CliRunner
 import tempfile
 from os import getcwd
+from typer.testing import CliRunner
 
 runner = CliRunner()
 project = getcwd()
