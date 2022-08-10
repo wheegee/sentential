@@ -5,9 +5,8 @@ from os import environ
 app = FastAPI()
 
 
-@app.get("/")
+@app.get("/{key}")
 def get_envar(key: str):
-    return {f"{key}": environ[key]}
-
+    return { f"{key.upper()}": environ[key.upper()] }
 
 handler = Mangum(app, lifespan="off")
