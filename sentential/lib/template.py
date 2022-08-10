@@ -22,17 +22,11 @@ class InitTime:
         self.runtime = runtime_image
         if not exists(self.path.src):
             makedirs(self.path.src)
-        if not exists(self.path.sntl):
-            makedirs(self.path.sntl)
         self.dockerfile()
-        self.wrapper()
         self.policy()
 
     def dockerfile(self):
         self._write(self.jinja.get_template("Dockerfile"), self.path.dockerfile)
-
-    def wrapper(self):
-        self._write(self.jinja.get_template("wrapper.sh"), self.path.wrapper)
 
     def policy(self):
         copy(f"{PACKAGE_PATH}/../templates/policy.json", self.path.policy)

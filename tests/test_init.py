@@ -14,7 +14,6 @@ def test_files_exist():
     for file in [
         "Dockerfile",
         "policy.json",
-        ".sntl/wrapper.sh",
     ]:
         assert exists(file)
 

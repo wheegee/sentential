@@ -1,9 +1,12 @@
+
 FROM segment/chamber:2 AS chamber
 
-FROM {{ runtime }} as chambered
+FROM {{ runtime }} AS chambered
 ENV AWS_LAMBDA_EXEC_WRAPPER=/opt/wrapper.sh
 COPY --from=chamber /chamber /bin/chamber
-COPY --chmod=755 ./.sntl/wrapper.sh /opt/
+RUN echo '#!/bin/bash' > /opt/wrapper.sh
+RUN echo 'chamber exec $PARTITION -- $@' >> /opt/wrapper.sh
+RUN chmod 755 /opt/wrapper.sh
 
 FROM chambered
 ENV repository_name={{ repository_name }}
