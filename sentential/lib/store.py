@@ -17,7 +17,7 @@ class Store(Factual):
             "Type": "SecureString",
             "Overwrite": True,
             "Tier": "Standard",
-            "KeyId": self.kms_key_id
+            "KeyId": self.kms_key_id,
         }
 
         return clients.ssm.put_parameter(**kwargs)
@@ -49,10 +49,7 @@ class Store(Factual):
         )
 
     def parameters(self):
-        data = {
-            p["Name"].replace(self.path, ""): p["Value"]
-            for p in self.fetch()
-        }
+        data = {p["Name"].replace(self.path, ""): p["Value"] for p in self.fetch()}
         return SimpleNamespace(**data)
 
     def delete(self, key: str):
@@ -60,6 +57,7 @@ class Store(Factual):
             return clients.ssm.delete_parameter(Name=f"{self.path}{key}")
         except clients.ssm.exceptions.ParameterNotFound:
             pass
+
 
 class Env(Store):
     def __init__(self):

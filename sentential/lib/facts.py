@@ -5,6 +5,7 @@ import boto3
 from sentential.lib.clients import clients
 from sentential.lib.shapes.internal import SntlMeta, derive_paths
 
+
 def dockerfile_meta():
     r = re.compile(r"^ENV\s([a-z].*)=(.*)", re.MULTILINE)
     try:
@@ -45,7 +46,9 @@ class Facts:
 
     @lazy_property
     def partition(self):
-        return getenv("PARTITION", default=clients.sts.get_caller_identity().get("UserId"))
+        return getenv(
+            "PARTITION", default=clients.sts.get_caller_identity().get("UserId")
+        )
 
     @lazy_property
     def repository_name(self):
