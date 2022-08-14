@@ -7,7 +7,7 @@ from sentential.lib.clients import clients
 from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual, Facts
 from jinja2 import Template
-from sentential.lib.store import ConfigStore
+from sentential.lib.store import Env
 
 
 class Image(Factual):
@@ -29,22 +29,13 @@ class Image(Factual):
             return metadata.architecture
 
     def _fetch_metadata(self):
-        return clients.docker.image.inspect(f"{self.facts.repository_name}:{self.tag}")
+        return clients.docker.image.inspect(f"{self.repository_name}:{self.tag}")
 
     @classmethod
     def build(cls, tag: str = "latest") -> None:
         facts = Facts()
         clients.docker.build(
             f"{facts.path.root}",
-            # TODO: replace labels with github metadata?
-            # labels={
-            #     "spec": Spec(
-            #         prefix=self.facts.repository_name,
-            #         policy=json.loads(self.facts.path.policy.read_text()),
-            #         role_name=self.facts.repository_name,
-            #         policy_name=self.facts.repository_name,
-            #     ).json(exclude_none=True)
-            # },
             load=True,
             tags=[f"{facts.repository_name}:{tag}"],
         )
@@ -52,10 +43,9 @@ class Image(Factual):
 
 
 class Lambda(Factual):
-    def __init__(self, image: Image, partition: str) -> None:
+    def __init__(self, image: Image) -> None:
         super().__init__()
         self.image = image
-        self.partition = partition
 
     def deploy(self, http: bool = True):
         self.destroy()
@@ -64,7 +54,7 @@ class Lambda(Factual):
         credentials = self._get_federation_token()
         default_env = {
             "AWS_REGION": self.facts.region,
-            "PARTITION": f"{self.partition}/{self.image.repository_name}",
+            "PARTITION": f"{self.facts.partition}/{self.image.repository_name}",
         }
 
         clients.docker.run(
@@ -105,10 +95,11 @@ class Lambda(Factual):
 
     def _get_federation_token(self):
         policy_json = Template(self.facts.path.policy.read_text()).render(
-            partition=self.partition,
+            partition=self.facts.partition,
             facts=self.facts,
-            config=ConfigStore(self.partition).parameters(),
+            config=Env().parameters(),
         )
+        print(policy_json)
         token = clients.sts.get_federation_token(
             Name=f"{self.image.repository_name}-spec-policy",
             Policy=policy_json,

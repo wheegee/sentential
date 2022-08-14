@@ -1,10 +1,9 @@
+from os import getenv
 import re
 import typer
 import boto3
-from enum import Enum
 from sentential.lib.clients import clients
 from sentential.lib.shapes.internal import SntlMeta, derive_paths
-
 
 def dockerfile_meta():
     r = re.compile(r"^ENV\s([a-z].*)=(.*)", re.MULTILINE)
@@ -37,10 +36,16 @@ class Facts:
     def __init__(
         self,
         runtime: str = None,
-        kms_key_alias: str = "aws/ssm",
     ) -> None:
         self.runtime = runtime
-        self.kms_key_alias = kms_key_alias
+
+    @lazy_property
+    def kms_key_alias(self):
+        return getenv("AWS_KMS_KEY_ALIAS", default="aws/ssm")
+
+    @lazy_property
+    def partition(self):
+        return getenv("PARTITION", default=clients.sts.get_caller_identity().get("UserId"))
 
     @lazy_property
     def repository_name(self):
@@ -59,24 +64,12 @@ class Facts:
         return clients.sts.get_caller_identity().get("Account")
 
     @lazy_property
-    def caller_id(self):
-        return clients.sts.get_caller_identity().get("UserId")
-
-    @lazy_property
     def kms_key_id(self):
         return [
             ssm_key["TargetKeyId"]
             for ssm_key in boto3.client("kms").list_aliases()["Aliases"]
             if self.kms_key_alias in ssm_key["AliasName"]
         ][0]
-
-    @lazy_property
-    def partitions(self):
-        # TODO: reimplement partitions other than caller
-        # partitions = {name: name for name in SNTL_META.partitions}
-        partitions = {}
-        partitions["default"] = self.caller_id.lower()
-        return partitions
 
     @lazy_property
     def repository_url(self):
@@ -90,7 +83,3 @@ class Facts:
 class Factual:
     def __init__(self) -> None:
         self.facts = Facts()
-
-
-# TODO: this will still work, but this init-at-bottom-of-file pattern is decidedly bad for testing. So remove it.
-Partitions = Enum("Partitions", Facts().partitions)

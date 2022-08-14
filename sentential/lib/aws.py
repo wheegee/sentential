@@ -7,7 +7,7 @@ from sentential.lib.clients import clients
 from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON
 from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual
-from sentential.lib.store import ConfigStore
+from sentential.lib.store import Env
 
 
 class Image(Factual):
@@ -41,10 +41,10 @@ class Image(Factual):
 
 
 class Lambda(Factual):
-    def __init__(self, image: Image, partition: str) -> None:
+    def __init__(self, image: Image) -> None:
         super().__init__()
         self.image = image
-        self.partition = partition
+        self.partition = self.facts.partition
         self.function_name = f"{self.partition}-{self.image.repository_name}"
         self.image_uri = f"{self.facts.repository_url}:{self.image.tag}"
         self.role_name = f"{self.partition}.{self.image.repository_name}"
@@ -123,7 +123,7 @@ class Lambda(Factual):
         policy_json = Template(self.facts.path.policy.read_text()).render(
             partition=self.partition,
             facts=self.facts,
-            config=ConfigStore(self.partition).parameters(),
+            config=Env().parameters(),
         )
         try:
             policy = clients.iam.create_policy(
