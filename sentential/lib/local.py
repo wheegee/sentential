@@ -7,7 +7,7 @@ from sentential.lib.clients import clients
 from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual, Facts
 from jinja2 import Template
-from sentential.lib.store import Env
+from sentential.lib.store import Env, Arg
 
 
 class Image(Factual):
@@ -38,6 +38,7 @@ class Image(Factual):
             f"{facts.path.root}",
             load=True,
             tags=[f"{facts.repository_name}:{tag}"],
+            build_args=Arg().as_dict()
         )
         return cls(tag)
 

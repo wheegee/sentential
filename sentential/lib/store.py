@@ -51,8 +51,11 @@ class Store(Factual):
             )
         )
 
+    def as_dict(self):
+        return {p["Name"].replace(self.path, ""): p["Value"] for p in self.fetch()}
+
     def parameters(self):
-        data = {p["Name"].replace(self.path, ""): p["Value"] for p in self.fetch()}
+        data = self.as_dict()
         return SimpleNamespace(**data)
 
     def delete(self, key: str):
