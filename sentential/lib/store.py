@@ -5,9 +5,10 @@ from tabulate import tabulate
 
 
 class Store(Factual):
-    def __init__(self):
+    def __init__(self, suffix: str):
         super().__init__()
-        self.path = f"/{self.facts.partition}/{self.facts.repository_name}/"
+        self.path = f"/{self.facts.partition}/{self.facts.repository_name}/{suffix}/"
+        self.chamber_path = f"{self.facts.partition}/{self.facts.repository_name}/{suffix}"
         self.kms_key_id = self.facts.kms_key_id
 
     def write(self, key: str, value: str):
@@ -61,4 +62,8 @@ class Store(Factual):
 
 class Env(Store):
     def __init__(self):
-        super().__init__()
+        super().__init__("env")
+
+class Arg(Store):
+    def __init__(self):
+        super().__init__("arg")

@@ -53,7 +53,7 @@ class Lambda(Factual):
             f"arn:aws:iam::{self.facts.account_id}:policy/{self.policy_name}"
         )
 
-    def deploy(self, http: bool):
+    def deploy(self, public_url: bool):
         clients.iam.attach_role_policy(
             RoleName=self._put_role()["Role"]["RoleName"],
             PolicyArn=self._put_policy()["Policy"]["Arn"],
@@ -61,7 +61,7 @@ class Lambda(Factual):
 
         function = self._put_lambda()
 
-        if http:
+        if public_url:
             print(self._put_url()["FunctionUrl"])
         else:
             print(function["FunctionArn"])
@@ -121,9 +121,8 @@ class Lambda(Factual):
 
     def _put_policy(self) -> object:
         policy_json = Template(self.facts.path.policy.read_text()).render(
-            partition=self.partition,
             facts=self.facts,
-            config=Env().parameters(),
+            env=Env().parameters(),
         )
         try:
             policy = clients.iam.create_policy(
@@ -182,7 +181,7 @@ class Lambda(Factual):
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
                 Environment={
                     "Variables": {
-                        "PARTITION": f"{self.partition}/{self.image.repository_name}"
+                        "PARTITION": Env().partition
                     }
                 },
                 Architectures=[self.image.arch()],
@@ -204,7 +203,7 @@ class Lambda(Factual):
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
                 Environment={
                     "Variables": {
-                        "PARTITION": f"{self.partition}/{self.image.repository_name}"
+                        "PARTITION": Env().chamber_path
                     }
                 },
             )

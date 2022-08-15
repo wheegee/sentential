@@ -47,15 +47,14 @@ class Lambda(Factual):
         super().__init__()
         self.image = image
 
-    def deploy(self, http: bool = True):
+    def deploy(self, public_url: bool = True):
         self.destroy()
         self.image.build()
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
-        print(self.facts.partition)
         default_env = {
             "AWS_REGION": self.facts.region,
-            "PARTITION": f"{self.facts.partition}/{self.image.repository_name}",
+            "PARTITION": Env().chamber_path,
         }
 
         clients.docker.run(
@@ -69,7 +68,7 @@ class Lambda(Factual):
             envs={**default_env, **credentials},
         )
 
-        if http:
+        if public_url:
             clients.docker.run(
                 "ghcr.io/wheegee/sentential-gw:latest",
                 name="sentential-gw",
@@ -81,10 +80,10 @@ class Lambda(Factual):
                 envs={"LAMBDA_ENDPOINT": "http://sentential:8080"},
             )
 
-        if http:
-            print("gateway: http://localhost:8081")
+        if public_url:
+            print("http://localhost:8081")
         else:
-            print("lambda: http://localhost:9000")
+            print("http://localhost:9000")
 
     def destroy(self):
         clients.docker.remove(["sentential"], force=True, volumes=True)
@@ -96,11 +95,9 @@ class Lambda(Factual):
 
     def _get_federation_token(self):
         policy_json = Template(self.facts.path.policy.read_text()).render(
-            partition=self.facts.partition,
             facts=self.facts,
-            config=Env().parameters(),
+            env=Env().parameters(),
         )
-        print(policy_json)
         token = clients.sts.get_federation_token(
             Name=f"{self.image.repository_name}-spec-policy",
             Policy=policy_json,

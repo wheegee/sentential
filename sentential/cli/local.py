@@ -1,5 +1,5 @@
 import typer
-from sentential.lib.local import Repository, Image, Lambda
+from sentential.lib.local import Image, Lambda
 
 local = typer.Typer()
 
