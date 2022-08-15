@@ -55,4 +55,3 @@ def test_local_destroy():
 def test_env_delete():
     result = runner.invoke(sntl, ["env", "delete", "envvar"])
     assert result.exit_code == 0
-
