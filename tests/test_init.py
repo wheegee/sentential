@@ -20,13 +20,8 @@ def test_files_exist():
         assert exists(file)
 
 
-def test_config_write():
-    result = runner.invoke(sntl, ["config", "write", "config", "hello"])
-    assert result.exit_code == 0
-
-
-def test_secret_write():
-    result = runner.invoke(sntl, ["secret", "write", "secret", "hello"])
+def test_env_write():
+    result = runner.invoke(sntl, ["env", "write", "envvar", "test"])
     assert result.exit_code == 0
 
 
@@ -43,14 +38,13 @@ def test_local_deploy():
             else:
                 fp.write(line)
 
-    result = runner.invoke(sntl, ["local", "deploy"])
+    result = runner.invoke(sntl, ["local", "deploy", "--public-url"])
     assert result.exit_code == 0
 
 
 @flaky(max_runs=10)
 def test_local_app():
-    assert requests.get("http://localhost:8081/secret").json() == {"SECRET": "hello"}
-    assert requests.get("http://localhost:8081/config").json() == {"CONFIG": "hello"}
+    assert requests.get("http://localhost:8081/envvar").json() == {"ENVVAR": "test"}
 
 
 def test_local_destroy():
@@ -58,11 +52,7 @@ def test_local_destroy():
     assert result.exit_code == 0
 
 
-def test_config_delete():
-    result = runner.invoke(sntl, ["config", "delete", "config"])
+def test_env_delete():
+    result = runner.invoke(sntl, ["env", "delete", "envvar"])
     assert result.exit_code == 0
 
-
-def test_secret_delete():
-    result = runner.invoke(sntl, ["secret", "delete", "secret"])
-    assert result.exit_code == 0

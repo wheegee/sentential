@@ -7,9 +7,9 @@ aws = typer.Typer()
 @aws.command()
 def deploy(
     tag: str = typer.Argument("latest", envvar="TAG"),
-    gateway: bool = typer.Option(True),
+    public_url: bool = typer.Option(False),
 ):
-    Lambda(Image(tag)).deploy(gateway)
+    Lambda(Image(tag)).deploy(public_url)
 
 
 @aws.command()

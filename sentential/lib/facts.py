@@ -46,9 +46,10 @@ class Facts:
 
     @lazy_property
     def partition(self):
+        # TODO: when we replace chamber in the image, stop doing this .lower() nonsense
         return getenv(
             "PARTITION", default=clients.sts.get_caller_identity().get("UserId")
-        )
+        ).lower()
 
     @lazy_property
     def repository_name(self):

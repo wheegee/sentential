@@ -7,9 +7,9 @@ local = typer.Typer()
 @local.command()
 def deploy(
     tag: str = typer.Argument("latest", envvar="TAG"),
-    gateway: bool = typer.Option(default=True),
+    public_url: bool = typer.Option(default=False),
 ):
-    Lambda(Image(tag)).deploy(gateway)
+    Lambda(Image(tag)).deploy(public_url)
 
 
 @local.command()

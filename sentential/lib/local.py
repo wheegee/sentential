@@ -52,6 +52,7 @@ class Lambda(Factual):
         self.image.build()
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
+        print(self.facts.partition)
         default_env = {
             "AWS_REGION": self.facts.region,
             "PARTITION": f"{self.facts.partition}/{self.image.repository_name}",
