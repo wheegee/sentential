@@ -35,10 +35,3 @@ def derive_paths(root: PosixPath = Path(".")):
         wrapper=Path(f"{root}/.sntl/wrapper.sh"),
         policy=Path(f"{root}/policy.json"),
     )
-
-
-#
-# SNTL_META
-#
-class SntlMeta(BaseModel):
-    repository_name: str = None

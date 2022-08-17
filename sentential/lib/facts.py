@@ -3,19 +3,7 @@ import re
 import typer
 import boto3
 from sentential.lib.clients import clients
-from sentential.lib.shapes.internal import SntlMeta, derive_paths
-
-
-def dockerfile_meta():
-    r = re.compile(r"FROM runtime AS (.*)", re.MULTILINE)
-    try:
-        with open("./Dockerfile") as file:
-            dockerfile = file.read()
-        meta = {match.group(1): match.group(2) for match in r.finditer(dockerfile)}
-        return SntlMeta(**meta)
-    except IOError:
-        print("no Dockerfile present, run `sntl init` first")
-        raise typer.Exit(code=1)
+from sentential.lib.shapes.internal import derive_paths
 
 
 def lazy_property(fn):
@@ -41,6 +29,25 @@ class Facts:
         self.runtime = runtime
 
     @lazy_property
+    def repository_name(self):
+        try:
+            repo = None
+            with open("./Dockerfile") as file:
+                for line in file.readlines():
+                    if "FROM runtime AS" in line:
+                        repo = line.split("AS")[1].strip()
+                if repo is not None:
+                    print(f"found repo to be {repo}")
+                    return repo
+                else:
+                    print("Dockerfile not formed for sentential")
+                    raise typer.Exit(code=1)
+        except IOError:
+            print("no Dockerfile present, run `sntl init` first")
+            raise typer.Exit(code=1)
+
+
+    @lazy_property
     def kms_key_alias(self):
         return getenv("AWS_KMS_KEY_ALIAS", default="aws/ssm")
 
@@ -50,10 +57,6 @@ class Facts:
         return getenv(
             "PARTITION", default=clients.sts.get_caller_identity().get("UserId")
         ).lower()
-
-    @lazy_property
-    def repository_name(self):
-        return dockerfile_meta().repository_name
 
     @lazy_property
     def region(self):

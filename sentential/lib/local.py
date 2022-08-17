@@ -1,4 +1,3 @@
-import typer
 import json
 from python_on_whales import DockerException
 from pipes import Template
