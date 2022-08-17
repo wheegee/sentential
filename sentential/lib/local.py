@@ -38,7 +38,7 @@ class Image(Factual):
             f"{facts.path.root}",
             load=True,
             tags=[f"{facts.repository_name}:{tag}"],
-            build_args=Arg().as_dict()
+            build_args=Arg().as_dict(),
         )
         return cls(tag)
 
