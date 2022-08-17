@@ -5,6 +5,7 @@ from rich.table import Table
 
 aws = typer.Typer()
 
+
 @aws.command()
 def deploy(
     tag: str = typer.Argument("latest", envvar="TAG"),
@@ -21,9 +22,10 @@ def destroy(
     """destroy lambda deployment in aws"""
     Lambda(Image(tag)).destroy()
 
+
 @aws.command()
 def show():
-    console = Console() 
+    console = Console()
     table = Table("Tag", "Arch")
     for image in Repository().images():
         table.add_row(image.tag, image.arch())

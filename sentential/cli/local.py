@@ -25,7 +25,7 @@ def destroy(
 
 @local.command()
 def show():
-    console = Console() 
+    console = Console()
     table = Table("Tag", "Arch")
     for image in Repository().images():
         table.add_row(image.tag, image.arch())
