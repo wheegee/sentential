@@ -8,6 +8,7 @@ from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON
 from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual
 from sentential.lib.store import Env
+import os
 
 
 class Image(Factual):
@@ -227,6 +228,11 @@ class Lambda(Factual):
             )
 
             return function
+    
+    def logs(self, follow: bool = False):
+        cmd = ['aws', 'logs', 'tail', f"/aws/lambda/{self.function_name}"]
+        if follow: cmd.append("--follow")
+        os.system(" ".join(cmd))
 
 
 class Repository(Factual):

@@ -2,6 +2,7 @@ import typer
 from sentential.lib.aws import Image, Lambda, Repository
 from rich.console import Console
 from rich.table import Table
+from sentential.lib.clients import clients
 
 aws = typer.Typer()
 
@@ -24,9 +25,16 @@ def destroy(
 
 
 @aws.command()
-def show():
+def list():
+    """list aws lambda images"""
     console = Console()
     table = Table("Tag", "Arch")
     for image in Repository().images():
         table.add_row(image.tag, image.arch())
     console.print(table)
+
+@aws.command()
+def logs(follow: bool = typer.Option(False)):
+    """dump running container logs"""
+    # This initialization implies Image should be a method argument, not a class initializer
+    Lambda(Image("latest")).logs(follow)

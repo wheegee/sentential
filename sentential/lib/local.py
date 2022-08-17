@@ -1,4 +1,5 @@
 import json
+from xmlrpc.client import Boolean
 from python_on_whales import DockerException
 from pipes import Template
 from typing import List
@@ -108,6 +109,9 @@ class Lambda(Factual):
             "AWS_SECRET_ACCESS_KEY": token["SecretAccessKey"],
             "AWS_SESSION_TOKEN": token["SessionToken"],
         }
+
+    def logs(self, follow: bool = False):
+        return clients.docker.logs("sentential", follow=follow)
 
 
 def retry_after_docker_login(func):
