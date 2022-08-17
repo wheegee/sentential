@@ -46,7 +46,6 @@ class Facts:
             print("no Dockerfile present, run `sntl init` first")
             raise typer.Exit(code=1)
 
-
     @lazy_property
     def kms_key_alias(self):
         return getenv("AWS_KMS_KEY_ALIAS", default="aws/ssm")

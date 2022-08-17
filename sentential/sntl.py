@@ -9,10 +9,13 @@ root.add_typer(aws, name="aws", help="ops for {repository}")
 root.add_typer(env, name="env", help="for {repository}")
 root.add_typer(arg, name="arg", help="for {repository}")
 
+
 @root.command()
 def wut():
     from IPython import embed
+
     embed()
+
 
 def main():
     root()
