@@ -17,6 +17,7 @@ pydantic = "^1.9.1"
 Jinja2 = "^3.1.2"
 tabulate = "^0.8.10"
 flaky = "^3.7.0"
+rich = "^12.5.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"

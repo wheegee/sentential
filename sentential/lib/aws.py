@@ -179,7 +179,7 @@ class Lambda(Factual):
                 PackageType="Image",
                 Code={"ImageUri": self.image_uri},
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
-                Environment={"Variables": {"PARTITION": Env().partition}},
+                Environment={"Variables": {"PARTITION": Env().chamber_path } },
                 Architectures=[self.image.arch()],
             )
 

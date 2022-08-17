@@ -1,8 +1,9 @@
 import typer
-from sentential.lib.aws import Image, Lambda
+from sentential.lib.aws import Image, Lambda, Repository
+from rich.console import Console
+from rich.table import Table
 
 aws = typer.Typer()
-
 
 @aws.command()
 def deploy(
@@ -19,3 +20,11 @@ def destroy(
 ):
     """destroy lambda deployment in aws"""
     Lambda(Image(tag)).destroy()
+
+@aws.command()
+def show():
+    console = Console() 
+    table = Table("Tag", "Arch")
+    for image in Repository().images():
+        table.add_row(image.tag, image.arch())
+    console.print(table)

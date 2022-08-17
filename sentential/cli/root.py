@@ -15,4 +15,4 @@ def init(repository_name: str, runtime: Runtimes):
 @root.command()
 def publish(tag: str = typer.Argument("latest", envvar="TAG")):
     """publish lambda image to aws"""
-    Repository(Image(tag)).publish()
+    Repository().publish(Image(tag))

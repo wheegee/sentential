@@ -49,7 +49,7 @@ class Lambda(Factual):
 
     def deploy(self, public_url: bool = True):
         self.destroy()
-        self.image.build()
+        self.image.build(self.image.tag)
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
         default_env = {
@@ -123,25 +123,24 @@ def retry_after_docker_login(func):
 
 
 class Repository(Factual):
-    def __init__(self, image: Image) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.image = image
 
-    def images(self) -> List:
-        images = clients.docker.image.list({"label": "spec"})
+    def images(self) -> List[Image]:
+        images = clients.docker.image.list()
         filtered = []
         for image in images:
             for repo_tag in image.repo_tags:
                 repository_name, tag = repo_tag.split(":")
                 if repository_name == self.facts.repository_name:
-                    filtered.append(Image(repository_name, tag))
+                    filtered.append(Image(tag))
         return filtered
 
     @retry_after_docker_login
-    def publish(self):
-        self.image.build()
+    def publish(self, image: Image):
+        image.build(image.tag)
         clients.docker.image.tag(
-            f"{self.facts.repository_name}:{self.image.tag}",
-            f"{self.facts.repository_url}:{self.image.tag}",
+            f"{self.facts.repository_name}:{image.tag}",
+            f"{self.facts.repository_url}:{image.tag}",
         )
-        clients.docker.image.push(f"{self.facts.repository_url}:{self.image.tag}")
+        clients.docker.image.push(f"{self.facts.repository_url}:{image.tag}")
