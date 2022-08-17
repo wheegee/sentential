@@ -6,17 +6,17 @@ arg = typer.Typer()
 
 @arg.command()
 def read():
-    """config for {repository} lambda"""
+    """read build args for lambda"""
     Arg().read()
 
 
 @arg.command()
 def write(key: str, value: str):
-    """config for {repository} lambda"""
+    """write build arg for lambda"""
     Arg().write(key, value)
 
 
 @arg.command()
 def delete(key: str):
-    """config for {repository} lambda"""
+    """delete build arg for lambda"""
     Arg().delete(key)

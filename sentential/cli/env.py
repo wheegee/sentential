@@ -6,17 +6,17 @@ env = typer.Typer()
 
 @env.command()
 def read():
-    """config for {repository} lambda"""
+    """read runtime environment variables for lambda"""
     Env().read()
 
 
 @env.command()
 def write(key: str, value: str):
-    """config for {repository} lambda"""
+    """write runtime environment variable for lambda"""
     Env().write(key, value)
 
 
 @env.command()
 def delete(key: str):
-    """config for {repository} lambda"""
+    """delete runtime environment variable for lambda"""
     Env().delete(key)

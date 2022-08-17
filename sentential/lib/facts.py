@@ -37,7 +37,6 @@ class Facts:
                     if "FROM runtime AS" in line:
                         repo = line.split("AS")[1].strip()
                 if repo is not None:
-                    print(f"found repo to be {repo}")
                     return repo
                 else:
                     print("Dockerfile not formed for sentential")

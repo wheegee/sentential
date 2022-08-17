@@ -9,6 +9,7 @@ def deploy(
     tag: str = typer.Argument("latest", envvar="TAG"),
     public_url: bool = typer.Option(False),
 ):
+    """deploy lambda image to aws"""
     Lambda(Image(tag)).deploy(public_url)
 
 
@@ -16,4 +17,5 @@ def deploy(
 def destroy(
     tag: str = typer.Argument("latest", envvar="TAG"),
 ):
+    """destroy lambda deployment in aws"""
     Lambda(Image(tag)).destroy()

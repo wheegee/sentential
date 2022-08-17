@@ -4,18 +4,10 @@ from sentential.cli.local import local
 from sentential.cli.env import env
 from sentential.cli.arg import arg
 
-root.add_typer(local, name="local", help="ops for {repository}")
-root.add_typer(aws, name="aws", help="ops for {repository}")
-root.add_typer(env, name="env", help="for {repository}")
-root.add_typer(arg, name="arg", help="for {repository}")
-
-
-@root.command()
-def wut():
-    from IPython import embed
-
-    embed()
-
+root.add_typer(local, name="local", help="work with lambda locally")
+root.add_typer(aws, name="aws", help="work with lambda in aws")
+root.add_typer(env, name="env", help="configure lambda runtime environment")
+root.add_typer(arg, name="arg", help="configure lambda build args")
 
 def main():
     root()

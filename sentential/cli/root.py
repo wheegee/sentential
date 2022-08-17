@@ -8,11 +8,11 @@ root = typer.Typer()
 
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
-    """{repository}"""
+    """initialize sentential project"""
     InitTime(repository_name).scaffold(f"public.ecr.aws/lambda/{runtime.value}:latest")
 
 
 @root.command()
 def publish(tag: str = typer.Argument("latest", envvar="TAG")):
-    """{repository} with {tag}"""
+    """publish lambda image to aws"""
     Repository(Image(tag)).publish()
