@@ -42,8 +42,4 @@ def derive_paths(root: PosixPath = Path(".")):
 #
 class SntlMeta(BaseModel):
     repository_name: str = None
-    partitions: List[str] = []
 
-    @validator("partitions", pre=True)
-    def to_list(cls, v):
-        return v.split(",")

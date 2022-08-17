@@ -7,7 +7,7 @@ from sentential.lib.shapes.internal import SntlMeta, derive_paths
 
 
 def dockerfile_meta():
-    r = re.compile(r"^ENV\s([a-z].*)=(.*)", re.MULTILINE)
+    r = re.compile(r"FROM runtime AS (.*)", re.MULTILINE)
     try:
         with open("./Dockerfile") as file:
             dockerfile = file.read()
