@@ -33,6 +33,7 @@ def list():
         table.add_row(image.tag, image.arch())
     console.print(table)
 
+
 @aws.command()
 def logs(follow: bool = typer.Option(False)):
     """dump running container logs"""

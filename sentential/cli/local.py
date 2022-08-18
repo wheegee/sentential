@@ -35,6 +35,7 @@ def list():
         table.add_row(image.tag, image.arch())
     print(table)
 
+
 @local.command()
 def logs(follow: bool = typer.Option(False)):
     """dump running container logs"""

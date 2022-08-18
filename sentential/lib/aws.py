@@ -228,10 +228,11 @@ class Lambda(Factual):
             )
 
             return function
-    
+
     def logs(self, follow: bool = False):
-        cmd = ['aws', 'logs', 'tail', f"/aws/lambda/{self.function_name}"]
-        if follow: cmd.append("--follow")
+        cmd = ["aws", "logs", "tail", f"/aws/lambda/{self.function_name}"]
+        if follow:
+            cmd.append("--follow")
         os.system(" ".join(cmd))
 
 
