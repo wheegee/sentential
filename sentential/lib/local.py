@@ -11,6 +11,7 @@ from sentential.lib.store import Env, Arg
 from IPython import embed
 from sentential.lib.facts import lazy_property
 
+
 class Image(Factual):
     def __init__(self, tag: str) -> None:
         super().__init__()
@@ -23,7 +24,7 @@ class Image(Factual):
 
     @lazy_property
     def tags(self) -> List[str]:
-        return [tag.split(":")[1] for tag in self.metadata.repo_tags ]
+        return [tag.split(":")[1] for tag in self.metadata.repo_tags]
 
     @lazy_property
     def arch(self) -> str:

@@ -20,7 +20,7 @@ class Image(Factual):
 
     @lazy_property
     def id(self) -> str:
-        return self.metadata['imageId']
+        return self.metadata["imageId"]
 
     @lazy_property
     def arch(self) -> str:
@@ -39,8 +39,8 @@ class Image(Factual):
         embed()
         image_manifest = json.loads(image["imageManifest"])
         metadata = json.loads(image_manifest["history"][0]["v1Compatibility"])
-        metadata['repositoryName']=image['repositoryName']
-        metadata['imageId']=image['imageId']['imageDigest']
+        metadata["repositoryName"] = image["repositoryName"]
+        metadata["imageId"] = image["imageId"]["imageDigest"]
         return metadata
 
 
@@ -60,6 +60,7 @@ class Lambda(Factual):
     @classmethod
     def deployed(cls):
         from IPython import embed
+
         embed()
 
     def deploy(self, public_url: bool):
