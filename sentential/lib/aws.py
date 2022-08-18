@@ -9,7 +9,6 @@ from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual, lazy_property
 from sentential.lib.store import Env
 import os
-from IPython import embed
 
 
 class Image(Factual):
@@ -36,7 +35,6 @@ class Image(Factual):
             imageIds=[{"imageTag": self.tag}],
             acceptedMediaTypes=["application/vnd.docker.distribution.manifest.v1+json"],
         )["images"][0]
-        embed()
         image_manifest = json.loads(image["imageManifest"])
         metadata = json.loads(image_manifest["history"][0]["v1Compatibility"])
         metadata["repositoryName"] = image["repositoryName"]
@@ -59,10 +57,8 @@ class Lambda(Factual):
 
     @classmethod
     def deployed(cls):
-        from IPython import embed
-
-        embed()
-
+        pass
+    
     def deploy(self, public_url: bool):
         clients.iam.attach_role_policy(
             RoleName=self._put_role()["Role"]["RoleName"],

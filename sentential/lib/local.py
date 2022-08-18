@@ -8,7 +8,6 @@ from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual, Facts
 from jinja2 import Template
 from sentential.lib.store import Env, Arg
-from IPython import embed
 from sentential.lib.facts import lazy_property
 
 
@@ -20,7 +19,11 @@ class Image(Factual):
 
     @lazy_property
     def id(self) -> str:
-        return self.metadata.id
+        if bool(self.metadata.repo_digests):
+            # TODO: use registry_url to find element of list instead of assuming first
+            return self.metadata.repo_digests[0].split("@")[1]
+        else:
+            return "not published"
 
     @lazy_property
     def tags(self) -> List[str]:
