@@ -58,7 +58,7 @@ class Lambda(Factual):
     @classmethod
     def deployed(cls):
         pass
-    
+
     def deploy(self, public_url: bool):
         clients.iam.attach_role_policy(
             RoleName=self._put_role()["Role"]["RoleName"],
