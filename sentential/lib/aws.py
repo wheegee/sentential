@@ -6,9 +6,10 @@ from jinja2 import Template
 from sentential.lib.clients import clients
 from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON
 from sentential.lib.shapes.internal import Spec
-from sentential.lib.facts import Factual
+from sentential.lib.facts import Factual, lazy_property
 from sentential.lib.store import Env
 import os
+from IPython import embed
 
 
 class Image(Factual):
@@ -17,28 +18,30 @@ class Image(Factual):
         self.repository_name = self.facts.repository_name
         self.tag = tag
 
-    def spec(self) -> Spec:
-        metadata = self._fetch_metadata()
-        spec_data = json.loads(metadata["config"]["Labels"]["spec"])
-        return Spec(**spec_data)
+    @lazy_property
+    def id(self) -> str:
+        return self.metadata['imageId']
 
+    @lazy_property
     def arch(self) -> str:
-        metadata = self._fetch_metadata()
-        if metadata["architecture"] == "amd64":
+        if self.metadata["architecture"] == "amd64":
             return "x86_64"
         else:
-            return metadata["architecture"]
+            return self.metadata["architecture"]
 
-    @lru_cache(maxsize=1)
-    def _fetch_metadata(self) -> dict:
+    @lazy_property
+    def metadata(self) -> dict:
         image = clients.ecr.batch_get_image(
             repositoryName=self.facts.repository_name,
             imageIds=[{"imageTag": self.tag}],
             acceptedMediaTypes=["application/vnd.docker.distribution.manifest.v1+json"],
         )["images"][0]
+        embed()
         image_manifest = json.loads(image["imageManifest"])
-        metadata = image_manifest["history"][0]["v1Compatibility"]
-        return json.loads(metadata)
+        metadata = json.loads(image_manifest["history"][0]["v1Compatibility"])
+        metadata['repositoryName']=image['repositoryName']
+        metadata['imageId']=image['imageId']['imageDigest']
+        return metadata
 
 
 class Lambda(Factual):
@@ -53,6 +56,11 @@ class Lambda(Factual):
         self.policy_arn = (
             f"arn:aws:iam::{self.facts.account_id}:policy/{self.policy_name}"
         )
+
+    @classmethod
+    def deployed(cls):
+        from IPython import embed
+        embed()
 
     def deploy(self, public_url: bool):
         clients.iam.attach_role_policy(

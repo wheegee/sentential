@@ -1,5 +1,5 @@
 import json
-from xmlrpc.client import Boolean
+import typer
 from python_on_whales import DockerException
 from pipes import Template
 from typing import List
@@ -8,7 +8,8 @@ from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual, Facts
 from jinja2 import Template
 from sentential.lib.store import Env, Arg
-
+from IPython import embed
+from sentential.lib.facts import lazy_property
 
 class Image(Factual):
     def __init__(self, tag: str) -> None:
@@ -16,19 +17,23 @@ class Image(Factual):
         self.repository_name = self.facts.repository_name
         self.tag = tag
 
-    def spec(self) -> Spec:
-        metadata = self._fetch_metadata()
-        spec_data = json.loads(metadata.config.labels["spec"])
-        return Spec(**spec_data)
+    @lazy_property
+    def id(self) -> str:
+        return self.metadata.id
 
+    @lazy_property
+    def tags(self) -> List[str]:
+        return [tag.split(":")[1] for tag in self.metadata.repo_tags ]
+
+    @lazy_property
     def arch(self) -> str:
-        metadata = self._fetch_metadata()
-        if metadata.architecture == "amd64":
+        if self.metadata.architecture == "amd64":
             return "x86_64"
         else:
-            return metadata.architecture
+            return self.metadata.architecture
 
-    def _fetch_metadata(self):
+    @lazy_property
+    def metadata(self):
         return clients.docker.image.inspect(f"{self.repository_name}:{self.tag}")
 
     @classmethod
@@ -47,6 +52,14 @@ class Lambda(Factual):
     def __init__(self, image: Image) -> None:
         super().__init__()
         self.image = image
+
+    @classmethod
+    def deployed(cls):
+        for container in clients.docker.ps():
+            if container.name == "sentential":
+                inspect = clients.docker.image.inspect(container.image)
+                tag = inspect.repo_tags[0].split(":")[1]
+                return cls(Image(tag))
 
     def deploy(self, public_url: bool = True):
         self.destroy()

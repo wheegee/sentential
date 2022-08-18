@@ -30,9 +30,14 @@ def destroy(
 def list():
     """list local lambda images"""
     console = Console()
-    table = Table("Tag", "Arch")
+    table = Table("Tag", "Arch", "Deployed", "Sha")
+    deployed = Lambda.deployed()
     for image in Repository().images():
-        table.add_row(image.tag, image.arch())
+        if deployed is not None and deployed.image.id == image.id:
+            table.add_row(image.tag, image.arch, "True", image.id)
+        else:
+            table.add_row(image.tag, image.arch, "False", image.id)
+
     print(table)
 
 

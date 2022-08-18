@@ -28,9 +28,10 @@ def destroy(
 def list():
     """list aws lambda images"""
     console = Console()
-    table = Table("Tag", "Arch")
+    table = Table("Tag", "Arch", "Sha")
+
     for image in Repository().images():
-        table.add_row(image.tag, image.arch())
+        table.add_row(image.tag, image.arch, image.id)
     console.print(table)
 
 
