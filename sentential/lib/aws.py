@@ -61,7 +61,7 @@ class Lambda(Factual):
         function_name = f"{facts.partition}-{facts.repository_name}"
         try:
             lmb = clients.lmb.get_function(FunctionName=function_name)
-            tag = lmb['Code']['ImageUri'].split("/")[1].split(":")[1]
+            tag = lmb["Code"]["ImageUri"].split("/")[1].split(":")[1]
             return cls(Image(tag))
         except clients.lmb.exceptions.ResourceNotFoundException:
             return None
