@@ -69,9 +69,11 @@ class Env(Store):
     def __init__(self):
         super().__init__("env")
 
+
 class Arg(Store):
     def __init__(self):
         super().__init__("arg")
+
 
 class Config(Store):
     def __init__(self):
