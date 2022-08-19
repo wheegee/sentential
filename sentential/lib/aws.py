@@ -57,7 +57,6 @@ class Lambda(Factual):
 
     @classmethod
     def deployed(cls):
-        from IPython import embed
         facts = Facts()
         function_name = f"{facts.partition}-{facts.repository_name}"
         try:
