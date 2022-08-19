@@ -2,6 +2,7 @@ import typer
 from sentential.lib.aws import Image, Lambda, Repository
 from rich.console import Console
 from rich.table import Table
+from rich import print
 from sentential.lib.clients import clients
 
 aws = typer.Typer()
@@ -26,17 +27,19 @@ def destroy(
 
 @aws.command()
 def list():
-    """list aws lambda images"""
-    console = Console()
-    table = Table("Tag", "Arch", "Sha")
-
+    """list local lambda images"""
+    table = Table("Tag", "Arch", "Deployed", "Sha")
+    deployed = Lambda.deployed()
     for image in Repository().images():
-        table.add_row(image.tag, image.arch, image.id)
-    console.print(table)
+        if deployed is not None and deployed.image.id == image.id:
+            table.add_row(image.tag, image.arch, "True", image.id)
+        else:
+            table.add_row(image.tag, image.arch, "False", image.id)
+
+    print(table)
 
 
 @aws.command()
 def logs(follow: bool = typer.Option(False)):
     """dump running container logs"""
-    # This initialization implies Image should be a method argument, not a class initializer
-    Lambda(Image("latest")).logs(follow)
+    Lambda.deployed().logs(follow)

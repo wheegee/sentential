@@ -1,12 +1,12 @@
 import json
+from pyclbr import Function
 from time import sleep
 from functools import lru_cache
 from typing import List
 from jinja2 import Template
 from sentential.lib.clients import clients
 from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON
-from sentential.lib.shapes.internal import Spec
-from sentential.lib.facts import Factual, lazy_property
+from sentential.lib.facts import Factual, Facts, lazy_property
 from sentential.lib.store import Env
 import os
 
@@ -57,8 +57,16 @@ class Lambda(Factual):
 
     @classmethod
     def deployed(cls):
-        pass
-    
+        from IPython import embed
+        facts = Facts()
+        function_name = f"{facts.partition}-{facts.repository_name}"
+        try:
+            lmb = clients.lmb.get_function(FunctionName=function_name)
+            tag = lmb['Code']['ImageUri'].split("/")[1].split(":")[1]
+            return cls(Image(tag))
+        except clients.lmb.exceptions.ResourceNotFoundException:
+            return None
+
     def deploy(self, public_url: bool):
         clients.iam.attach_role_policy(
             RoleName=self._put_role()["Role"]["RoleName"],
@@ -186,7 +194,7 @@ class Lambda(Factual):
                 Code={"ImageUri": self.image_uri},
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
                 Environment={"Variables": {"PARTITION": Env().chamber_path}},
-                Architectures=[self.image.arch()],
+                Architectures=[self.image.arch],
             )
 
             clients.lmb.add_permission(

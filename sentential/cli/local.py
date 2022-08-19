@@ -2,9 +2,7 @@ import typer
 from sentential.lib.local import Image, Lambda, Repository
 from rich.console import Console
 from rich.table import Table
-from rich.layout import Layout
 from rich import print
-from sentential.lib.clients import clients
 
 local = typer.Typer()
 
@@ -29,7 +27,6 @@ def destroy(
 @local.command()
 def list():
     """list local lambda images"""
-    console = Console()
     table = Table("Tag", "Arch", "Deployed", "Sha")
     deployed = Lambda.deployed()
     for image in Repository().images():
@@ -44,5 +41,4 @@ def list():
 @local.command()
 def logs(follow: bool = typer.Option(False)):
     """dump running container logs"""
-    # This initialization implies Image should be a method argument, not a class initializer
-    Lambda(Image("latest")).logs(follow)
+    Lambda.deployed().logs(follow)
