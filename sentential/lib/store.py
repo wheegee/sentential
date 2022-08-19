@@ -74,7 +74,9 @@ class Arg(Store):
     def __init__(self):
         super().__init__("arg")
 
+
 from sentential.lib.shapes.internal import Config as ConfigModel
+
 
 class Config(Store):
     def __init__(self):

@@ -9,11 +9,14 @@ root.add_typer(aws, name="aws", help="work with lambda in aws")
 root.add_typer(env, name="env", help="configure lambda runtime environment")
 root.add_typer(arg, name="arg", help="configure lambda build args")
 
+
 @root.command()
 def wut():
     from IPython import embed
     from sentential.lib.store import Config
+
     embed()
+
 
 def main():
     root()

@@ -37,9 +37,11 @@ def derive_paths(root: PosixPath = Path(".")):
         policy=Path(f"{root}/policy.json"),
     )
 
+
 #
 # Config
-# 
+#
+
 
 class Config(BaseModel):
     Storage: Annotated[int, Field(description="ephemeral storage (gb)")] = 512
