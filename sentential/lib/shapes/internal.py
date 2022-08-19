@@ -1,8 +1,9 @@
+from email.policy import default
 from pathlib import PosixPath, Path
-from typing import List, Optional
-from wsgiref.validate import validator
-from pydantic import BaseModel, ValidationError, validator
+from typing import List
+from pydantic import BaseModel, Field
 from sentential.lib.shapes.aws import AWSPolicyDocument
+from typing import Annotated
 
 #
 # Spec
@@ -35,3 +36,14 @@ def derive_paths(root: PosixPath = Path(".")):
         wrapper=Path(f"{root}/.sntl/wrapper.sh"),
         policy=Path(f"{root}/policy.json"),
     )
+
+#
+# Config
+# 
+
+class Config(BaseModel):
+    Storage: Annotated[int, Field(description="ephemeral storage (gb)")] = 512
+    Memory: Annotated[int, Field(description="allocated memory (mb)")] = 128
+    Timeout: Annotated[int, Field(description="timeout (s)")] = 3
+    SubnetIds: Annotated[List[str], Field(description="subnet ids")] = []
+    SecurityGroupIds: Annotated[List[str], Field(description="security group ids")] = []
