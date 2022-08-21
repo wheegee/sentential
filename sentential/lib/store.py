@@ -145,7 +145,7 @@ class Arg(Store):
 class Provision(Store):
     def __init__(self):
         try:
-            from shapes import Provision as Model
+            from sentential.lib.shapes.internal import Provision as Model
             super().__init__("config", Model)
         except ImportError: 
             super().__init__("config")
