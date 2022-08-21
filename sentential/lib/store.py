@@ -152,6 +152,7 @@ class Provision(Store):
     def __init__(self):
         try:
             from sentential.lib.shapes.internal import Provision as Model
+
             super().__init__("config", Model)
         except ImportError:
             super().__init__("config")
