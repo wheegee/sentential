@@ -1,6 +1,5 @@
 import typer
 from sentential.lib.local import Image, Lambda, Repository
-from rich.console import Console
 from rich.table import Table
 from rich import print
 
