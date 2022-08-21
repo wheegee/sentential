@@ -192,7 +192,7 @@ class Lambda(Factual):
                 PackageType="Image",
                 Code={"ImageUri": self.image_uri},
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
-                Environment={"Variables": {"PARTITION": Env().chamber_path}},
+                Environment={"Variables": {"PARTITION": Env().path}},
                 Architectures=[self.image.arch],
                 # EphemeralStorage={'Size': Config().read()},
                 # MemorySize=128,
@@ -217,7 +217,7 @@ class Lambda(Factual):
                 FunctionName=self.function_name,
                 Role=role_arn,
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
-                Environment={"Variables": {"PARTITION": Env().chamber_path}},
+                Environment={"Variables": {"PARTITION": Env().path}},
             )
 
             clients.lmb.get_waiter("function_updated_v2").wait(

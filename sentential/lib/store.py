@@ -17,9 +17,6 @@ class Store(Factual):
         super().__init__()
         self.model = model
         self.path = f"/{self.facts.partition}/{self.facts.repository_name}/{suffix}/"
-        self.chamber_path = (
-            f"{self.facts.partition}/{self.facts.repository_name}/{suffix}"
-        )
         self.kms_key_id = self.facts.kms_key_id
 
     @lru_cache()

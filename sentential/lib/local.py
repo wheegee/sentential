@@ -72,7 +72,7 @@ class Lambda(Factual):
         credentials = self._get_federation_token()
         default_env = {
             "AWS_REGION": self.facts.region,
-            "PARTITION": Env().chamber_path,
+            "PARTITION": Env().path,
         }
 
         clients.docker.run(
