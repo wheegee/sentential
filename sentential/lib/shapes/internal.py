@@ -1,9 +1,7 @@
 from pathlib import PosixPath, Path
 from typing import List
 from pydantic import BaseModel, Field, Extra
-from typing import Annotated
 from sentential.lib.shapes.aws import AWSPolicyDocument
-from typing import Annotated
 
 #
 # Spec
@@ -39,14 +37,11 @@ def derive_paths(root: PosixPath = Path(".")):
 
 
 class Provision(BaseModel):
-    storage: Annotated[int, Field(description="ephemeral storage (gb)")] = 512
-    memory: Annotated[int, Field(description="allocated memory (mb)")] = 128
-    timeout: Annotated[int, Field(description="timeout (s)")] = 3
-    subnet_ids: Annotated[List[str], Field(description="subnet ids")] = []
-    security_group_ids: Annotated[
-        List[str], Field(description="security group ids")
-    ] = []
+    storage: int = Field(default=512, description="ephemeral storage (gb)")
+    memory: int = Field(default=128, description="allocated memory (mb)")
+    timeout: int = Field(default=3, description="timeout (s)")
+    subnet_ids: List[str] = Field(default=[], description="subnet ids")
+    security_group_ids: List[str] = Field(default=[], description="security group ids")
 
-
-class Config:
-    extra = Extra.forbid
+    class Config:
+        extra = Extra.forbid
