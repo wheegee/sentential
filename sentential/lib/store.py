@@ -3,8 +3,6 @@ from typing import Union
 from sentential.lib.clients import clients
 from types import SimpleNamespace
 from sentential.lib.facts import Factual
-from rich.table import Table
-from rich import print
 import sys
 import os
 import polars as pl
@@ -12,6 +10,7 @@ from pydantic import ValidationError
 
 
 sys.path.append(os.getcwd())
+
 
 class Store(Factual):
     def __init__(self, suffix: str, model: object = None):
@@ -47,50 +46,54 @@ class Store(Factual):
         return pl.DataFrame(data, columns=[("field", pl.Utf8), ("persisted", pl.Utf8)])
 
     def validation(self):
-        columns=[("field", pl.Utf8), ("validation", pl.Utf8)]
+        columns = [("field", pl.Utf8), ("validation", pl.Utf8)]
         try:
             self.model(**self.as_dict())
-            return pl.DataFrame([[],[]], columns=columns)
+            return pl.DataFrame([[], []], columns=columns)
         except ValidationError as e:
-            return pl.DataFrame([
-                    ["/".join(list(e['loc'])) for e in e.errors()],
-                    [e['msg'] for e in e.errors()]
-                ], columns=columns)
+            return pl.DataFrame(
+                [
+                    ["/".join(list(e["loc"])) for e in e.errors()],
+                    [e["msg"] for e in e.errors()],
+                ],
+                columns=columns,
+            )
 
     def schema(self):
-        fields = list(self.model.schema()['properties'].keys())
-        properties = list(self.model.schema()['properties'].values())
-        columns=[("field", pl.Utf8), ("default", pl.Utf8), ("description", pl.Utf8)]
-        return pl.DataFrame([
+        fields = list(self.model.schema()["properties"].keys())
+        properties = list(self.model.schema()["properties"].values())
+        columns = [("field", pl.Utf8), ("default", pl.Utf8), ("description", pl.Utf8)]
+        return pl.DataFrame(
+            [
                 fields,
-                [str(p['default']) if 'default' in p else None for p in properties],
-                [p['description']if 'description' in p else None for p in properties]
-            ], columns=columns)
+                [str(p["default"]) if "default" in p else None for p in properties],
+                [p["description"] if "description" in p else None for p in properties],
+            ],
+            columns=columns,
+        )
 
     def read(self):
-        data=self.data()
+        data = self.data()
         if self.model is not None:
-            opts={ 'on':'field', 'how':'outer' }
-            schema=self.schema()
-            validation=self.validation()
-            df=schema.join(data, **opts).join(validation, **opts)
-            df=df.with_columns([
-                (pl.col("persisted").fill_null(pl.col("default"))).alias('value')
-            ])
-            from IPython import embed
-            # embed()
-            print(df.select([
-                pl.col("field"),
-                pl.col("value"),
-                pl.col("validation"),
-                pl.col("description"),
-            ]))
+            opts = {"on": "field", "how": "outer"}
+            schema = self.schema()
+            validation = self.validation()
+            df = schema.join(data, **opts).join(validation, **opts)
+            df = df.with_columns(
+                [(pl.col("persisted").fill_null(pl.col("default"))).alias("value")]
+            )
+            print(
+                df.select(
+                    [
+                        pl.col("field"),
+                        pl.col("value"),
+                        pl.col("validation"),
+                        pl.col("description"),
+                    ]
+                )
+            )
         else:
-            print(data.select([
-                pl.col("field"),
-                pl.col("persisted").alias("value")
-            ]))
-        
+            print(data.select([pl.col("field"), pl.col("persisted").alias("value")]))
 
     def write(self, key: str, value: str):
         kwargs = {
@@ -108,14 +111,15 @@ class Store(Factual):
                 if err is not None:
                     raise ValueError(err.exc.msg_template)
             except KeyError:
-                print(f"invalid key, valid options {list(self.model.__fields__.keys())}")
+                print(
+                    f"invalid key, valid options {list(self.model.__fields__.keys())}"
+                )
                 exit(1)
             except ValueError as e:
                 print(e)
                 exit(1)
-        
-        return clients.ssm.put_parameter(**kwargs)
 
+        return clients.ssm.put_parameter(**kwargs)
 
     def delete(self, key: str):
         try:
@@ -128,8 +132,9 @@ class Env(Store):
     def __init__(self):
         try:
             from shapes import Env as Model
+
             super().__init__("env", Model)
-        except ImportError: 
+        except ImportError:
             super().__init__("env")
 
 
@@ -137,8 +142,9 @@ class Arg(Store):
     def __init__(self):
         try:
             from shapes import Arg as Model
+
             super().__init__("arg", Model)
-        except ImportError: 
+        except ImportError:
             super().__init__("arg")
 
 
@@ -147,5 +153,5 @@ class Provision(Store):
         try:
             from sentential.lib.shapes.internal import Provision as Model
             super().__init__("config", Model)
-        except ImportError: 
+        except ImportError:
             super().__init__("config")
