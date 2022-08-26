@@ -193,13 +193,13 @@ class Lambda(Factual):
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
                 Environment={"Variables": {"PARTITION": Env().path}},
                 Architectures=[self.image.arch],
-                EphemeralStorage={'Size': provision.storage },
+                EphemeralStorage={"Size": provision.storage},
                 MemorySize=provision.memory,
                 Timeout=provision.timeout,
                 VpcConfig={
-                    'SubnetIds': provision.subnet_ids,
-                    'SecurityGroupIds': provision.security_group_ids,
-                }
+                    "SubnetIds": provision.subnet_ids,
+                    "SecurityGroupIds": provision.security_group_ids,
+                },
             )
 
             clients.lmb.add_permission(

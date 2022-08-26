@@ -9,6 +9,7 @@ from sentential.lib.store import Env, Arg
 from sentential.lib.facts import lazy_property
 import os
 
+
 class Image(Factual):
     def __init__(self, tag: str) -> None:
         super().__init__()
