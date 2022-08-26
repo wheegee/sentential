@@ -1,5 +1,6 @@
+from builtins import KeyError, ValueError
 from functools import lru_cache
-from typing import Union
+from typing import List, Union
 from sentential.lib.clients import clients
 from types import SimpleNamespace
 from sentential.lib.facts import Factual
@@ -7,6 +8,7 @@ import sys
 import os
 import polars as pl
 from pydantic import ValidationError
+from IPython import embed        
 
 
 sys.path.append(os.getcwd())
@@ -29,58 +31,30 @@ class Store(Factual):
 
     def as_dict(self):
         return {p["Name"].replace(self.path, ""): p["Value"] for p in self.fetch()}
+        
 
-    # TODO: rename to as_simple_namespace
     def parameters(self):
         if self.model is not None:
-            return self.model(**self.as_dict())
+            return self.model.constrained_parse_obj(self.as_dict())
         else:
             return SimpleNamespace(**self.as_dict())
 
-    def data(self):
+    def ssm_df(self):
         data = self.as_dict()
         data = [list(data.keys()), list(data.values())]
         return pl.DataFrame(data, columns=[("field", pl.Utf8), ("persisted", pl.Utf8)])
 
-    def validation(self):
-        columns = [("field", pl.Utf8), ("validation", pl.Utf8)]
-        try:
-            self.model(**self.as_dict())
-            return pl.DataFrame([[], []], columns=columns)
-        except ValidationError as e:
-            return pl.DataFrame(
-                [
-                    ["/".join(list(e["loc"])) for e in e.errors()],
-                    [e["msg"] for e in e.errors()],
-                ],
-                columns=columns,
-            )
-
-    def schema(self):
-        fields = list(self.model.schema()["properties"].keys())
-        properties = list(self.model.schema()["properties"].values())
-        columns = [("field", pl.Utf8), ("default", pl.Utf8), ("description", pl.Utf8)]
-        return pl.DataFrame(
-            [
-                fields,
-                [str(p["default"]) if "default" in p else None for p in properties],
-                [p["description"] if "description" in p else None for p in properties],
-            ],
-            columns=columns,
-        )
-
-    def read(self):
-        data = self.data()
+    def state_df(self):
+        data = self.ssm_df()
         if self.model is not None:
             opts = {"on": "field", "how": "outer"}
-            schema = self.schema()
-            validation = self.validation()
+            schema = self.model.schema_df()
+            validation = self.model.constrained_validation_df(self.as_dict())
             df = schema.join(data, **opts).join(validation, **opts)
             df = df.with_columns(
                 [(pl.col("persisted").fill_null(pl.col("default"))).alias("value")]
             )
-            print(
-                df.select(
+            return df.select(
                     [
                         pl.col("field"),
                         pl.col("value"),
@@ -88,14 +62,17 @@ class Store(Factual):
                         pl.col("description"),
                     ]
                 )
-            )
         else:
-            print(data.select([pl.col("field"), pl.col("persisted").alias("value")]))
+            return data.select([pl.col("field"), pl.col("persisted").alias("value")])
 
-    def write(self, key: str, value: str):
+
+    def read(self):
+        print(self.state_df())
+
+    def write(self, key: str, value: Union[List[str], str]):
         kwargs = {
             "Name": f"{self.path}{key}",
-            "Value": value,
+            "Value": str(value),
             "Type": "SecureString",
             "Overwrite": True,
             "Tier": "Standard",
@@ -103,10 +80,11 @@ class Store(Factual):
         }
         if self.model is not None:
             try:
-                field = self.model.__fields__[key]
-                err = field.validate(value, [], loc=key)[1]
-                if err is not None:
-                    raise ValueError(err.exc.msg_template)
+                validation = self.model.constrained_validation_df({ key: value })
+                validation = validation.filter(pl.col("field") == key)
+                if validation.row(0)[1] is not None:
+                    raise ValueError(validation.row(0)[1])
+
             except KeyError:
                 print(
                     f"invalid key, valid options {list(self.model.__fields__.keys())}"

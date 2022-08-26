@@ -1,7 +1,8 @@
 from pathlib import PosixPath, Path
 from typing import List
-from pydantic import BaseModel, Field, Extra
+from pydantic import BaseModel, Field
 from sentential.lib.shapes.aws import AWSPolicyDocument
+from sentential.lib.shapes.shaper import Shaper
 
 #
 # Spec
@@ -36,12 +37,16 @@ def derive_paths(root: PosixPath = Path(".")):
     )
 
 
-class Provision(BaseModel):
-    storage: int = Field(default=512, description="ephemeral storage (gb)")
+
+
+#
+# Internally Defined Shapes
+# 
+
+class Provision(Shaper):
+    storage: int = Field(default=512, description="ephemeral storage (mb)")
     memory: int = Field(default=128, description="allocated memory (mb)")
     timeout: int = Field(default=3, description="timeout (s)")
     subnet_ids: List[str] = Field(default=[], description="subnet ids")
     security_group_ids: List[str] = Field(default=[], description="security group ids")
 
-    class Config:
-        extra = Extra.forbid

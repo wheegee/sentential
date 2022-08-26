@@ -1,3 +1,4 @@
+from typing import List
 import typer
 from sentential.lib.store import Provision
 
@@ -11,7 +12,7 @@ def read():
 
 
 @config.command()
-def write(key: str, value: str):
+def write(key: str, value: List[str]):
     """write lambda provisioning config"""
     Provision().write(key, value)
 
