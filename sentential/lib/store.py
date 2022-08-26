@@ -8,7 +8,7 @@ import sys
 import os
 import polars as pl
 from pydantic import ValidationError
-from IPython import embed        
+from IPython import embed
 
 
 sys.path.append(os.getcwd())
@@ -31,7 +31,6 @@ class Store(Factual):
 
     def as_dict(self):
         return {p["Name"].replace(self.path, ""): p["Value"] for p in self.fetch()}
-        
 
     def parameters(self):
         if self.model is not None:
@@ -55,16 +54,15 @@ class Store(Factual):
                 [(pl.col("persisted").fill_null(pl.col("default"))).alias("value")]
             )
             return df.select(
-                    [
-                        pl.col("field"),
-                        pl.col("value"),
-                        pl.col("validation"),
-                        pl.col("description"),
-                    ]
-                )
+                [
+                    pl.col("field"),
+                    pl.col("value"),
+                    pl.col("validation"),
+                    pl.col("description"),
+                ]
+            )
         else:
             return data.select([pl.col("field"), pl.col("persisted").alias("value")])
-
 
     def read(self):
         print(self.state_df())
@@ -80,7 +78,7 @@ class Store(Factual):
         }
         if self.model is not None:
             try:
-                validation = self.model.constrained_validation_df({ key: value })
+                validation = self.model.constrained_validation_df({key: value})
                 validation = validation.filter(pl.col("field") == key)
                 if validation.row(0)[1] is not None:
                     raise ValueError(validation.row(0)[1])

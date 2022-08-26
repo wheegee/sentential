@@ -37,11 +37,10 @@ def derive_paths(root: PosixPath = Path(".")):
     )
 
 
-
-
 #
 # Internally Defined Shapes
-# 
+#
+
 
 class Provision(Shaper):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
@@ -49,4 +48,3 @@ class Provision(Shaper):
     timeout: int = Field(default=3, description="timeout (s)")
     subnet_ids: List[str] = Field(default=[], description="subnet ids")
     security_group_ids: List[str] = Field(default=[], description="security group ids")
-

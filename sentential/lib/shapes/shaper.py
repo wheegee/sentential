@@ -7,15 +7,15 @@ import ast
 # User Driven Shapes
 #
 
-ALLOWED_LIST_TYPES=[List[str], List[int], List[float]]
+ALLOWED_LIST_TYPES = [List[str], List[int], List[float]]
 ALLOWED_TYPES = [str, int, float] + ALLOWED_LIST_TYPES
+
 
 class DisallowedType(BaseException):
     pass
 
+
 class Shaper(BaseModel):
-
-
     class Config:
         extra = Extra.forbid
 
@@ -32,24 +32,29 @@ class Shaper(BaseModel):
     @classmethod
     def type_constraints_df(cls):
         columns = [("field", pl.Utf8), ("type_check", pl.Utf8)]
-        fields = [ name for name in cls.__fields__.keys() ]
-        type_checks = [ 
-            f"disallowed type {f.outer_type_}" if f.outer_type_ not in ALLOWED_TYPES else None for f in list(cls.__fields__.values())
+        fields = [name for name in cls.__fields__.keys()]
+        type_checks = [
+            f"disallowed type {f.outer_type_}"
+            if f.outer_type_ not in ALLOWED_TYPES
+            else None
+            for f in list(cls.__fields__.values())
         ]
 
-        return pl.DataFrame([
-            fields,
-            type_checks,
-        ],
-        columns=columns)
+        return pl.DataFrame(
+            [
+                fields,
+                type_checks,
+            ],
+            columns=columns,
+        )
 
     @classmethod
     def validation_df(cls, data: dict):
         columns = [("field", pl.Utf8), ("value_check", pl.Utf8)]
-        fields = [ name for name in cls.__fields__.keys() ]
+        fields = [name for name in cls.__fields__.keys()]
         try:
             cls.constrained_parse_obj(data)
-            return pl.DataFrame([fields, [ None for f in fields ]], columns=columns)
+            return pl.DataFrame([fields, [None for f in fields]], columns=columns)
         except ValidationError as e:
             return pl.DataFrame(
                 [
@@ -64,9 +69,13 @@ class Shaper(BaseModel):
         type_constraints = cls.type_constraints_df()
         validations = cls.validation_df(data)
 
-        df = type_constraints.join(validations, on="field", how="outer" )
+        df = type_constraints.join(validations, on="field", how="outer")
         df = df.with_columns(
-            [(pl.col("type_check").fill_null(pl.col("value_check"))).alias("validation")]
+            [
+                (pl.col("type_check").fill_null(pl.col("value_check"))).alias(
+                    "validation"
+                )
+            ]
         )
         return df.select([pl.col("field"), pl.col("validation")])
 
@@ -75,7 +84,9 @@ class Shaper(BaseModel):
         fields = list(cls.schema()["properties"].keys())
         properties = list(cls.schema()["properties"].values())
         defaults = [str(p["default"]) if "default" in p else None for p in properties]
-        descriptions = [p["description"] if "description" in p else None for p in properties]
+        descriptions = [
+            p["description"] if "description" in p else None for p in properties
+        ]
         columns = [("field", pl.Utf8), ("default", pl.Utf8), ("description", pl.Utf8)]
         return pl.DataFrame(
             [
