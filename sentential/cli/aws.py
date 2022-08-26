@@ -1,10 +1,6 @@
 import typer
 from sentential.lib.aws import Image, Lambda, Repository
-from rich.console import Console
-from rich.table import Table
-from rich import print
-from sentential.lib.clients import clients
-
+import polars as pl
 aws = typer.Typer()
 
 
@@ -27,15 +23,17 @@ def destroy(
 
 @aws.command()
 def list():
-    """list local lambda images"""
-    table = Table("Tag", "Arch", "Deployed", "Sha")
+    """list aws lambda images"""
+    columns = [("Tag", pl.Utf8),("Arch", pl.Utf8), ("Sha", pl.Utf8), ("Deployed", pl.Boolean)]
+    images = Repository().images()
     deployed = Lambda.deployed()
-    for image in Repository().images():
-        if deployed is not None and deployed.image.id == image.id:
-            table.add_row(image.tag, image.arch, "True", image.id)
-        else:
-            table.add_row(image.tag, image.arch, "False", image.id)
-
+    table = pl.DataFrame([
+        [i.tag for i in images],
+        [i.arch for i in images],
+        [i.id for i in images],
+        ["i.id == deployed.image.id" if deployed is not None else False for i in images ]
+    ],
+    columns=columns)
     print(table)
 
 

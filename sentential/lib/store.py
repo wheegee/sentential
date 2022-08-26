@@ -7,8 +7,6 @@ from sentential.lib.facts import Factual
 import sys
 import os
 import polars as pl
-from pydantic import ValidationError
-from IPython import embed
 
 
 sys.path.append(os.getcwd())

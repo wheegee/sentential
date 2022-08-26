@@ -1,7 +1,6 @@
 import typer
 from sentential.lib.local import Image, Lambda, Repository
-from rich.table import Table
-from rich import print
+import polars as pl
 
 local = typer.Typer()
 
@@ -26,16 +25,17 @@ def destroy(
 @local.command()
 def list():
     """list local lambda images"""
-    table = Table("Tag", "Arch", "Deployed", "Sha")
+    columns = [("Tag", pl.Utf8),("Arch", pl.Utf8), ("Sha", pl.Utf8), ("Deployed", pl.Boolean)]
+    images = Repository().images()
     deployed = Lambda.deployed()
-    for image in Repository().images():
-        if deployed is not None and deployed.image.id == image.id:
-            table.add_row(image.tag, image.arch, "True", image.id)
-        else:
-            table.add_row(image.tag, image.arch, "False", image.id)
-
+    table = pl.DataFrame([
+        [i.tag for i in images],
+        [i.arch for i in images],
+        [i.id for i in images],
+        ["i.id == deployed.image.id" if deployed is not None else False for i in images ]
+    ],
+    columns=columns)
     print(table)
-
 
 @local.command()
 def logs(follow: bool = typer.Option(False)):

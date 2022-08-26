@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ValidationError, Extra
+from pydantic import BaseModel, ValidationError, Extra, Field
 from typing import List
 import polars as pl
 import ast

@@ -1,13 +1,11 @@
 import json
-from pyclbr import Function
 from time import sleep
-from functools import lru_cache
 from typing import List
 from jinja2 import Template
 from sentential.lib.clients import clients
 from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON
 from sentential.lib.facts import Factual, Facts, lazy_property
-from sentential.lib.store import Env
+from sentential.lib.store import Env, Provision
 import os
 
 
@@ -186,6 +184,7 @@ class Lambda(Factual):
         role_arn = clients.iam.get_role(RoleName=self.role_name)["Role"]["Arn"]
         sleep(10)
         try:
+            provision = Provision().parameters()
             function = clients.lmb.create_function(
                 FunctionName=self.function_name,
                 Role=role_arn,
@@ -194,13 +193,13 @@ class Lambda(Factual):
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
                 Environment={"Variables": {"PARTITION": Env().path}},
                 Architectures=[self.image.arch],
-                # EphemeralStorage={'Size': Config().read()},
-                # MemorySize=128,
-                # Timeout=3,
-                # VpcConfig={
-                #     SubnetIds=[],
-                #     SecurityGroupIds=[],
-                # }
+                EphemeralStorage={'Size': provision.storage },
+                MemorySize=provision.memory,
+                Timeout=provision.timeout,
+                VpcConfig={
+                    'SubnetIds': provision.subnet_ids,
+                    'SecurityGroupIds': provision.security_group_ids,
+                }
             )
 
             clients.lmb.add_permission(

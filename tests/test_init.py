@@ -21,7 +21,7 @@ def test_files_exist():
 
 
 def test_env_write():
-    result = runner.invoke(sntl, ["env", "write", "envvar", "test"])
+    result = runner.invoke(sntl, ["env", "write", "ENVVAR", "test"])
     assert result.exit_code == 0
 
 

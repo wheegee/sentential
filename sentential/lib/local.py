@@ -1,5 +1,3 @@
-import json
-import typer
 from python_on_whales import DockerException
 from pipes import Template
 from typing import List
@@ -9,7 +7,7 @@ from sentential.lib.facts import Factual, Facts
 from jinja2 import Template
 from sentential.lib.store import Env, Arg
 from sentential.lib.facts import lazy_property
-
+import os
 
 class Image(Factual):
     def __init__(self, tag: str) -> None:
@@ -128,7 +126,10 @@ class Lambda(Factual):
         }
 
     def logs(self, follow: bool = False):
-        return clients.docker.logs("sentential", follow=follow)
+        cmd = ["docker", "logs", "sentential"]
+        if follow:
+            cmd.append("--follow")
+        os.system(" ".join(cmd))
 
 
 def retry_after_docker_login(func):
