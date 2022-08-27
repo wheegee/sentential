@@ -282,9 +282,9 @@ class Repository(Factual):
         deployed = Lambda.deployed()
         return pl.DataFrame(
             [
+                [i.id for i in images],
                 [i.tag for i in images],
                 [i.arch for i in images],
-                [i.id for i in images],
                 [
                     i.id == deployed.image.id if deployed is not None else False
                     for i in images

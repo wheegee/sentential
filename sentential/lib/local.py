@@ -23,7 +23,7 @@ class Image(Factual):
             # TODO: use registry_url to find element of list instead of assuming first
             return self.metadata.repo_digests[0].split("@")[1]
         else:
-            return "not published"
+            return self.metadata.id
 
     @lazy_property
     def tags(self) -> List[str]:
@@ -180,9 +180,9 @@ class Repository(Factual):
         deployed = Lambda.deployed()
         return pl.DataFrame(
             [
+                [i.id for i in images],
                 [i.tag for i in images],
                 [i.arch for i in images],
-                [i.id for i in images],
                 [
                     i.id == deployed.image.id if deployed is not None else False
                     for i in images
