@@ -19,6 +19,7 @@ def write(key: str, value: List[str]):
     else:
         Env().write(key, value[0])
 
+
 @env.command()
 def delete(key: str):
     """delete runtime environment variable for lambda"""
