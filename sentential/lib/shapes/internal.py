@@ -24,6 +24,7 @@ class Paths(BaseModel):
     dockerfile: PosixPath
     wrapper: PosixPath
     policy: PosixPath
+    shapes: PosixPath
 
 
 def derive_paths(root: PosixPath = Path(".")):
@@ -34,6 +35,7 @@ def derive_paths(root: PosixPath = Path(".")):
         dockerfile=Path(f"{root}/Dockerfile"),
         wrapper=Path(f"{root}/.sntl/wrapper.sh"),
         policy=Path(f"{root}/policy.json"),
+        shapes=Path(f"{root}/shapes.py")
     )
 
 

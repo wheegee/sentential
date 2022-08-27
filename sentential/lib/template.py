@@ -1,5 +1,4 @@
 import os
-import json
 from shutil import copy
 from os import makedirs
 from os.path import exists
@@ -8,7 +7,6 @@ from jinja2 import Environment, FileSystemLoader, Template
 from sentential.lib.shapes.internal import derive_paths
 
 PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
-
 
 class InitTime:
     def __init__(self, repository_name: str):
@@ -24,12 +22,16 @@ class InitTime:
             makedirs(self.path.src)
         self.dockerfile()
         self.policy()
+        self.shapes()
 
     def dockerfile(self):
         self._write(self.jinja.get_template("Dockerfile"), self.path.dockerfile)
 
     def policy(self):
         copy(f"{PACKAGE_PATH}/../templates/policy.json", self.path.policy)
+    
+    def shapes(self):
+        copy(f"{PACKAGE_PATH}/../templates/shapes.py", self.path.shapes)
 
     def _write(self, template: Template, write_to: PosixPath) -> PosixPath:
         if not exists(write_to):
@@ -43,16 +45,3 @@ class InitTime:
                 )
 
         return write_to
-
-
-# TODO: Turn this into a Spec deploy time templating system, extract from duplicate locations
-# where it's currently implemented inline (local.py and aws.py)
-# class DeployTime:
-#     def __init__(self):
-#         self.jinja = Environment(loader=FileSystemLoader("."))
-
-# def policy(self) -> str:
-#     return json.dumps(json.loads(self.template(str(facts.path.policy))))
-
-# def template(self, template: PosixPath) -> str:
-#     return self.jinja.get_template(template).render(facts=facts, config=)
