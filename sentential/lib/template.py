@@ -8,6 +8,7 @@ from sentential.lib.shapes.internal import derive_paths
 
 PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 
+
 class InitTime:
     def __init__(self, repository_name: str):
         self.repository_name = repository_name
@@ -29,7 +30,7 @@ class InitTime:
 
     def policy(self):
         copy(f"{PACKAGE_PATH}/../templates/policy.json", self.path.policy)
-    
+
     def shapes(self):
         copy(f"{PACKAGE_PATH}/../templates/shapes.py", self.path.shapes)
 

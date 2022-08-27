@@ -22,7 +22,3 @@ class Arg(Shaper):
 class Env(Shaper):
     pass
 """
-
-
-
-
