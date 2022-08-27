@@ -2,7 +2,7 @@ from pathlib import PosixPath, Path
 from typing import List
 from pydantic import BaseModel, Field
 from sentential.lib.shapes.aws import AWSPolicyDocument
-from sentential.lib.shapes.shaper import Shaper
+from sentential.support.shaper import Shaper
 
 #
 # Spec

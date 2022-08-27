@@ -1,7 +1,10 @@
+from builtins import BaseException
 from pydantic import BaseModel, ValidationError, Extra, Field
 from typing import List
 import polars as pl
 import ast
+
+from IPython import embed
 
 #
 # User Driven Shapes
@@ -22,11 +25,19 @@ class Shaper(BaseModel):
     @classmethod
     def constrained_parse_obj(cls, data: dict):
         for (name, field) in cls.__fields__.items():
+            # disallow types
             if field.outer_type_ not in ALLOWED_TYPES:
                 raise DisallowedType(f"disallowed type")
+
+        # If data is populating from ssm, it's always a string.
+        # A list is stored in ssm as "[ 'some', 'list' ]"
+        # Use knowledge that the field is a list, and ast.literal_eval
+        # to bring it back to a python list, pydantic will coerce what's within
+        for field in cls.__fields__.values():
             if field.outer_type_ in ALLOWED_LIST_TYPES:
                 if field.name in data and type(data[field.name]) is str:
                     data[field.name] = ast.literal_eval(data[field.name])
+
         return cls(**data)
 
     @classmethod

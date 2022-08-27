@@ -65,7 +65,7 @@ class Store(Factual):
     def read(self):
         print(self.state_df())
 
-    def write(self, key: str, value: Union[List[str], str]):
+    def write(self, key: str, value: List[str]):
         kwargs = {
             "Name": f"{self.path}{key}",
             "Value": str(value),
@@ -80,7 +80,6 @@ class Store(Factual):
                 validation = validation.filter(pl.col("field") == key)
                 if validation.row(0)[1] is not None:
                     raise ValueError(validation.row(0)[1])
-
             except KeyError:
                 print(
                     f"invalid key, valid options {list(self.model.__fields__.keys())}"

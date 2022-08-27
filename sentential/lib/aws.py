@@ -7,6 +7,7 @@ from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON
 from sentential.lib.facts import Factual, Facts, lazy_property
 from sentential.lib.store import Env, Provision
 import os
+import polars as pl
 
 
 class Image(Factual):
@@ -269,3 +270,25 @@ class Repository(Factual):
                 for tag in image["imageTags"]:
                     filtered.append(Image(tag))
         return filtered
+
+    def df(self):
+        columns = [
+            ("Sha", pl.Utf8),
+            ("Tag", pl.Utf8),
+            ("Arch", pl.Utf8),
+            ("Deployed", pl.Boolean),
+        ]
+        images = Repository().images()
+        deployed = Lambda.deployed()
+        return pl.DataFrame(
+            [
+                [i.tag for i in images],
+                [i.arch for i in images],
+                [i.id for i in images],
+                [
+                    i.id == deployed.image.id if deployed is not None else False
+                    for i in images
+                ],
+            ],
+            columns=columns,
+        )

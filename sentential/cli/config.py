@@ -14,7 +14,10 @@ def read():
 @config.command()
 def write(key: str, value: List[str]):
     """write lambda provisioning config"""
-    Provision().write(key, value)
+    if len(value) > 1:
+        Provision().write(key, value)
+    else:
+        Provision().write(key, value[0])
 
 
 @config.command()

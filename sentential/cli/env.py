@@ -1,4 +1,5 @@
 import typer
+from typing import List
 from sentential.lib.store import Env
 
 env = typer.Typer()
@@ -11,10 +12,12 @@ def read():
 
 
 @env.command()
-def write(key: str, value: str):
+def write(key: str, value: List[str]):
     """write runtime environment variable for lambda"""
-    Env().write(key, value)
-
+    if len(value) > 1:
+        Env().write(key, value)
+    else:
+        Env().write(key, value[0])
 
 @env.command()
 def delete(key: str):

@@ -13,7 +13,10 @@ def read():
 @arg.command()
 def write(key: str, value: str):
     """write build arg for lambda"""
-    Arg().write(key, value)
+    if len(value) > 1:
+        Arg().write(key, value)
+    else:
+        Arg().write(key, value[0])
 
 
 @arg.command()

@@ -8,6 +8,7 @@ from jinja2 import Template
 from sentential.lib.store import Env, Arg
 from sentential.lib.facts import lazy_property
 import os
+import polars as pl
 
 
 class Image(Factual):
@@ -167,3 +168,25 @@ class Repository(Factual):
             f"{self.facts.repository_url}:{image.tag}",
         )
         clients.docker.image.push(f"{self.facts.repository_url}:{image.tag}")
+
+    def df(self):
+        columns = [
+            ("Sha", pl.Utf8),
+            ("Tag", pl.Utf8),
+            ("Arch", pl.Utf8),
+            ("Deployed", pl.Boolean),
+        ]
+        images = self.images()
+        deployed = Lambda.deployed()
+        return pl.DataFrame(
+            [
+                [i.tag for i in images],
+                [i.arch for i in images],
+                [i.id for i in images],
+                [
+                    i.id == deployed.image.id if deployed is not None else False
+                    for i in images
+                ],
+            ],
+            columns=columns,
+        )
