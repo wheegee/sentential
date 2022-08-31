@@ -1,9 +1,10 @@
-import typer
+from sentential.lib.const import CWI_TAG
 from sentential.lib.aws import Lambda as AwsLambda
 from sentential.lib.aws import Image as AwsImage
 from sentential.lib.local import Lambda as LocalLambda
 from sentential.lib.local import Image as LocalImage
 from sentential.lib.ontology import Ontology
+import typer
 
 deploy = typer.Typer()
 
@@ -25,7 +26,7 @@ def aws(
 
 @deploy.command()
 def local(
-    tag: str = typer.Argument("latest", envvar="TAG"),
+    tag: str = typer.Argument(CWI_TAG, envvar="TAG"),
     public_url: bool = typer.Option(default=False),
 ):
     """build and deploy local lambda container"""

@@ -16,6 +16,7 @@ def test_files_exist():
     for file in [
         "Dockerfile",
         "policy.json",
+        "shapes.py"
     ]:
         assert exists(file)
 
@@ -25,7 +26,7 @@ def test_env_write():
     assert result.exit_code == 0
 
 
-def test_local_deploy():
+def test_local_build():
     copyfile(f"{project}/tests/fixtures/app.py", f"{repo.name}/src/app.py")
     copyfile(
         f"{project}/tests/fixtures/requirements.txt",
@@ -38,7 +39,11 @@ def test_local_deploy():
             else:
                 fp.write(line)
 
-    result = runner.invoke(sntl, ["local", "deploy", "--public-url"])
+    result = runner.invoke(sntl, ["build"])
+    assert result.exit_code == 0
+
+def test_local_deploy():
+    result = runner.invoke(sntl, ["deploy", "local", "--public-url"])
     assert result.exit_code == 0
 
 
@@ -48,7 +53,7 @@ def test_local_app():
 
 
 def test_local_destroy():
-    result = runner.invoke(sntl, ["local", "destroy"])
+    result = runner.invoke(sntl, ["destroy", "local"])
     assert result.exit_code == 0
 
 

@@ -1,15 +1,12 @@
+from sentential.lib.const import SEMVER_REGEX
 from sentential.lib.aws import Repository as AwsRepository
 from sentential.lib.local import Repository as LocalRepository
 from distutils.version import StrictVersion
 import semantic_version as semver
-import polars as pl
-import re
 from rich.table import Table
 from rich import print
-from IPython import embed
-
-SEMVER_REGEX = "^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
-
+import polars as pl
+import re
 
 class Ontology:
     def __init__(self):
@@ -68,6 +65,13 @@ class Ontology:
 
     def semvers(self):
         return list(self._sort(self._extract()).get_column("tag"))
+
+    def sha_exists(self, sha):
+        table = self._squash(self._extract())
+        for row in table.to_dicts():
+            if row["sha"] == sha:
+                return True
+        return False
 
     def print(self):
         df = self._squash(self._sort(self._extract()))

@@ -1,12 +1,10 @@
-import os
+from sentential.lib.const import PACKAGE_PATH
+from sentential.lib.shapes.internal import derive_paths
 from shutil import copy
 from os import makedirs
 from os.path import exists
 from pathlib import PosixPath
 from jinja2 import Environment, FileSystemLoader, Template
-from sentential.lib.shapes.internal import derive_paths
-
-PACKAGE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 
 class InitTime:

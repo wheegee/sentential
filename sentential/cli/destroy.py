@@ -8,9 +8,7 @@ destroy = typer.Typer()
 
 
 @destroy.command()
-def local(
-    tag: str = typer.Argument("latest", envvar="TAG"),
-):
+def local():
     """destroy lambda deployment in aws"""
     lmb = LocalLambda.deployed()
     if lmb:
@@ -18,9 +16,7 @@ def local(
 
 
 @destroy.command()
-def aws(
-    tag: str = typer.Argument("latest", envvar="TAG"),
-):
+def aws():
     """destroy lambda deployment in aws"""
     lmb = AwsLambda.deployed()
     if lmb:
