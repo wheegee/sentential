@@ -41,13 +41,17 @@ class Image(Factual):
         return clients.docker.image.inspect(f"{self.repository_name}:{self.tag}")
 
     def retag(self, tag: str):
-        clients.docker.tag(f"{self.repository_name}:{self.tag}", f"{self.repository_name}:{tag}")
+        clients.docker.tag(
+            f"{self.repository_name}:{self.tag}", f"{self.repository_name}:{tag}"
+        )
         return Image(tag)
 
     @classmethod
     def retag(cls, old_tag: str, new_tag: str):
         old = cls(old_tag)
-        clients.docker.tag(f"{old.repository_name}:{old_tag}", f"{old.repository_name}:{new_tag}")
+        clients.docker.tag(
+            f"{old.repository_name}:{old_tag}", f"{old.repository_name}:{new_tag}"
+        )
         return cls(new_tag)
 
     @classmethod

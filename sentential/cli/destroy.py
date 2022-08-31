@@ -16,6 +16,7 @@ def local(
     if lmb:
         lmb.destroy()
 
+
 @destroy.command()
 def aws(
     tag: str = typer.Argument("latest", envvar="TAG"),

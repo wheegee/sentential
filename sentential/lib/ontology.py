@@ -8,7 +8,8 @@ from rich.table import Table
 from rich import print
 from IPython import embed
 
-SEMVER_REGEX="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+SEMVER_REGEX = "^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
+
 
 class Ontology:
     def __init__(self):
@@ -16,35 +17,39 @@ class Ontology:
         self.local = LocalRepository().df()
         self.rgx = re.compile(SEMVER_REGEX)
         self.df = self.local.join(self.aws, on="Sha", how="outer")
-    
+
     def _extract(self):
-        return self.df.select([
-            pl.col("Sha").alias("sha"),
-            pl.col("Tag_right").alias("tag"),
-            pl.col("Deployed").alias("deployed_local"),
-            pl.col("Deployed_right").alias("deployed_aws")
-        ])
+        return self.df.select(
+            [
+                pl.col("Sha").alias("sha"),
+                pl.col("Tag_right").alias("tag"),
+                pl.col("Deployed").alias("deployed_local"),
+                pl.col("Deployed_right").alias("deployed_aws"),
+            ]
+        )
 
     def _sort(self, df):
         table = self._extract().drop_nulls("tag").drop_nulls("tag")
-        rows = [ row for row in table.rows() if self.rgx.match(row[1]) ]
-        rows.sort(key = lambda row: StrictVersion(row[1]))
+        rows = [row for row in table.rows() if self.rgx.match(row[1])]
+        rows.sort(key=lambda row: StrictVersion(row[1]))
         rows = list(reversed(rows))
         # TODO: this is pretty lame, do it another way.
-        sha = [ row[0] for row in rows ]
-        tag = [ row[1] for row in rows ]
-        deployed_local = [ row[2] for row in rows ]
-        deployed_aws = [ row[3] for row in rows ]
+        sha = [row[0] for row in rows]
+        tag = [row[1] for row in rows]
+        deployed_local = [row[2] for row in rows]
+        deployed_aws = [row[3] for row in rows]
 
-        return pl.DataFrame([sha, tag, deployed_local, deployed_aws], columns=table.columns)
+        return pl.DataFrame(
+            [sha, tag, deployed_local, deployed_aws], columns=table.columns
+        )
 
     def _squash(self, df):
         table = df.groupby("sha").agg_list()
         rows = table.to_dicts()
         for row in rows:
-            row['tag']=list(set(row['tag']))
-            row['deployed_local']=any(row['deployed_local'])
-            row['deployed_aws']=any(row['deployed_aws'])
+            row["tag"] = list(set(row["tag"]))
+            row["deployed_local"] = any(row["deployed_local"])
+            row["deployed_aws"] = any(row["deployed_aws"])
 
         return pl.DataFrame([list(row.values()) for row in rows], columns=table.columns)
 
@@ -58,7 +63,7 @@ class Ontology:
     def next_build_semver(self):
         latest = self.latest_semver()
         if latest is None:
-            latest = '0.0.0'
+            latest = "0.0.0"
         return semver.Version(latest).next_patch()
 
     def semvers(self):
