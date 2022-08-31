@@ -13,11 +13,7 @@ def test_init():
 
 
 def test_files_exist():
-    for file in [
-        "Dockerfile",
-        "policy.json",
-        "shapes.py"
-    ]:
+    for file in ["Dockerfile", "policy.json", "shapes.py"]:
         assert exists(file)
 
 
@@ -41,6 +37,7 @@ def test_local_build():
 
     result = runner.invoke(sntl, ["build"])
     assert result.exit_code == 0
+
 
 def test_local_deploy():
     result = runner.invoke(sntl, ["deploy", "local", "--public-url"])

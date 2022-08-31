@@ -22,7 +22,10 @@ def build(tag: str = typer.Argument(CWI_TAG, envvar="CWI_TAG")):
 
 
 @root.command()
-def publish(from_tag: str = typer.Argument(CWI_TAG, envvar="CWI_TAG"), to_tag: str = typer.Argument(None, envvar="TAG")):
+def publish(
+    from_tag: str = typer.Argument(CWI_TAG, envvar="CWI_TAG"),
+    to_tag: str = typer.Argument(None, envvar="TAG"),
+):
     """publish lambda image to aws"""
     ont = Ontology()
 

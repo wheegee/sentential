@@ -8,6 +8,7 @@ from rich import print
 import polars as pl
 import re
 
+
 class Ontology:
     def __init__(self):
         self.aws = AwsRepository().df()
