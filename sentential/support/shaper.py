@@ -4,8 +4,6 @@ from typing import List
 import polars as pl
 import ast
 
-from IPython import embed
-
 #
 # User Driven Shapes
 #

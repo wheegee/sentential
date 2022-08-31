@@ -40,6 +40,16 @@ class Image(Factual):
     def metadata(self):
         return clients.docker.image.inspect(f"{self.repository_name}:{self.tag}")
 
+    def retag(self, tag: str):
+        clients.docker.tag(f"{self.repository_name}:{self.tag}", f"{self.repository_name}:{tag}")
+        return Image(tag)
+
+    @classmethod
+    def retag(cls, old_tag: str, new_tag: str):
+        old = cls(old_tag)
+        clients.docker.tag(f"{old.repository_name}:{old_tag}", f"{old.repository_name}:{new_tag}")
+        return cls(new_tag)
+
     @classmethod
     def build(cls, tag: str = "latest") -> None:
         facts = Facts()
@@ -67,7 +77,6 @@ class Lambda(Factual):
 
     def deploy(self, public_url: bool = True):
         self.destroy()
-        self.image.build(self.image.tag)
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
         default_env = {
@@ -162,7 +171,6 @@ class Repository(Factual):
 
     @retry_after_docker_login
     def publish(self, image: Image):
-        image.build(image.tag)
         clients.docker.image.tag(
             f"{self.facts.repository_name}:{image.tag}",
             f"{self.facts.repository_url}:{image.tag}",
