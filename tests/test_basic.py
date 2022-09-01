@@ -30,17 +30,21 @@ def test_setup_fixtures():
             else:
                 fp.write(line)
 
+
 def test_env_write():
     result = runner.invoke(sntl, ["env", "write", "key", "value"])
     assert result.exit_code == 0
+
 
 def test_local_build():
     result = runner.invoke(sntl, ["build"])
     assert result.exit_code == 0
 
+
 def test_local_deploy():
     result = runner.invoke(sntl, ["deploy", "local", "--public-url"])
     assert result.exit_code == 0
+
 
 @flaky(max_runs=10)
 def test_local_lambda():

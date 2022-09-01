@@ -82,7 +82,7 @@ class Lambda(Factual):
     def deploy(self, public_url: bool = True):
         self.destroy()
         self.env.export_defaults()
-        
+
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
         default_env = {

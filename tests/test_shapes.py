@@ -6,6 +6,7 @@ from sentential.sntl import root as sntl
 from flaky import flaky
 import requests
 
+
 def test_init():
     result = runner.invoke(sntl, ["init", "test", "python"])
     assert result.exit_code == 0
@@ -34,12 +35,8 @@ def test_setup_fixtures():
 
 def test_write():
     result = []
-    result.append(
-        runner.invoke(sntl, ["arg", "write", "required_arg", "given_value"])
-    )
-    result.append(
-        runner.invoke(sntl, ["env", "write", "required_env", "given_value"])
-    )
+    result.append(runner.invoke(sntl, ["arg", "write", "required_arg", "given_value"]))
+    result.append(runner.invoke(sntl, ["env", "write", "required_env", "given_value"]))
     assert all(result)
 
 
@@ -69,10 +66,6 @@ def test_local_destroy():
 
 def test_delete():
     result = []
-    result.append(
-        runner.invoke(sntl, ["arg", "delete", "required_arg"])
-    )
-    result.append(
-        runner.invoke(sntl, ["env", "delete", "required_env"])
-    )
+    result.append(runner.invoke(sntl, ["arg", "delete", "required_arg"]))
+    result.append(runner.invoke(sntl, ["env", "delete", "required_env"]))
     assert all(result)
