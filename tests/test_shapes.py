@@ -6,7 +6,6 @@ from sentential.sntl import root as sntl
 from flaky import flaky
 import requests
 
-
 def test_init():
     result = runner.invoke(sntl, ["init", "test", "python"])
     assert result.exit_code == 0
@@ -36,16 +35,10 @@ def test_setup_fixtures():
 def test_write():
     result = []
     result.append(
-        runner.invoke(sntl, ["arg", "write", "REQUIRED_ARG", "required_value"])
+        runner.invoke(sntl, ["arg", "write", "required_arg", "given_value"])
     )
     result.append(
-        runner.invoke(sntl, ["arg", "write", "list_arg", f"{['one', 'two', 'three']}"])
-    )
-    result.append(
-        runner.invoke(sntl, ["env", "write", "REQUIRED_ENV", "required_value"])
-    )
-    result.append(
-        runner.invoke(sntl, ["env", "write", "list_env", f"{['one', 'two', 'three']}"])
+        runner.invoke(sntl, ["env", "write", "required_env", "given_value"])
     )
     assert all(result)
 
@@ -61,10 +54,10 @@ def test_local_deploy():
 
 
 @flaky(max_runs=10)
-def test_local_app():
+def test_local_lambda():
     results = []
     environment = dict(requests.get("http://localhost:8081/").json())
-    for envar in ["REQUIRED_ENV", "OPTIONAL_ENV", "list_env"]:
+    for envar in ["required_env", "optional_env"]:
         results.append(envar in environment.keys())
     assert all(results)
 
@@ -77,15 +70,9 @@ def test_local_destroy():
 def test_delete():
     result = []
     result.append(
-        runner.invoke(sntl, ["arg", "delete", "REQUIRED_ARG", "required_value"])
+        runner.invoke(sntl, ["arg", "delete", "required_arg"])
     )
     result.append(
-        runner.invoke(sntl, ["arg", "delete", "list_arg", f"{['one', 'two', 'three']}"])
-    )
-    result.append(
-        runner.invoke(sntl, ["env", "delete", "REQUIRED_ENV", "required_value"])
-    )
-    result.append(
-        runner.invoke(sntl, ["env", "delete", "list_env", f"{['one', 'two', 'three']}"])
+        runner.invoke(sntl, ["env", "delete", "required_env"])
     )
     assert all(result)

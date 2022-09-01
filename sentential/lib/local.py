@@ -2,7 +2,6 @@ from python_on_whales import DockerException
 from pipes import Template
 from typing import List
 from sentential.lib.clients import clients
-from sentential.lib.shapes.internal import Spec
 from sentential.lib.facts import Factual, Facts
 from jinja2 import Template
 from sentential.lib.store import Env, Arg
@@ -70,6 +69,7 @@ class Lambda(Factual):
     def __init__(self, image: Image) -> None:
         super().__init__()
         self.image = image
+        self.env = Env()
 
     @classmethod
     def deployed(cls):
@@ -81,11 +81,13 @@ class Lambda(Factual):
 
     def deploy(self, public_url: bool = True):
         self.destroy()
+        self.env.export_defaults()
+        
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
         default_env = {
             "AWS_REGION": self.facts.region,
-            "PARTITION": Env().path,
+            "PARTITION": self.env.path,
         }
 
         clients.docker.run(
@@ -127,7 +129,7 @@ class Lambda(Factual):
     def _get_federation_token(self):
         policy_json = Template(self.facts.path.policy.read_text()).render(
             facts=self.facts,
-            env=Env().parameters(),
+            env=self.env.parameters(),
         )
         token = clients.sts.get_federation_token(
             Name=f"{self.image.repository_name}-spec-policy",

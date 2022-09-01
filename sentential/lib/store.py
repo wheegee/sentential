@@ -89,13 +89,24 @@ class Store(Factual):
                 print(e)
                 exit(1)
 
-        return clients.ssm.put_parameter(**kwargs)
+        return clients.ssm.put_parameter(**kwargs)        
 
     def delete(self, key: str):
         try:
             return clients.ssm.delete_parameter(Name=f"{self.path}{key}")
         except clients.ssm.exceptions.ParameterNotFound:
             pass
+
+    def export_defaults(self):
+        from IPython import embed
+        if self.model:
+            current_state = self.as_dict()
+            for (name, field) in self.model.__fields__.items():
+                if field.name not in current_state.keys():
+                    if hasattr(field, 'default'):
+                        print("exporting default")
+                        self.write(field.name, field.default)
+        self.fetch.cache_clear()
 
 
 class Env(Store):

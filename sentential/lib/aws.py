@@ -53,6 +53,8 @@ class Lambda(Factual):
         self.policy_arn = (
             f"arn:aws:iam::{self.facts.account_id}:policy/{self.policy_name}"
         )
+        self.env = Env()
+        self.provision = Provision()
 
     @classmethod
     def deployed(cls):
@@ -134,7 +136,7 @@ class Lambda(Factual):
     def _put_policy(self) -> object:
         policy_json = Template(self.facts.path.policy.read_text()).render(
             facts=self.facts,
-            env=Env().parameters(),
+            env=self.env.parameters(),
         )
         try:
             policy = clients.iam.create_policy(
@@ -185,21 +187,20 @@ class Lambda(Factual):
         role_arn = clients.iam.get_role(RoleName=self.role_name)["Role"]["Arn"]
         sleep(10)
         try:
-            provision = Provision().parameters()
             function = clients.lmb.create_function(
                 FunctionName=self.function_name,
                 Role=role_arn,
                 PackageType="Image",
                 Code={"ImageUri": self.image_uri},
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
-                Environment={"Variables": {"PARTITION": Env().path}},
+                Environment={"Variables": {"PARTITION": self.env.path}},
                 Architectures=[self.image.arch],
-                EphemeralStorage={"Size": provision.storage},
-                MemorySize=provision.memory,
-                Timeout=provision.timeout,
+                EphemeralStorage={"Size": self.provision.storage},
+                MemorySize=self.provision.memory,
+                Timeout=self.provision.timeout,
                 VpcConfig={
-                    "SubnetIds": provision.subnet_ids,
-                    "SecurityGroupIds": provision.security_group_ids,
+                    "SubnetIds": self.provision.subnet_ids,
+                    "SecurityGroupIds": self.provision.security_group_ids,
                 },
             )
 
@@ -217,7 +218,7 @@ class Lambda(Factual):
                 FunctionName=self.function_name,
                 Role=role_arn,
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
-                Environment={"Variables": {"PARTITION": Env().path}},
+                Environment={"Variables": {"PARTITION": self.env.path}},
             )
 
             clients.lmb.get_waiter("function_updated_v2").wait(

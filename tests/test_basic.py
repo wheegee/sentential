@@ -17,12 +17,7 @@ def test_files_exist():
         assert exists(file)
 
 
-def test_env_write():
-    result = runner.invoke(sntl, ["env", "write", "ENVVAR", "test"])
-    assert result.exit_code == 0
-
-
-def test_local_build():
+def test_setup_fixtures():
     copyfile(f"{project}/tests/fixtures/app.py", f"{repo.name}/src/app.py")
     copyfile(
         f"{project}/tests/fixtures/requirements.txt",
@@ -35,18 +30,25 @@ def test_local_build():
             else:
                 fp.write(line)
 
-    result = runner.invoke(sntl, ["build"])
+def test_env_write():
+    result = runner.invoke(sntl, ["env", "write", "key", "value"])
     assert result.exit_code == 0
 
+def test_local_build():
+    result = runner.invoke(sntl, ["build"])
+    assert result.exit_code == 0
 
 def test_local_deploy():
     result = runner.invoke(sntl, ["deploy", "local", "--public-url"])
     assert result.exit_code == 0
 
-
 @flaky(max_runs=10)
-def test_local_app():
-    assert requests.get("http://localhost:8081/envvar").json() == {"ENVVAR": "test"}
+def test_local_lambda():
+    results = []
+    environment = dict(requests.get("http://localhost:8081/").json())
+    for envar in ["key"]:
+        results.append(envar in environment.keys())
+    assert all(results)
 
 
 def test_local_destroy():
