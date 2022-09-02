@@ -2,18 +2,27 @@ import pytest
 import tempfile
 from os import getcwd
 from typer.testing import CliRunner
+from IPython import embed
 
-runner = CliRunner()
-project = getcwd()
-repo = tempfile.TemporaryDirectory()
+class EphemeralProject:
+    repo = tempfile.TemporaryDirectory()
+    runner = CliRunner()
+    project = getcwd()
+    
+    @classmethod
+    def tearDownClass(cls):
+        cls.dir.cleanup()
+        # cls.repo = tempfile.TemporaryDirectory()
+
+    def setUp(self):
+        self.repo = self.__class__.repo
+        self.runner = self.__class__.runner
+        self.project = self.__class__.project
+
+    @pytest.fixture(autouse=True)
+    def run_in_tmp_dir(self, monkeypatch):
+        monkeypatch.chdir(self.repo.name)
+        yield
+        monkeypatch.chdir(self.project)
 
 
-def teardown_module(module):
-    repo.cleanup()
-
-
-@pytest.fixture(autouse=True)
-def run_in_tmp_dir(monkeypatch):
-    monkeypatch.chdir(repo.name)
-    yield
-    monkeypatch.chdir(project)

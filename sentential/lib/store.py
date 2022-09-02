@@ -98,14 +98,12 @@ class Store(Factual):
             pass
 
     def export_defaults(self):
-        from IPython import embed
 
         if self.model:
             current_state = self.as_dict()
             for (name, field) in self.model.__fields__.items():
                 if field.name not in current_state.keys():
-                    if hasattr(field, "default"):
-                        print("exporting default")
+                    if hasattr(field, "default") and field.default is not None:
                         self.write(field.name, field.default)
         self.fetch.cache_clear()
 
