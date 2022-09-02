@@ -17,6 +17,10 @@ def aws(
     """deploy lambda image to aws"""
     if tag is None:
         tag = Ontology().latest_semver()
+    
+    if tag is None:
+        print(f"no published images in registry")
+        exit(1)
     elif tag not in Ontology().semvers():
         print(f"{tag} is not a published tag")
         exit(1)

@@ -54,7 +54,7 @@ class Lambda(Factual):
             f"arn:aws:iam::{self.facts.account_id}:policy/{self.policy_name}"
         )
         self.env = Env()
-        self.provision = Provision()
+        self.provision = Provision().parameters()
 
     @classmethod
     def deployed(cls):

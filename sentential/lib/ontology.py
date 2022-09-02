@@ -73,11 +73,12 @@ class Ontology:
     def semvers(self) -> List[str]:
         return list(self._sort(self._extract()).get_column("tag"))
 
-    def sha_exists(self, sha) -> bool:
+    def sha_published(self, sha) -> bool:
         table = self._squash(self._extract())
         for row in table.to_dicts():
             if row["sha"] == sha:
-                return True
+                if any(row["tag"]):
+                    return True
         return False
 
     def print(self) -> Table:

@@ -35,7 +35,7 @@ def publish(
 
     image = Image.retag(from_tag, to_tag)
 
-    if ont.sha_exists(image.id):
+    if ont.sha_published(image.id):
         print(f"image {image.id} already exists")
     else:
         Repository().publish(image)

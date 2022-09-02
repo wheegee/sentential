@@ -136,7 +136,6 @@ class Arg(Store):
         try:
             reload_shapes()
             from shapes import Arg as Model
-
             super().__init__("arg", Model)
         except ImportError:
             super().__init__("arg")

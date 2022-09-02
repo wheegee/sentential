@@ -1,3 +1,4 @@
+import pytest
 import requests
 import in_place
 from flaky import flaky
@@ -37,12 +38,13 @@ def test_local_build(invoke):
 
 def test_local_deploy(invoke):
     result = invoke(["deploy", "local", "--public-url"])
+    pytest.deployment_url = result.output
     assert result.exit_code == 0
 
 @flaky(max_runs=10)
 def test_local_lambda():
     results = []
-    environment = dict(requests.get("http://localhost:8081/").json())
+    environment = dict(requests.get(pytest.deployment_url).json())
     for envar in ["key"]:
         results.append(envar in environment.keys())
     assert all(results)

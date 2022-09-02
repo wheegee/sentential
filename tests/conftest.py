@@ -25,3 +25,6 @@ def run_in_tmp_dir(project, repo):
     yield
     chdir(project)
     repo.cleanup()
+
+def pytest_configure():
+    pytest.deployment_url = None
