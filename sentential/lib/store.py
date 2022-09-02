@@ -11,12 +11,15 @@ from rich.table import Table
 from rich import print
 
 
-sys.path.append(os.getcwd())
-
 
 class Store(Factual):
     def __init__(self, suffix: str, model: object = None):
         super().__init__()
+
+        # for loading shapes.py from cwd
+        if os.getcwd() not in sys.path:
+            sys.path.append(os.getcwd())
+        
         self.model = model
         self.path = f"/{self.facts.partition}/{self.facts.repository_name}/{suffix}/"
         self.kms_key_id = self.facts.kms_key_id
@@ -104,11 +107,12 @@ class Store(Factual):
             pass
 
     def export_defaults(self):
+        from IPython import embed
         if self.model:
             current_state = self.as_dict()
             for (name, field) in self.model.__fields__.items():
                 if field.name not in current_state.keys():
-                    if hasattr(field, "default") and field.default is not None:
+                    if hasattr(field, "default") and field.default != None:
                         self.write(field.name, field.default)
         self.fetch.cache_clear()
 

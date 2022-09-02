@@ -61,5 +61,5 @@ class TestCase(EphemeralProject):
 
 
     def test_env_delete(self):
-        result = self.runner.invoke(sntl, ["env", "delete", "envvar"])
+        result = self.runner.invoke(sntl, ["env", "delete", "key"])
         assert result.exit_code == 0

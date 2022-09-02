@@ -54,6 +54,7 @@ class TestCase(EphemeralProject):
     def test_local_lambda(self):
         results = []
         environment = dict(requests.get("http://localhost:8081/").json())
+        from IPython import embed
         for envar in ["required_env", "optional_env"]:
             results.append(envar in environment.keys())
         assert all(results)
@@ -67,5 +68,7 @@ class TestCase(EphemeralProject):
     def test_delete(self):
         result = []
         result.append(self.runner.invoke(sntl, ["arg", "delete", "required_arg"]))
+        result.append(self.runner.invoke(sntl, ["arg", "delete", "optional_arg"]))
         result.append(self.runner.invoke(sntl, ["env", "delete", "required_env"]))
+        result.append(self.runner.invoke(sntl, ["env", "delete", "optional_env"]))
         assert all(result)

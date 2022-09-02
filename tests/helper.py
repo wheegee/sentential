@@ -12,7 +12,7 @@ class EphemeralProject:
     @classmethod
     def tearDownClass(cls):
         cls.dir.cleanup()
-        # cls.repo = tempfile.TemporaryDirectory()
+        cls.repo = tempfile.TemporaryDirectory()
 
     def setUp(self):
         self.repo = self.__class__.repo
