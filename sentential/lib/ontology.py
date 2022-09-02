@@ -49,10 +49,10 @@ class Ontology:
             row["deployed_local"] = any(row["deployed_local"])
             row["deployed_aws"] = any(row["deployed_aws"])
         # TODO: this is pretty lame, do it another way.
-        sha = [ row['sha'] for row in rows ]
-        tag = [ row['tag'] for row in rows ]
-        deployed_local = [ row['deployed_local'] for row in rows ]
-        deployed_aws = [ row['deployed_aws'] for row in rows ]
+        sha = [row["sha"] for row in rows]
+        tag = [row["tag"] for row in rows]
+        deployed_local = [row["deployed_local"] for row in rows]
+        deployed_aws = [row["deployed_aws"] for row in rows]
         return pl.DataFrame(
             [sha, tag, deployed_local, deployed_aws], columns=table.columns
         )

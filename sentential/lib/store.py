@@ -7,6 +7,8 @@ from sentential.lib.facts import Factual
 import sys
 import os
 import polars as pl
+from rich.table import Table
+from rich import print
 
 
 sys.path.append(os.getcwd())
@@ -63,7 +65,11 @@ class Store(Factual):
             return data.select([pl.col("field"), pl.col("persisted").alias("value")])
 
     def read(self):
-        print(self.state_df())
+        data = self.state_df()
+        table = Table(*data.columns)
+        for row in data.rows():
+            table.add_row(*[str(value) for value in row])
+        print(table)
 
     def write(self, key: str, value: List[str]):
         kwargs = {
@@ -98,7 +104,6 @@ class Store(Factual):
             pass
 
     def export_defaults(self):
-
         if self.model:
             current_state = self.as_dict()
             for (name, field) in self.model.__fields__.items():
