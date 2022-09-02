@@ -3,15 +3,16 @@ import in_place
 from flaky import flaky
 from os.path import exists
 from shutil import copyfile
+import requests
+
 
 def test_init(invoke):
-    result = invoke(["init", "testshapes", "python"])
+    result = invoke(["init", "test", "python"])
     assert result.exit_code == 0
 
 def test_files_exist():
     for file in ["Dockerfile", "policy.json", "shapes.py"]:
         assert exists(file)
-
 
 def test_setup_fixtures(project, repo):
     copyfile(f"{project}/tests/fixtures/app.py", f"{repo.name}/src/app.py")
@@ -28,31 +29,28 @@ def test_setup_fixtures(project, repo):
             else:
                 fp.write(line)
 
+
 def test_write(invoke):
     result = []
     result.append(invoke(["arg", "write", "required_arg", "given_value"]))
     result.append(invoke(["env", "write", "required_env", "given_value"]))
     assert all(result)
 
-
 def test_local_build(invoke):
     result = invoke(["build"])
     assert result.exit_code == 0
-
 
 def test_local_deploy(invoke):
     result = invoke(["deploy", "local", "--public-url"])
     assert result.exit_code == 0
 
-
 @flaky(max_runs=10)
 def test_local_lambda():
     results = []
     environment = dict(requests.get("http://localhost:8081/").json())
-    for envar in ["required_env", "optional_env"]:
+    for envar in ["required_env","optional_env"]:
         results.append(envar in environment.keys())
     assert all(results)
-
 
 def test_local_destroy(invoke):
     result = invoke(["destroy", "local"])
