@@ -4,11 +4,12 @@ from os import getcwd
 from typer.testing import CliRunner
 from IPython import embed
 
+
 class EphemeralProject:
     repo = tempfile.TemporaryDirectory()
     runner = CliRunner()
     project = getcwd()
-    
+
     @classmethod
     def tearDownClass(cls):
         cls.dir.cleanup()
@@ -24,5 +25,3 @@ class EphemeralProject:
         monkeypatch.chdir(self.repo.name)
         yield
         monkeypatch.chdir(self.project)
-
-
