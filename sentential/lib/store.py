@@ -1,6 +1,6 @@
 from builtins import KeyError, ValueError
 from functools import lru_cache
-from typing import List, Union
+from typing import List
 from sentential.lib.clients import clients
 from types import SimpleNamespace
 from sentential.lib.facts import Factual
@@ -9,17 +9,11 @@ import os
 import polars as pl
 from rich.table import Table
 from rich import print
-
-
+import importlib
 
 class Store(Factual):
     def __init__(self, suffix: str, model: object = None):
         super().__init__()
-
-        # for loading shapes.py from cwd
-        if os.getcwd() not in sys.path:
-            sys.path.append(os.getcwd())
-        
         self.model = model
         self.path = f"/{self.facts.partition}/{self.facts.repository_name}/{suffix}/"
         self.kms_key_id = self.facts.kms_key_id
@@ -107,7 +101,6 @@ class Store(Factual):
             pass
 
     def export_defaults(self):
-        from IPython import embed
         if self.model:
             current_state = self.as_dict()
             for (name, field) in self.model.__fields__.items():
@@ -116,12 +109,23 @@ class Store(Factual):
                         self.write(field.name, field.default)
         self.fetch.cache_clear()
 
+    def clear(self):
+        for (key, value) in self.as_dict().items():
+            # TODO: do this with a bulk op
+            self.delete(key)
+
+def reload_shapes():
+    # This method is used to ensure cached objects in testing don't hold stale import information about shapes.py
+    if os.getcwd() not in sys.path:
+        sys.path.append(os.getcwd())
+    import shapes
+    importlib.reload(shapes)
 
 class Env(Store):
     def __init__(self):
         try:
+            reload_shapes()
             from shapes import Env as Model
-
             super().__init__("env", Model)
         except ImportError:
             super().__init__("env")
@@ -130,6 +134,7 @@ class Env(Store):
 class Arg(Store):
     def __init__(self):
         try:
+            reload_shapes()
             from shapes import Arg as Model
 
             super().__init__("arg", Model)

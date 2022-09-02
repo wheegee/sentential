@@ -4,10 +4,11 @@ from sentential.lib.template import InitTime
 from sentential.lib.local import Image, Repository
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
+from sentential.lib.store import Env
+
 import typer
 
 root = typer.Typer()
-
 
 @root.command()
 def init(repository_name: str, runtime: Runtimes):

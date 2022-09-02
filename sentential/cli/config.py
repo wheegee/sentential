@@ -24,3 +24,8 @@ def write(key: str, value: List[str]):
 def delete(key: str):
     """delete lambda provisioning config"""
     Provision().delete(key)
+
+@config.command()
+def clear():
+    """delete all config"""
+    Provision().clear()

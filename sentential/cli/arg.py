@@ -23,3 +23,8 @@ def write(key: str, value: str):
 def delete(key: str):
     """delete build arg for lambda"""
     Arg().delete(key)
+
+@arg.command()
+def clear():
+    """delete all args"""
+    Arg().clear()

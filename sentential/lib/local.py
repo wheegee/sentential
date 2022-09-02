@@ -56,6 +56,7 @@ class Image(Factual):
     @classmethod
     def build(cls, tag: str = "latest") -> None:
         facts = Facts()
+        Arg().export_defaults()
         clients.docker.build(
             f"{facts.path.root}",
             load=True,
