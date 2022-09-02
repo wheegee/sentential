@@ -11,6 +11,7 @@ from rich.table import Table
 from rich import print
 import importlib
 
+
 class Store(Factual):
     def __init__(self, suffix: str, model: object = None):
         super().__init__()
@@ -114,18 +115,22 @@ class Store(Factual):
             # TODO: do this with a bulk op
             self.delete(key)
 
+
 def reload_shapes():
     # This method is used to ensure cached objects in testing don't hold stale import information about shapes.py
     if os.getcwd() not in sys.path:
         sys.path.append(os.getcwd())
     import shapes
+
     importlib.reload(shapes)
+
 
 class Env(Store):
     def __init__(self):
         try:
             reload_shapes()
             from shapes import Env as Model
+
             super().__init__("env", Model)
         except ImportError:
             super().__init__("env")
@@ -136,6 +141,7 @@ class Arg(Store):
         try:
             reload_shapes()
             from shapes import Arg as Model
+
             super().__init__("arg", Model)
         except ImportError:
             super().__init__("arg")
