@@ -26,7 +26,7 @@ def publish(
     from_tag: str = typer.Argument(CWI_TAG, envvar="CWI_TAG"),
     to_tag: str = typer.Argument(None, envvar="TAG"),
     major: bool = typer.Option(False),
-    minor: bool = typer.Option(False)
+    minor: bool = typer.Option(False),
 ):
     """publish lambda image to aws"""
     ontology = Ontology()

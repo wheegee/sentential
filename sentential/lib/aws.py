@@ -283,7 +283,7 @@ class Repository(Factual):
 
     def semver(self) -> List[Image]:
         matcher = re.compile(SEMVER_REGEX)
-        images = [ image for image in Repository().images() if matcher.match(image.tag) ]
+        images = [image for image in Repository().images() if matcher.match(image.tag)]
         images.sort(key=lambda image: LooseVersion(image.tag))
         return images
 
