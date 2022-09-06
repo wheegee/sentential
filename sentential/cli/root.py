@@ -3,8 +3,6 @@ from sentential.lib.shapes.aws import Runtimes
 from sentential.lib.template import InitTime
 from sentential.lib.local import Image, Repository
 from sentential.lib.ontology import Ontology
-from sentential.lib.clients import clients
-from sentential.lib.store import Env
 
 import typer
 
@@ -27,19 +25,22 @@ def build(tag: str = typer.Argument(CWI_TAG, envvar="CWI_TAG")):
 def publish(
     from_tag: str = typer.Argument(CWI_TAG, envvar="CWI_TAG"),
     to_tag: str = typer.Argument(None, envvar="TAG"),
+    major: bool = typer.Option(False),
+    minor: bool = typer.Option(False)
 ):
     """publish lambda image to aws"""
-    ont = Ontology()
+    ontology = Ontology()
 
     if to_tag is None:
-        to_tag = ont.next_build_semver()
+        to_tag = ontology.next(major, minor)
 
-    image = Image.retag(from_tag, to_tag)
+    image = Image(from_tag)
 
-    if ont.sha_published(image.id):
-        print(f"image {image.id} already exists")
+    if ontology.published(image.id):
+        print(f"image {image.id} already published")
+        exit(1)
     else:
-        Repository().publish(image)
+        Repository().publish(image.retag(to_tag))
 
 
 @root.command()

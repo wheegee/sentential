@@ -1,5 +1,4 @@
 from os import getenv
-import re
 import typer
 import boto3
 from sentential.lib.clients import clients

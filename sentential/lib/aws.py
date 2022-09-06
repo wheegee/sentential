@@ -1,13 +1,15 @@
+from distutils.version import LooseVersion
 import json
+import re
 from time import sleep
 from typing import List
 from jinja2 import Template
 from sentential.lib.clients import clients
+from sentential.lib.const import SEMVER_REGEX
 from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON
 from sentential.lib.facts import Factual, Facts, lazy_property
 from sentential.lib.store import Env, Provision
 import os
-import polars as pl
 
 
 class Image(Factual):
@@ -219,6 +221,13 @@ class Lambda(Factual):
                 Role=role_arn,
                 Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
                 Environment={"Variables": {"PARTITION": self.env.path}},
+                EphemeralStorage={"Size": self.provision.storage},
+                MemorySize=self.provision.memory,
+                Timeout=self.provision.timeout,
+                VpcConfig={
+                    "SubnetIds": self.provision.subnet_ids,
+                    "SecurityGroupIds": self.provision.security_group_ids,
+                },
             )
 
             clients.lmb.get_waiter("function_updated_v2").wait(
@@ -272,24 +281,14 @@ class Repository(Factual):
                     filtered.append(Image(tag))
         return filtered
 
-    def df(self):
-        columns = [
-            ("Sha", pl.Utf8),
-            ("Tag", pl.Utf8),
-            ("Arch", pl.Utf8),
-            ("Deployed", pl.Boolean),
-        ]
-        images = Repository().images()
-        deployed = Lambda.deployed()
-        return pl.DataFrame(
-            [
-                [i.id for i in images],
-                [i.tag for i in images],
-                [i.arch for i in images],
-                [
-                    i.id == deployed.image.id if deployed is not None else False
-                    for i in images
-                ],
-            ],
-            columns=columns,
-        )
+    def semver(self) -> List[Image]:
+        matcher = re.compile(SEMVER_REGEX)
+        images = [ image for image in Repository().images() if matcher.match(image.tag) ]
+        images.sort(key=lambda image: LooseVersion(image.tag))
+        return images
+
+    def latest(self) -> Image:
+        try:
+            return self.semver()[-1]
+        except IndexError:
+            return None

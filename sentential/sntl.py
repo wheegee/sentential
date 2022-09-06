@@ -8,11 +8,10 @@ from sentential.cli.config import config
 
 root.add_typer(deploy, name="deploy", help="deploy lambda")
 root.add_typer(destroy, name="destroy", help="destroy lambda")
-root.add_typer(logs, name="logs", help="view lambda logs")
-root.add_typer(env, name="env", help="configure lambda runtime environment")
+root.add_typer(logs, name="logs", help="lambda logs")
+root.add_typer(env, name="env", help="configure lambda specs")
 root.add_typer(arg, name="arg", help="configure lambda build args")
-root.add_typer(config, name="config", help="configure lambda provisioning")
-
+root.add_typer(config, name="config", help="configure lambda environment")
 
 def main():
     root()

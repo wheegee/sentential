@@ -1,14 +1,44 @@
-# sentential
+# `sntl`
 
-[![black](https://github.com/wheegee/sentential/actions/workflows/black.yml/badge.svg)](https://github.com/wheegee/sentential/actions/workflows/black.yml)
-[![main](https://github.com/wheegee/sentential/actions/workflows/main.yml/badge.svg)](https://github.com/wheegee/sentential/actions/workflows/main.yml)
+**Usage**:
 
-## Installation
-```bash
-pip install sentential
+```console
+$ sntl [OPTIONS] COMMAND [ARGS]...
 ```
 
-## Usage
-```bash
-sntl --help
+**Options**:
+
+* `--help`: Show this message and exit.
+
+**Commands**:
+
+* `aws`: destroy lambda deployment in aws
+* `local`: destroy lambda deployment in aws
+
+## `sntl aws`
+
+destroy lambda deployment in aws
+
+**Usage**:
+
+```console
+$ sntl aws [OPTIONS]
 ```
+
+**Options**:
+
+* `--help`: Show this message and exit.
+
+## `sntl local`
+
+destroy lambda deployment in aws
+
+**Usage**:
+
+```console
+$ sntl local [OPTIONS]
+```
+
+**Options**:
+
+* `--help`: Show this message and exit.

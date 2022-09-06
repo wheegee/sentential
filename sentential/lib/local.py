@@ -7,7 +7,6 @@ from jinja2 import Template
 from sentential.lib.store import Env, Arg
 from sentential.lib.facts import lazy_property
 import os
-import polars as pl
 
 
 class Image(Factual):
@@ -46,14 +45,6 @@ class Image(Factual):
         return Image(tag)
 
     @classmethod
-    def retag(cls, old_tag: str, new_tag: str):
-        old = cls(old_tag)
-        clients.docker.tag(
-            f"{old.repository_name}:{old_tag}", f"{old.repository_name}:{new_tag}"
-        )
-        return cls(new_tag)
-
-    @classmethod
     def build(cls, tag: str = "latest") -> None:
         facts = Facts()
         Arg().export_defaults()
@@ -61,7 +52,7 @@ class Image(Factual):
             f"{facts.path.root}",
             load=True,
             tags=[f"{facts.repository_name}:{tag}"],
-            # build_args=Arg().as_dict(),
+            build_args=Arg().as_dict(),
         )
         return cls(tag)
 
@@ -183,25 +174,3 @@ class Repository(Factual):
             f"{self.facts.repository_url}:{image.tag}",
         )
         clients.docker.image.push(f"{self.facts.repository_url}:{image.tag}")
-
-    def df(self):
-        columns = [
-            ("Sha", pl.Utf8),
-            ("Tag", pl.Utf8),
-            ("Arch", pl.Utf8),
-            ("Deployed", pl.Boolean),
-        ]
-        images = self.images()
-        deployed = Lambda.deployed()
-        return pl.DataFrame(
-            [
-                [i.id for i in images],
-                [i.tag for i in images],
-                [i.arch for i in images],
-                [
-                    i.id == deployed.image.id if deployed is not None else False
-                    for i in images
-                ],
-            ],
-            columns=columns,
-        )

@@ -4,7 +4,6 @@ from sentential.lib.store import Env
 
 env = typer.Typer()
 
-
 @env.command()
 def read():
     """read runtime environment variables for lambda"""
