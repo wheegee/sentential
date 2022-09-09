@@ -18,7 +18,7 @@ class Image(Factual):
         super().__init__()
         self.repository_name = self.facts.repository_name
         self.tag = tag
-    
+
     @lazy_property
     def id(self) -> str:
         return self.metadata["imageId"]
@@ -138,7 +138,9 @@ class Lambda(Factual):
         if self.tags:
             clients.iam.tag_role(
                 RoleName=self.role_name,
-                Tags=[ { 'Key': key, 'Value': value } for (key, value) in self.tags.items() ]
+                Tags=[
+                    {"Key": key, "Value": value} for (key, value) in self.tags.items()
+                ],
             )
 
         return clients.iam.get_role(RoleName=self.role_name)
@@ -150,7 +152,7 @@ class Lambda(Factual):
         )
         try:
             policy = clients.iam.create_policy(
-                PolicyName=self.policy_name, 
+                PolicyName=self.policy_name,
                 PolicyDocument=policy_json,
             )
 
@@ -175,7 +177,9 @@ class Lambda(Factual):
         if self.tags:
             clients.iam.tag_policy(
                 PolicyName=policy.name,
-                Tags=[ { 'Key': key, 'Value': value} for (key, value) in self.tags.items() ]
+                Tags=[
+                    {"Key": key, "Value": value} for (key, value) in self.tags.items()
+                ],
             )
 
         clients.iam.get_waiter("policy_exists").wait(PolicyArn=self.policy_arn)
@@ -272,10 +276,7 @@ class Lambda(Factual):
             )
 
             if self.tags:
-                clients.lmb.tag_resource(
-                    Resource=function.arn,
-                    Tags=self.tags
-                )
+                clients.lmb.tag_resource(Resource=function.arn, Tags=self.tags)
 
             return function
 
@@ -305,7 +306,7 @@ class Repository(Factual):
 
     def semver(self) -> List[Image]:
         matcher = re.compile(SEMVER_REGEX)
-        images = [ image for image in self.images() if matcher.match(image.tag) ]
+        images = [image for image in self.images() if matcher.match(image.tag)]
         images.sort(key=lambda image: LooseVersion(image.tag))
         return images
 

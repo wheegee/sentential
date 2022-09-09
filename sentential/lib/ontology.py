@@ -50,7 +50,7 @@ class Ontology:
             if aws_deployed != None and aws_deployed.image.id == image.id:
                 data[image.id]["deployed"].append("aws")
             if local_deployed != None and local_deployed.image.id == image.id:
-                data[image.id]['deployed'].append("local")
+                data[image.id]["deployed"].append("local")
 
         for sha, data in data.items():
             table.add_row(sha, *[str(list(set(value))) for value in data.values()])
