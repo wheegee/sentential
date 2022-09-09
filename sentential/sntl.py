@@ -13,5 +13,6 @@ root.add_typer(env, name="env", help="configure lambda specs")
 root.add_typer(arg, name="arg", help="configure lambda build args")
 root.add_typer(config, name="config", help="configure lambda environment")
 
+
 def main():
     root()

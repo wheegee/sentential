@@ -6,12 +6,13 @@ import semantic_version as semver
 from rich.table import Table
 from rich import print
 
+
 class Ontology:
     def __init__(self):
         self.repo = Repository()
 
     def semvers(self) -> List[str]:
-        return [ image.tag for image in self.repo.semver() ]
+        return [image.tag for image in self.repo.semver()]
 
     def latest(self) -> str:
         if self.repo.latest() is None:
@@ -25,7 +26,7 @@ class Ontology:
                 return True
         return False
 
-    def next(self, major = False, minor = False) -> str:
+    def next(self, major=False, minor=False) -> str:
         latest = "0.0.0" if self.latest() is None else self.latest()
         latest = semver.Version(latest)
         if major:
@@ -41,17 +42,13 @@ class Ontology:
         local_deployed = LocalLambda.deployed()
         data = {}
         for image in self.repo.semver():
-            data[image.id] = {
-                'tag': [],
-                'arch': [],
-                'deployed': []
-            }
+            data[image.id] = {"tag": [], "arch": [], "deployed": []}
 
         for image in self.repo.semver():
-            data[image.id]['tag'].append(image.tag)
-            data[image.id]['arch'].append(image.arch)
+            data[image.id]["tag"].append(image.tag)
+            data[image.id]["arch"].append(image.arch)
             if aws_deployed != None and aws_deployed.image.id == image.id:
-                data[image.id]['deployed'].append("aws")
+                data[image.id]["deployed"].append("aws")
             if local_deployed != None and local_deployed.image.id == image.id:
                 data[image.id]['deployed'].append("local")
 
@@ -59,4 +56,3 @@ class Ontology:
             table.add_row(sha, *[str(list(set(value))) for value in data.values()])
 
         print(table)
-        
