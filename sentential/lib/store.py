@@ -147,6 +147,17 @@ class Arg(Store):
             super().__init__("arg")
 
 
+class Tag(Store):
+    def __init__(self):
+        try:
+            reload_shapes()
+            from shapes import Tag as Model
+
+            super().__init__("tag", Model)
+        except ImportError:
+            super().__init__("tag")
+
+
 class Provision(Store):
     def __init__(self):
         try:
@@ -155,3 +166,5 @@ class Provision(Store):
             super().__init__("config", Model)
         except ImportError:
             super().__init__("config")
+
+

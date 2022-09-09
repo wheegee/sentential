@@ -15,6 +15,18 @@ class Image(Factual):
         self.repository_name = self.facts.repository_name
         self.tag = tag
 
+    @classmethod
+    def build(cls, tag: str = "latest") -> None:
+        facts = Facts()
+        Arg().export_defaults()
+        clients.docker.build(
+            f"{facts.path.root}",
+            load=True,
+            tags=[f"{facts.repository_name}:{tag}"],
+            build_args=Arg().as_dict(),
+        )
+        return cls(tag)
+
     @lazy_property
     def id(self) -> str:
         if bool(self.metadata.repo_digests):
@@ -43,18 +55,6 @@ class Image(Factual):
             f"{self.repository_name}:{self.tag}", f"{self.repository_name}:{tag}"
         )
         return Image(tag)
-
-    @classmethod
-    def build(cls, tag: str = "latest") -> None:
-        facts = Facts()
-        Arg().export_defaults()
-        clients.docker.build(
-            f"{facts.path.root}",
-            load=True,
-            tags=[f"{facts.repository_name}:{tag}"],
-            build_args=Arg().as_dict(),
-        )
-        return cls(tag)
 
 
 class Lambda(Factual):

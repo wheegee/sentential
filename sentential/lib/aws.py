@@ -1,15 +1,16 @@
-from distutils.version import LooseVersion
+from functools import lru_cache
+import os
 import json
 import re
 from time import sleep
 from typing import List
 from jinja2 import Template
+from distutils.version import LooseVersion
 from sentential.lib.clients import clients
 from sentential.lib.const import SEMVER_REGEX
 from sentential.lib.shapes.aws import LAMBDA_ROLE_POLICY_JSON
 from sentential.lib.facts import Factual, Facts, lazy_property
-from sentential.lib.store import Env, Provision
-import os
+from sentential.lib.store import Env, Provision, Tag
 
 
 class Image(Factual):
@@ -17,7 +18,7 @@ class Image(Factual):
         super().__init__()
         self.repository_name = self.facts.repository_name
         self.tag = tag
-
+    
     @lazy_property
     def id(self) -> str:
         return self.metadata["imageId"]
@@ -57,6 +58,7 @@ class Lambda(Factual):
         )
         self.env = Env()
         self.provision = Provision().parameters()
+        self.tags = Tag().as_dict()
 
     @classmethod
     def deployed(cls):
@@ -133,6 +135,12 @@ class Lambda(Factual):
 
         clients.iam.get_waiter("role_exists").wait(RoleName=self.role_name)
 
+        if self.tags:
+            clients.iam.tag_role(
+                RoleName=self.role_name,
+                Tags=[ { 'Key': key, 'Value': value } for (key, value) in self.tags.items() ]
+            )
+
         return clients.iam.get_role(RoleName=self.role_name)
 
     def _put_policy(self) -> object:
@@ -142,7 +150,8 @@ class Lambda(Factual):
         )
         try:
             policy = clients.iam.create_policy(
-                PolicyName=self.policy_name, PolicyDocument=policy_json
+                PolicyName=self.policy_name, 
+                PolicyDocument=policy_json,
             )
 
         except clients.iam.exceptions.EntityAlreadyExistsException:
@@ -161,6 +170,12 @@ class Lambda(Factual):
                 PolicyArn=self.policy_arn,
                 PolicyDocument=policy_json,
                 SetAsDefault=True,
+            )
+
+        if self.tags:
+            clients.iam.tag_policy(
+                PolicyName=policy.name,
+                Tags=[ { 'Key': key, 'Value': value} for (key, value) in self.tags.items() ]
             )
 
         clients.iam.get_waiter("policy_exists").wait(PolicyArn=self.policy_arn)
@@ -256,6 +271,12 @@ class Lambda(Factual):
                 FunctionUrlAuthType="NONE",
             )
 
+            if self.tags:
+                clients.lmb.tag_resource(
+                    Resource=function.arn,
+                    Tags=self.tags
+                )
+
             return function
 
     def logs(self, follow: bool = False):
@@ -278,12 +299,13 @@ class Repository(Factual):
         for image in images:
             if "imageTags" in image:
                 for tag in image["imageTags"]:
+                    # TODO: performance => let image be prepopulated with metadata at init, do bulk request here
                     filtered.append(Image(tag))
         return filtered
 
     def semver(self) -> List[Image]:
         matcher = re.compile(SEMVER_REGEX)
-        images = [ image for image in Repository().images() if matcher.match(image.tag) ]
+        images = [ image for image in self.images() if matcher.match(image.tag) ]
         images.sort(key=lambda image: LooseVersion(image.tag))
         return images
 

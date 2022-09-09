@@ -38,7 +38,6 @@ def publish(
 
     if ontology.published(image.id):
         print(f"image {image.id} already published")
-        exit(1)
     else:
         Repository().publish(image.retag(to_tag))
 
