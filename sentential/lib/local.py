@@ -1,7 +1,10 @@
+from distutils.version import LooseVersion
+import re
 from python_on_whales import DockerException
 from pipes import Template
 from typing import List
 from sentential.lib.clients import clients
+from sentential.lib.const import CWI_TAG, SEMVER_REGEX
 from sentential.lib.facts import Factual, Facts
 from jinja2 import Template
 from sentential.lib.store import Env, Arg
@@ -22,10 +25,18 @@ class Image(Factual):
         clients.docker.build(
             f"{facts.path.root}",
             load=True,
-            tags=[f"{facts.repository_name}:{tag}"],
+            tags=[f"{facts.repository_url}:{tag}"],
             build_args=Arg().as_dict(),
         )
         return cls(tag)
+
+    @lazy_property
+    def exists(self):
+        try:
+            self.metadata
+            return True
+        except:
+            return False
 
     @lazy_property
     def id(self) -> str:
@@ -48,11 +59,11 @@ class Image(Factual):
 
     @lazy_property
     def metadata(self):
-        return clients.docker.image.inspect(f"{self.repository_name}:{self.tag}")
+        return clients.docker.image.inspect(f"{self.facts.repository_url}:{self.tag}")
 
     def retag(self, tag: str):
         clients.docker.tag(
-            f"{self.repository_name}:{self.tag}", f"{self.repository_name}:{tag}"
+            f"{self.facts.repository_url}:{self.tag}", f"{self.facts.repository_url}:{tag}"
         )
         return Image(tag)
 
@@ -83,7 +94,7 @@ class Lambda(Factual):
         }
 
         clients.docker.run(
-            f"{self.image.repository_name}:{self.image.tag}",
+            f"{self.facts.repository_url}:{self.image.tag}",
             name="sentential",
             hostname="sentential",
             networks=["sentential-bridge"],
@@ -169,8 +180,8 @@ class Repository(Factual):
 
     @retry_after_docker_login
     def publish(self, image: Image):
-        clients.docker.image.tag(
-            f"{self.facts.repository_name}:{image.tag}",
-            f"{self.facts.repository_url}:{image.tag}",
-        )
+        # clients.docker.image.tag(
+        #     f"{self.facts.repository_name}:{image.tag}",
+        #     f"{self.facts.repository_url}:{image.tag}",
+        # )
         clients.docker.image.push(f"{self.facts.repository_url}:{image.tag}")

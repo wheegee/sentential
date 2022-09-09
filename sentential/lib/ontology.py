@@ -1,6 +1,8 @@
 from sentential.lib.aws import Repository
 from sentential.lib.aws import Lambda as AwsLambda
+from sentential.lib.const import CWI_TAG
 from sentential.lib.local import Lambda as LocalLambda
+from sentential.lib.local import Image as LocalImage
 from typing import List
 import semantic_version as semver
 from rich.table import Table
@@ -40,11 +42,17 @@ class Ontology:
         table = Table("sha", "tag", "arch", "deployed")
         aws_deployed = AwsLambda.deployed()
         local_deployed = LocalLambda.deployed()
+        current_working_image = LocalImage(CWI_TAG)
+
         data = {}
-        for image in self.repo.semver():
+        images = self.repo.semver()
+        if current_working_image.exists:
+            images.append(current_working_image)
+
+        for image in images:
             data[image.id] = {"tag": [], "arch": [], "deployed": []}
 
-        for image in self.repo.semver():
+        for image in images:
             data[image.id]["tag"].append(image.tag)
             data[image.id]["arch"].append(image.arch)
             if aws_deployed != None and aws_deployed.image.id == image.id:
