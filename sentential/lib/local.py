@@ -62,7 +62,8 @@ class Image(Factual):
 
     def retag(self, tag: str):
         clients.docker.tag(
-            f"{self.facts.repository_url}:{self.tag}", f"{self.facts.repository_url}:{tag}"
+            f"{self.facts.repository_url}:{self.tag}",
+            f"{self.facts.repository_url}:{tag}",
         )
         return Image(tag)
 
