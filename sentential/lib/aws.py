@@ -16,9 +16,8 @@ from sentential.lib.store import Env, Provision, Tag
 class Image(Factual):
     def __init__(self, tag: str = "latest") -> None:
         super().__init__()
-        self.repository_name = self.facts.repository_name
         self.tag = tag
-    
+
     @lazy_property
     def id(self) -> str:
         return self.metadata["imageId"]
@@ -49,10 +48,10 @@ class Lambda(Factual):
         super().__init__()
         self.image = image
         self.partition = self.facts.partition
-        self.function_name = f"{self.partition}-{self.image.repository_name}"
+        self.function_name = f"{self.partition}-{self.facts.repository_name}"
         self.image_uri = f"{self.facts.repository_url}:{self.image.tag}"
-        self.role_name = f"{self.partition}.{self.image.repository_name}"
-        self.policy_name = f"{self.partition}.{self.image.repository_name}"
+        self.role_name = f"{self.partition}.{self.facts.repository_name}"
+        self.policy_name = f"{self.partition}.{self.facts.repository_name}"
         self.policy_arn = (
             f"arn:aws:iam::{self.facts.account_id}:policy/{self.policy_name}"
         )
@@ -138,7 +137,9 @@ class Lambda(Factual):
         if self.tags:
             clients.iam.tag_role(
                 RoleName=self.role_name,
-                Tags=[ { 'Key': key, 'Value': value } for (key, value) in self.tags.items() ]
+                Tags=[
+                    {"Key": key, "Value": value} for (key, value) in self.tags.items()
+                ],
             )
 
         return clients.iam.get_role(RoleName=self.role_name)
@@ -150,7 +151,7 @@ class Lambda(Factual):
         )
         try:
             policy = clients.iam.create_policy(
-                PolicyName=self.policy_name, 
+                PolicyName=self.policy_name,
                 PolicyDocument=policy_json,
             )
 
@@ -175,7 +176,9 @@ class Lambda(Factual):
         if self.tags:
             clients.iam.tag_policy(
                 PolicyName=policy.name,
-                Tags=[ { 'Key': key, 'Value': value} for (key, value) in self.tags.items() ]
+                Tags=[
+                    {"Key": key, "Value": value} for (key, value) in self.tags.items()
+                ],
             )
 
         clients.iam.get_waiter("policy_exists").wait(PolicyArn=self.policy_arn)
@@ -209,7 +212,7 @@ class Lambda(Factual):
                 Role=role_arn,
                 PackageType="Image",
                 Code={"ImageUri": self.image_uri},
-                Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
+                Description=f"sententially deployed {self.facts.repository_name}:{self.image.tag}",
                 Environment={"Variables": {"PARTITION": self.env.path}},
                 Architectures=[self.image.arch],
                 EphemeralStorage={"Size": self.provision.storage},
@@ -234,7 +237,7 @@ class Lambda(Factual):
             function = clients.lmb.update_function_configuration(
                 FunctionName=self.function_name,
                 Role=role_arn,
-                Description=f"sententially deployed {self.image.repository_name}:{self.image.tag}",
+                Description=f"sententially deployed {self.facts.repository_name}:{self.image.tag}",
                 Environment={"Variables": {"PARTITION": self.env.path}},
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
@@ -272,10 +275,7 @@ class Lambda(Factual):
             )
 
             if self.tags:
-                clients.lmb.tag_resource(
-                    Resource=function.arn,
-                    Tags=self.tags
-                )
+                clients.lmb.tag_resource(Resource=function.arn, Tags=self.tags)
 
             return function
 
@@ -305,7 +305,7 @@ class Repository(Factual):
 
     def semver(self) -> List[Image]:
         matcher = re.compile(SEMVER_REGEX)
-        images = [ image for image in self.images() if matcher.match(image.tag) ]
+        images = [image for image in self.images() if matcher.match(image.tag)]
         images.sort(key=lambda image: LooseVersion(image.tag))
         return images
 

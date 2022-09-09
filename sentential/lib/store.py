@@ -166,5 +166,3 @@ class Provision(Store):
             super().__init__("config", Model)
         except ImportError:
             super().__init__("config")
-
-

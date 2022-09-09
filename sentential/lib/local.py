@@ -15,7 +15,6 @@ import os
 class Image(Factual):
     def __init__(self, tag: str) -> None:
         super().__init__()
-        self.repository_name = self.facts.repository_name
         self.tag = tag
 
     @classmethod
@@ -135,7 +134,7 @@ class Lambda(Factual):
             env=self.env.parameters(),
         )
         token = clients.sts.get_federation_token(
-            Name=f"{self.image.repository_name}-spec-policy",
+            Name=f"{self.facts.repository_name}-spec-policy",
             Policy=policy_json,
         )["Credentials"]
 
@@ -180,8 +179,4 @@ class Repository(Factual):
 
     @retry_after_docker_login
     def publish(self, image: Image):
-        # clients.docker.image.tag(
-        #     f"{self.facts.repository_name}:{image.tag}",
-        #     f"{self.facts.repository_url}:{image.tag}",
-        # )
         clients.docker.image.push(f"{self.facts.repository_url}:{image.tag}")
