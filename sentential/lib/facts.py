@@ -50,10 +50,9 @@ class Facts:
 
     @lazy_property
     def partition(self):
-        # TODO: when we replace chamber in the image, stop doing this .lower() nonsense
         return getenv(
             "PARTITION", default=clients.sts.get_caller_identity().get("UserId")
-        ).lower()
+        )
 
     @lazy_property
     def region(self):
@@ -69,6 +68,7 @@ class Facts:
 
     @lazy_property
     def kms_key_id(self):
+        # TODO: if region has not yet written an ssm param with the default key, the kms key will not yet exist \o/
         return [
             ssm_key["TargetKeyId"]
             for ssm_key in boto3.client("kms").list_aliases()["Aliases"]

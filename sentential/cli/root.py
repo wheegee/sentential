@@ -39,7 +39,7 @@ def publish(
     if ontology.published(image.id):
         print(f"image {image.id} already published")
     else:
-        Repository().publish(image.retag(to_tag))
+        Repository().publish(image.label_for_shipment(to_tag))
 
 
 @root.command()
