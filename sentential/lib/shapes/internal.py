@@ -43,20 +43,29 @@ def derive_paths(root: PosixPath = Path(".")):
 # Internally Defined Shapes
 #
 
+
 class Provision(Shaper):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
     memory: int = Field(default=128, description="allocated memory (mb)")
     timeout: int = Field(default=3, description="timeout (s)")
     subnet_ids: List[str] = Field(default=[], description="subnet ids")
     security_group_ids: List[str] = Field(default=[], description="security group ids")
-    auth_type: str = Field(default="NONE", description="auth type (--public-url)" )
-    allow_headers: List[str] = Field(default=["*"], description="CORS AllowHeaders (--public-url)" )
-    allow_methods: List[str] = Field(default=["*"], description="CORS AllowMethods (--public-url)" )
-    allow_origins: List[str] = Field(default=["*"], description="CORS AllowOrigins (--public-url)" )
-    expose_headers: List[str] = Field(default=["*"], description="CORS ExposeHeaders (--public-url)" )
+    auth_type: str = Field(default="NONE", description="auth type (--public-url)")
+    allow_headers: List[str] = Field(
+        default=["*"], description="CORS AllowHeaders (--public-url)"
+    )
+    allow_methods: List[str] = Field(
+        default=["*"], description="CORS AllowMethods (--public-url)"
+    )
+    allow_origins: List[str] = Field(
+        default=["*"], description="CORS AllowOrigins (--public-url)"
+    )
+    expose_headers: List[str] = Field(
+        default=["*"], description="CORS ExposeHeaders (--public-url)"
+    )
 
-    @validator('auth_type')
+    @validator("auth_type")
     def is_valid_auth_type(cls, v):
-        valid_auth_types = ['NONE', 'AWS']
+        valid_auth_types = ["NONE", "AWS"]
         if v not in valid_auth_types:
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")

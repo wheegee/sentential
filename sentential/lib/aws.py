@@ -49,9 +49,15 @@ class Lambda(Factual):
         self.image = image
         self.partition = self.facts.partition
         self.image_uri = f"{self.facts.repository_url}:{self.image.tag}"
-        self.function_name = f"{self.partition}-{self.facts.region}-{self.facts.repository_name}"
-        self.role_name = f"{self.partition}-{self.facts.region}-{self.facts.repository_name}"
-        self.policy_name = f"{self.partition}-{self.facts.region}-{self.facts.repository_name}"
+        self.function_name = (
+            f"{self.partition}-{self.facts.region}-{self.facts.repository_name}"
+        )
+        self.role_name = (
+            f"{self.partition}-{self.facts.region}-{self.facts.repository_name}"
+        )
+        self.policy_name = (
+            f"{self.partition}-{self.facts.region}-{self.facts.repository_name}"
+        )
         self.policy_arn = (
             f"arn:aws:iam::{self.facts.account_id}:policy/{self.policy_name}"
         )
