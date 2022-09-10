@@ -1,6 +1,7 @@
 from builtins import BaseException
 from pydantic import BaseModel, ValidationError, Extra, Field
 from typing import List
+from enum import Enum
 import polars as pl
 import ast
 
@@ -25,7 +26,7 @@ class Shaper(BaseModel):
         for (name, field) in cls.__fields__.items():
             # disallow types
             if field.outer_type_ not in ALLOWED_TYPES:
-                raise DisallowedType(f"disallowed type")
+                raise DisallowedType(f"disallowed type {field.outer_type_}")
 
         # If data is populating from ssm, it's always a string.
         # A list is stored in ssm as "[ 'some', 'list' ]"

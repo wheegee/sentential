@@ -187,12 +187,12 @@ class Lambda(Factual):
     def _put_url(self) -> object:
         config = {
             "FunctionName": self.function_name,
-            "AuthType": "NONE",
+            "AuthType": self.provision.auth_type,
             "Cors": {
-                "AllowHeaders": ["*"],
-                "AllowMethods": ["*"],
-                "AllowOrigins": ["*"],
-                "ExposeHeaders": ["*"],
+                "AllowHeaders": self.provision.allow_headers,
+                "AllowMethods": self.provision.allow_methods,
+                "AllowOrigins": self.provision.allow_origins,
+                "ExposeHeaders": self.provision.expose_headers,
             },
         }
 
