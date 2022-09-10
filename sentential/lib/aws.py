@@ -48,10 +48,10 @@ class Lambda(Factual):
         super().__init__()
         self.image = image
         self.partition = self.facts.partition
-        self.function_name = f"{self.partition}-{self.facts.repository_name}"
         self.image_uri = f"{self.facts.repository_url}:{self.image.tag}"
-        self.role_name = f"{self.partition}.{self.facts.repository_name}"
-        self.policy_name = f"{self.partition}.{self.facts.repository_name}"
+        self.function_name = f"{self.partition}-{self.facts.region}-{self.facts.repository_name}"
+        self.role_name = f"{self.partition}-{self.facts.region}-{self.facts.repository_name}"
+        self.policy_name = f"{self.partition}-{self.facts.region}-{self.facts.repository_name}"
         self.policy_arn = (
             f"arn:aws:iam::{self.facts.account_id}:policy/{self.policy_name}"
         )
@@ -62,7 +62,7 @@ class Lambda(Factual):
     @classmethod
     def deployed(cls):
         facts = Facts()
-        function_name = f"{facts.partition}-{facts.repository_name}"
+        function_name = f"{facts.partition}-{facts.region}-{facts.repository_name}"
         try:
             lmb = clients.lmb.get_function(FunctionName=function_name)
             tag = lmb["Code"]["ImageUri"].split("/")[1].split(":")[1]
