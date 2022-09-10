@@ -11,6 +11,7 @@ from sentential.lib.store import Env, Arg
 from sentential.lib.facts import lazy_property
 import os
 
+
 def retry_after_docker_login(func):
     def wrap(self, *args, **kwargs):
         try:
@@ -35,7 +36,7 @@ class Image(Factual):
         clients.docker.build(
             f"{facts.path.root}",
             load=True,
-            tags=[f"{facts.repository_name}:{tag}"], # build with local handle format
+            tags=[f"{facts.repository_name}:{tag}"],  # build with local handle format
             build_args=Arg().as_dict(),
         )
         return cls(tag)
@@ -102,7 +103,6 @@ class Lambda(Factual):
             image_label = f"{self.facts.repository_name}:{self.image.tag}"
         else:
             image_label = f"{self.facts.repository_url}:{self.image.tag}"
-            
 
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
@@ -168,6 +168,7 @@ class Lambda(Factual):
         if follow:
             cmd.append("--follow")
         os.system(" ".join(cmd))
+
 
 class Repository(Factual):
     def __init__(self) -> None:
