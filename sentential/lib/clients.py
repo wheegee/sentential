@@ -33,6 +33,7 @@ class Clients:
         self.ecr = boto3.client("ecr")
         self.ecr_api = ECRApi()
         self.ssm = boto3.client("ssm")
+        self.cloudwatch = boto3.client("logs")
         self.docker = docker
 
 

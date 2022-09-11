@@ -1,21 +1,8 @@
-import re
+from os import getenv
 import typer
 import boto3
-from enum import Enum
 from sentential.lib.clients import clients
-from sentential.lib.shapes.internal import SntlMeta, derive_paths
-
-
-def dockerfile_meta():
-    r = re.compile(r"^ENV\s([a-z].*)=(.*)", re.MULTILINE)
-    try:
-        with open("./Dockerfile") as file:
-            dockerfile = file.read()
-        meta = {match.group(1): match.group(2) for match in r.finditer(dockerfile)}
-        return SntlMeta(**meta)
-    except IOError:
-        print("no Dockerfile present, run `sntl init` first")
-        raise typer.Exit(code=1)
+from sentential.lib.shapes.internal import derive_paths
 
 
 def lazy_property(fn):
@@ -37,14 +24,35 @@ class Facts:
     def __init__(
         self,
         runtime: str = None,
-        kms_key_alias: str = "aws/ssm",
     ) -> None:
         self.runtime = runtime
-        self.kms_key_alias = kms_key_alias
 
     @lazy_property
     def repository_name(self):
-        return dockerfile_meta().repository_name
+        try:
+            repo = None
+            with open("./Dockerfile") as file:
+                for line in file.readlines():
+                    if "FROM runtime AS" in line:
+                        repo = line.split("AS")[1].strip()
+                if repo is not None:
+                    return repo
+                else:
+                    print("Dockerfile not formed for sentential")
+                    raise typer.Exit(code=1)
+        except IOError:
+            print("no Dockerfile present, run `sntl init` first")
+            raise typer.Exit(code=1)
+
+    @lazy_property
+    def kms_key_alias(self):
+        return getenv("AWS_KMS_KEY_ALIAS", default="aws/ssm")
+
+    @lazy_property
+    def partition(self):
+        return getenv(
+            "PARTITION", default=clients.sts.get_caller_identity().get("UserId")
+        )
 
     @lazy_property
     def region(self):
@@ -59,24 +67,13 @@ class Facts:
         return clients.sts.get_caller_identity().get("Account")
 
     @lazy_property
-    def caller_id(self):
-        return clients.sts.get_caller_identity().get("UserId")
-
-    @lazy_property
     def kms_key_id(self):
+        # TODO: if region has not yet written an ssm param with the default key, the kms key will not yet exist \o/
         return [
             ssm_key["TargetKeyId"]
             for ssm_key in boto3.client("kms").list_aliases()["Aliases"]
             if self.kms_key_alias in ssm_key["AliasName"]
         ][0]
-
-    @lazy_property
-    def partitions(self):
-        # TODO: reimplement partitions other than caller
-        # partitions = {name: name for name in SNTL_META.partitions}
-        partitions = {}
-        partitions["default"] = self.caller_id.lower()
-        return partitions
 
     @lazy_property
     def repository_url(self):
@@ -90,7 +87,3 @@ class Facts:
 class Factual:
     def __init__(self) -> None:
         self.facts = Facts()
-
-
-# TODO: this will still work, but this init-at-bottom-of-file pattern is decidedly bad for testing. So remove it.
-Partitions = Enum("Partitions", Facts().partitions)

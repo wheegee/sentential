@@ -10,8 +10,8 @@
                 "kms:Decrypt"
             ],
             "Resource": [
-                "arn:aws:ssm:{{ facts.region }}:{{ facts.account_id }}:parameter/{{ partition }}/{{ facts.repository_name }}",
-                "arn:aws:ssm:{{ facts.region }}:{{ facts.account_id }}:parameter/{{ partition }}/{{ facts.repository_name }}/*",
+                "arn:aws:ssm:{{ facts.region }}:{{ facts.account_id }}:parameter/{{ facts.partition }}/{{ facts.repository_name }}",
+                "arn:aws:ssm:{{ facts.region }}:{{ facts.account_id }}:parameter/{{ facts.partition }}/{{ facts.repository_name }}/*",
                 "arn:aws:kms:{{ facts.region }}:{{ facts.account_id }}:key/{{ facts.kms_key_id }}"
             ]
         },

@@ -1,16 +1,14 @@
-
-FROM segment/chamber:2 AS chamber
-
-FROM {{ runtime }} AS chambered
+FROM {{ runtime }} AS runtime
+ARG TARGETARCH
 ENV AWS_LAMBDA_EXEC_WRAPPER=/opt/wrapper.sh
-COPY --from=chamber /chamber /bin/chamber
+ADD https://github.com/wheegee/sentential-entry/releases/latest/download/entry-${TARGETARCH} /bin/entry
 RUN echo '#!/bin/bash' > /opt/wrapper.sh
-RUN echo 'chamber exec $PARTITION -- $@' >> /opt/wrapper.sh
-RUN chmod 755 /opt/wrapper.sh
+RUN echo 'entry $PARTITION -- $@' >> /opt/wrapper.sh
+RUN chmod 755 /bin/entry /opt/wrapper.sh
 
-FROM chambered
-ENV repository_name={{ repository_name }}
-ENV partitions=qa,prod
+FROM runtime AS {{ repository_name }}
 COPY ./src/* ${LAMBDA_TASK_ROOT}
+
 # insert application specific build steps here
+
 CMD ["app.handler"]
