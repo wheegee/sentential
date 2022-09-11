@@ -24,12 +24,14 @@ def main():
         root()
     # TODO: start handling terminating exceptions here, tart it up later
     except clients.ecr.exceptions.RepositoryNotFoundException as e:
-        print(e.response['message'])
+        print(e.response["message"])
         exit(1)
     except DockerException as e:
         print(f"failed: {e.docker_command}")
-        if e.stdout: print(e.stdout)
-        if e.stderr: print(e.stderr)
+        if e.stdout:
+            print(e.stdout)
+        if e.stderr:
+            print(e.stderr)
         exit(1)
     except ValidationError as e:
         print(e)
