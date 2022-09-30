@@ -5,15 +5,38 @@ from sentential.lib.shapes import Image
 from sentential.lib.clients import clients
 
 
-class Aws(Driver):
+class AwsDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
-    def images(self) -> List[Image]:
+    def deployed(cls):
         ...
+
+    def images(self):
+        repo = self.ontology.context.repository_name
+        images = clients.ecr.describe_images(repositoryName=repo)
+        images = [ { 'imageDigest': image['imageDigest'] } for image in images ]
+        # then batch_get_image
+        # then get image id / arch
+        from IPython import embed
+        embed()
 
     def image(self, version: str):
         ...
+
+    def deploy(self):
+        ...
+
+    def destroy(self):
+        ...
+
+    def logs(self, follow: bool):
+        ...
+
+    def invoke(self, payload: str):
+        ...
+
+
 
 
 # class Repository(Factual):
