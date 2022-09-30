@@ -1,4 +1,3 @@
-from unittest.mock import sentinel
 from typing import List
 from sentential.lib.drivers.spec import Driver
 from sentential.lib.ontology import Ontology
@@ -10,8 +9,8 @@ class Aws(Driver):
         self.ontology = ontology
 
     def images(self) -> List[Image]:
-        clients.ecr
-    
+        ...
+        
     def image(self, version: str):
         ...
 

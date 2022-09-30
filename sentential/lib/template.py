@@ -41,7 +41,6 @@ class Init:
 class Policy:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
-        self.env = env
         self.jinja = Environment(
             loader=FileSystemLoader(".")
         )
