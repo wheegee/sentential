@@ -1,4 +1,5 @@
 from builtins import BaseException
+from email import message
 from pydantic import BaseModel, ValidationError, Extra, Field
 from typing import List
 from enum import Enum
@@ -66,10 +67,13 @@ class Shaper(BaseModel):
             cls.constrained_parse_obj(data)
             return pl.DataFrame([fields, [None for f in fields]], columns=columns)
         except ValidationError as e:
+            locations = [map(str, e["loc"]) for e in e.errors()]
+            locations = ["/".join(loc) for loc in locations]
+            messages = [ e["msg"] for e in e.errors()]
             return pl.DataFrame(
                 [
-                    ["/".join(list(e["loc"])) for e in e.errors()],
-                    [e["msg"] for e in e.errors()],
+                    locations,
+                    messages
                 ],
                 columns=columns,
             )
