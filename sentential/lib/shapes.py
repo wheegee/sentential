@@ -106,9 +106,11 @@ class Provision(Shaper):
         if v not in valid_auth_types:
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
 
+
 #
-# 
 #
+#
+
 
 class Image(BaseModel):
     id: str

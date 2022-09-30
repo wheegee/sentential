@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-class Driver(ABC):
 
+class Driver(ABC):
     @abstractmethod
     def deployed(cls):
         ...
@@ -9,7 +9,7 @@ class Driver(ABC):
     @abstractmethod
     def images(self):
         ...
-    
+
     @abstractmethod
     def image(self, version: str):
         ...

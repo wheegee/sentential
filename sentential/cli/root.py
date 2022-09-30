@@ -6,6 +6,7 @@ from sentential.lib.ontology import Ontology
 
 root = typer.Typer()
 
+
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
     """initialize sentential project"""
@@ -16,6 +17,7 @@ def init(repository_name: str, runtime: Runtimes):
 def build(tag: str = typer.Argument("latest", envvar="CWI_TAG")):
     """build lambda image"""
     print(LocalDriver(Ontology()).build(tag))
+
 
 # @root.command()
 # def publish(
