@@ -5,16 +5,16 @@ from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Image
 from sentential.lib.clients import clients
 
+
 class Aws(Driver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
     def images(self) -> List[Image]:
         clients.ecr
-    
+
     def image(self, version: str):
         ...
-
 
 
 # class Repository(Factual):

@@ -13,7 +13,6 @@ def aws(
     """deploy lambda image to aws"""
     local = LocalDriver(Ontology())
     images = local.images()
-    
 
 
 @deploy.command()

@@ -7,10 +7,12 @@ from sentential.lib.clients import clients
 from sentential.lib.context import Context
 from sentential.support.shaper import Shaper
 
+
 class StoreError(BaseException):
     pass
 
-class Common():
+
+class Common:
     path: str
     context: Context
 
@@ -39,11 +41,14 @@ class Common():
         for (key, value) in self.as_dict().items():
             self.delete(key)
 
+
 class GenericStore(Common):
     def __init__(self, context: Context, prefix: str) -> None:
         super().__init__()
         self.context = context
-        self.path = f"/{self.context.partition}/{self.context.repository_name}/{prefix}/"
+        self.path = (
+            f"/{self.context.partition}/{self.context.repository_name}/{prefix}/"
+        )
 
     def parameters(self) -> SimpleNamespace:
         return SimpleNamespace(**self.as_dict())
@@ -71,7 +76,9 @@ class ModeledStore(Common):
         super().__init__()
         self.context = context
         self.model = model
-        self.path = f"/{self.context.partition}/{self.context.repository_name}/{prefix}/"
+        self.path = (
+            f"/{self.context.partition}/{self.context.repository_name}/{prefix}/"
+        )
 
     def _export_defaults(self) -> None:
         if self.model:
@@ -92,9 +99,7 @@ class ModeledStore(Common):
         schema = self.model.schema_df()
         validation = self.model.constrained_validation_df(self.as_dict())
         df = schema.join(data, **opts).join(validation, **opts)
-        df = df.with_columns(
-            [(pl.col("value").fill_null(pl.col("default")))]
-        )
+        df = df.with_columns([(pl.col("value").fill_null(pl.col("default")))])
         df = df.select(
             [
                 pl.col("field"),
@@ -116,7 +121,9 @@ class ModeledStore(Common):
             if validation.row(0)[1] is not None:
                 raise ValueError(validation.row(0)[1])
         except KeyError:
-            raise StoreError(f"invalid key, valid options {list(self.model.__fields__.keys())}")
+            raise StoreError(
+                f"invalid key, valid options {list(self.model.__fields__.keys())}"
+            )
         except ValueError as e:
             raise StoreError(e)
 

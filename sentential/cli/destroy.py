@@ -2,6 +2,7 @@ import typer
 
 destroy = typer.Typer()
 
+
 @destroy.command()
 def local():
     """destroy lambda deployment in aws"""

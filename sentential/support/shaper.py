@@ -69,12 +69,9 @@ class Shaper(BaseModel):
         except ValidationError as e:
             locations = [map(str, e["loc"]) for e in e.errors()]
             locations = ["/".join(loc) for loc in locations]
-            messages = [ e["msg"] for e in e.errors()]
+            messages = [e["msg"] for e in e.errors()]
             return pl.DataFrame(
-                [
-                    locations,
-                    messages
-                ],
+                [locations, messages],
                 columns=columns,
             )
 

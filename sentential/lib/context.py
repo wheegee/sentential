@@ -4,8 +4,10 @@ import boto3
 from sentential.lib.clients import clients
 from sentential.lib.shapes import derive_paths, Paths
 
+
 class ContextError(BaseException):
     pass
+
 
 class Context:
     @property

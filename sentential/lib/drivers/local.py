@@ -8,8 +8,10 @@ from sentential.lib.shapes import Image
 from sentential.lib.template import Policy
 from python_on_whales.components.image.cli_wrapper import Image as DriverImage
 
+
 class LocalDriverError(BaseException):
     pass
+
 
 class LocalDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
@@ -19,16 +21,14 @@ class LocalDriver(Driver):
         image = clients.docker.build(
             self.ontology.context.path.root,
             load=True,
-            tags=[f"{self.ontology.context.repository_name}:{version}"],  # build with local handle format
+            tags=[
+                f"{self.ontology.context.repository_name}:{version}"
+            ],  # build with local handle format
             build_args=self.ontology.args.as_dict(),
         )
 
-        if isinstance(image, DriverImage):            
-            return Image(
-                id=image.id,
-                tags=image.repo_tags,
-                arch=image.architecture
-            )
+        if isinstance(image, DriverImage):
+            return Image(id=image.id, tags=image.repo_tags, arch=image.architecture)
         else:
             raise LocalDriverError("build returned unexpected type")
 
@@ -37,17 +37,14 @@ class LocalDriver(Driver):
         repo_name = self.ontology.context.repository_name
         repo_url = self.ontology.context.repository_url
         for image in clients.docker.images():
-            match = \
-                any([repo_name == tag.split(":")[0] for tag in image.repo_tags]) \
-                or \
-                any([repo_url == tag.split(":")[0] for tag in image.repo_tags])
+            match = any(
+                [repo_name == tag.split(":")[0] for tag in image.repo_tags]
+            ) or any([repo_url == tag.split(":")[0] for tag in image.repo_tags])
 
             if match:
-                images.append(Image(
-                    id=image.id,
-                    tags=image.repo_tags,
-                    arch=image.architecture
-                ))
+                images.append(
+                    Image(id=image.id, tags=image.repo_tags, arch=image.architecture)
+                )
         return images
 
     def image(self, version: str) -> Image:
@@ -62,15 +59,11 @@ class LocalDriver(Driver):
         return image
 
     def deployed(self) -> Image:
-        running = [ c for c in clients.docker.ps() if c.name == "sentential" ]
+        running = [c for c in clients.docker.ps() if c.name == "sentential"]
         if running:
             container = running[0]
             image = clients.docker.image.inspect(container.image)
-            return Image(
-                    id=image.id,
-                    tags=image.repo_tags,
-                    arch=image.architecture
-                )
+            return Image(id=image.id, tags=image.repo_tags, arch=image.architecture)
         else:
             raise LocalDriverError("could not find locally deployed function")
 
@@ -81,7 +74,7 @@ class LocalDriver(Driver):
         credentials = self._get_federation_token()
         default_env = {
             "AWS_REGION": self.ontology.context.region,
-            "PARTITION": self.ontology.context.partition
+            "PARTITION": self.ontology.context.partition,
         }
 
         clients.docker.run(

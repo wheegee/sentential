@@ -1,4 +1,5 @@
 import typer
+
 logs = typer.Typer()
 
 
