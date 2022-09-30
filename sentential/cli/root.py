@@ -5,6 +5,7 @@ from sentential.lib.shapes import Runtimes
 from sentential.lib.drivers.local import LocalDriver
 from sentential.lib.ontology import Ontology
 from sentential.lib.drivers.aws import AwsDriver
+
 root = typer.Typer()
 
 
@@ -19,14 +20,17 @@ def build(tag: str = typer.Argument("latest", envvar="CWI_TAG")):
     """build lambda image"""
     print(LocalDriver(Ontology()).build(tag))
 
+
 @root.command()
 def wut():
     AwsDriver(Ontology()).images()
 
+
 @root.command()
 def login():
     clients.docker.login_ecr()
-    
+
+
 # @root.command()
 # def publish(
 #     from_tag: str = typer.Argument("latest", envvar="CWI_TAG"),

@@ -15,10 +15,11 @@ class AwsDriver(Driver):
     def images(self):
         repo = self.ontology.context.repository_name
         images = clients.ecr.describe_images(repositoryName=repo)
-        images = [ { 'imageDigest': image['imageDigest'] } for image in images ]
+        images = [{"imageDigest": image["imageDigest"]} for image in images]
         # then batch_get_image
         # then get image id / arch
         from IPython import embed
+
         embed()
 
     def image(self, version: str):
@@ -35,8 +36,6 @@ class AwsDriver(Driver):
 
     def invoke(self, payload: str):
         ...
-
-
 
 
 # class Repository(Factual):
