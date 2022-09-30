@@ -11,7 +11,7 @@ class Aws(Driver):
 
     def images(self) -> List[Image]:
         ...
-        
+
     def image(self, version: str):
         ...
 

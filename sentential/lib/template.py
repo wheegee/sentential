@@ -41,10 +41,8 @@ class Init:
 class Policy:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
-        self.jinja = Environment(
-            loader=FileSystemLoader(".")
-        )
-        
+        self.jinja = Environment(loader=FileSystemLoader("."))
+
     def render(self) -> str:
         template = self.jinja.get_template("policy.json")
         return template.render(
