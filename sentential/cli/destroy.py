@@ -12,6 +12,7 @@ def local():
     local = LocalDriver(Ontology())
     print(local.destroy())
 
+
 @destroy.command()
 def aws():
     """destroy lambda deployment in aws"""

@@ -32,7 +32,12 @@ class LocalDriver(Driver):
             for tag in image.repo_tags:
                 versions.append(tag.split(":")[-1])
 
-            return Image(id=image.id, digests=image.repo_digests, tags=image.repo_tags, versions=versions) # arch=image.architecture
+            return Image(
+                id=image.id,
+                digests=image.repo_digests,
+                tags=image.repo_tags,
+                versions=versions,
+            )  # arch=image.architecture
         else:
             raise LocalDriverError("build returned unexpected type")
 
@@ -64,7 +69,12 @@ class LocalDriver(Driver):
 
             if match:
                 images.append(
-                    Image(id=image.id, tags=image.repo_tags, digests=digests, versions=versions) # arch=image.architecture
+                    Image(
+                        id=image.id,
+                        tags=image.repo_tags,
+                        digests=digests,
+                        versions=versions,
+                    )  # arch=image.architecture
                 )
         return images
 
@@ -79,17 +89,19 @@ class LocalDriver(Driver):
         if running:
             container = running[0]
             image = clients.docker.image.inspect(container.image)
-            
+
             # TODO: DRY with above usage
             digests = []
             for digest in image.repo_digests:
                 digests.append(digest.split("@")[-1])
-            
+
             versions = []
             for tag in image.repo_tags:
                 versions.append(tag.split(":")[-1])
-            
-            return Image(id=image.id, tags=image.repo_tags, digests=digests, versions=versions) # arch=image.architecture
+
+            return Image(
+                id=image.id, tags=image.repo_tags, digests=digests, versions=versions
+            )  # arch=image.architecture
         else:
             raise LocalDriverError("could not find locally deployed function")
 

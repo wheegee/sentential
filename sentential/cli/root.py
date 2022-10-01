@@ -16,16 +16,19 @@ def init(repository_name: str, runtime: Runtimes):
     aws_supported_image = f"public.ecr.aws/lambda/{runtime.value}:latest"
     Init(repository_name, aws_supported_image).scaffold()
 
+
 @root.command()
 def build(version: str = typer.Argument("latest", envvar="VERSION")):
     """build lambda image"""
     local = LocalDriver(Ontology())
     print(local.build(version))
 
+
 @root.command()
 def publish(version: str = typer.Argument("latest", envvar="VERSION")):
     local = LocalDriver(Ontology())
     print(local.publish(version))
+
 
 @root.command()
 def login():

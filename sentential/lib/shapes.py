@@ -86,13 +86,15 @@ def derive_paths(root: PosixPath = PosixPath(".")):
 # - digests: validation should run a deduplication
 # - arch: wtf is going on with the ecr API around this?
 
+
 class Image(BaseModel):
     id: str
     digests: List[str]
     tags: List[str]
     versions: List[str]
     # arch: str
-    
+
+
 class Provision(Shaper):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
     memory: int = Field(default=128, description="allocated memory (mb)")

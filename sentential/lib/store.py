@@ -65,7 +65,7 @@ class GenericStore(Common):
         # Typer doesn't support Union[str, List[str]], understandably
         # So desired behavior is implemented here, to the insult of typing
 
-        value = delimiter.join(value)   # type: ignore
+        value = delimiter.join(value)  # type: ignore
 
         return clients.ssm.put_parameter(
             Name=f"{self.path}{key}",

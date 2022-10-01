@@ -19,7 +19,7 @@ def local(
 
 @deploy.command()
 def aws(
-    version: str = typer.Argument(...,envvar="VERSION"),
+    version: str = typer.Argument(..., envvar="VERSION"),
     public_url: bool = typer.Option(default=False),
 ):
     """build and deploy local lambda container"""

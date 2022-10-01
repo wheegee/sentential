@@ -10,8 +10,10 @@ from sentential.lib.template import Policy
 
 # TODO: figure out how to get boto3 typeshed to work, so functions can return types instead of Dict
 
+
 class AwsDriverError(BaseException):
     pass
+
 
 class AwsDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
@@ -28,47 +30,53 @@ class AwsDriver(Driver):
         self.policy_arn = f"arn:aws:iam::{self.account_id}:policy/{self.resource_name}"
 
     def deployed(self) -> Image:
-            function_name = self.resource_name
-            try:
-                function = clients.lmb.get_function(FunctionName=function_name)
-                # tag = function["Code"]["ImageUri"].split("/")[1].split(":")[1]
-                return Image(id="todo", digests=["todo"], tags=["todo"], versions=["todo"])
-            except clients.lmb.exceptions.ResourceNotFoundException:
-                raise AwsDriverError("could not find aws deployed function")
+        function_name = self.resource_name
+        try:
+            function = clients.lmb.get_function(FunctionName=function_name)
+            # tag = function["Code"]["ImageUri"].split("/")[1].split(":")[1]
+            return Image(id="todo", digests=["todo"], tags=["todo"], versions=["todo"])
+        except clients.lmb.exceptions.ResourceNotFoundException:
+            raise AwsDriverError("could not find aws deployed function")
 
     def images(self) -> List[Image]:
         images = []
-        describe_images = clients.ecr.describe_images(repositoryName=self.repo_name)['imageDetails']
-        image_digests = [ {"imageDigest": image["imageDigest"]} for image in describe_images ]
-        batch_get_images = clients.ecr.batch_get_image(repositoryName=self.repo_name, imageIds=image_digests)['images']
+        describe_images = clients.ecr.describe_images(repositoryName=self.repo_name)[
+            "imageDetails"
+        ]
+        image_digests = [
+            {"imageDigest": image["imageDigest"]} for image in describe_images
+        ]
+        batch_get_images = clients.ecr.batch_get_image(
+            repositoryName=self.repo_name, imageIds=image_digests
+        )["images"]
         image_config_digests = {}
-        
+
         for image in batch_get_images:
-            image_digest = image['imageId']['imageDigest']
-            image_config_digest = json.loads(image['imageManifest'])['config']['digest']
+            image_digest = image["imageId"]["imageDigest"]
+            image_config_digest = json.loads(image["imageManifest"])["config"]["digest"]
             if image_digest not in image_config_digests:
                 image_config_digests[image_digest] = []
             image_config_digests[image_digest].append(image_config_digest)
 
         for image in describe_images:
-            image_digest = image['imageDigest']
-            if 'imageTags' in image:
-                tags = [f"{self.repo_url}:{tag}" for tag in image['imageTags'] ]
-                versions = image['imageTags']
+            image_digest = image["imageDigest"]
+            if "imageTags" in image:
+                tags = [f"{self.repo_url}:{tag}" for tag in image["imageTags"]]
+                versions = image["imageTags"]
             else:
                 tags = []
-                versions= []
+                versions = []
 
-                
-            images.append(Image(
-                id=image['imageDigest'],
-                digests=image_config_digests[image_digest],
-                tags=tags,
-                versions=versions
-            ))
-        
+            images.append(
+                Image(
+                    id=image["imageDigest"],
+                    digests=image_config_digests[image_digest],
+                    tags=tags,
+                    versions=versions,
+                )
+            )
+
         return images
-
 
     def image(self, version: str) -> Image:
         for image in self.images():
@@ -89,7 +97,6 @@ class AwsDriver(Driver):
             return self._put_url()["FunctionUrl"]
         else:
             return function["FunctionArn"]
-
 
     def destroy(self):
         role_name = self.resource_name
@@ -136,7 +143,6 @@ class AwsDriver(Driver):
     def invoke(self, payload: str) -> None:
         raise AwsDriverError("invoke is not yet implemented")
 
-
     def _put_role(self, tags: Optional[Dict[str, str]] = None) -> Dict:
         role_name = self.resource_name
         try:
@@ -158,9 +164,7 @@ class AwsDriver(Driver):
         if tags:
             clients.iam.tag_role(
                 RoleName=role_name,
-                Tags=[
-                    {"Key": key, "Value": value} for (key, value) in tags.items()
-                ],
+                Tags=[{"Key": key, "Value": value} for (key, value) in tags.items()],
             )
 
         return clients.iam.get_role(RoleName=role_name)
@@ -169,7 +173,7 @@ class AwsDriver(Driver):
         policy_json = Policy(self.ontology).render()
         policy_name = self.resource_name
         policy_arn = self.policy_arn
-        
+
         try:
             policy = clients.iam.create_policy(
                 PolicyName=policy_name,
@@ -197,9 +201,7 @@ class AwsDriver(Driver):
         if tags:
             clients.iam.tag_policy(
                 PolicyName=policy.name,
-                Tags=[
-                    {"Key": key, "Value": value} for (key, value) in tags.items()
-                ],
+                Tags=[{"Key": key, "Value": value} for (key, value) in tags.items()],
             )
 
         clients.iam.get_waiter("policy_exists").wait(PolicyArn=policy_arn)
@@ -209,7 +211,7 @@ class AwsDriver(Driver):
         role_name = self.resource_name
         function_name = self.resource_name
         role_arn = clients.iam.get_role(RoleName=role_name)["Role"]["Arn"]
-        image_uri = f"{self.repo_url}:{image.versions[0]}" # TODO: do we want to deploy latest version on image, or version declared?
+        image_uri = f"{self.repo_url}:{image.versions[0]}"  # TODO: do we want to deploy latest version on image, or version declared?
         envs_path = self.envs.path
         sleep(10)
         try:
@@ -285,7 +287,6 @@ class AwsDriver(Driver):
 
             return function
 
-
     def _put_url(self) -> Dict:
         function_name = self.resource_name
         config = {
@@ -305,4 +306,3 @@ class AwsDriver(Driver):
             clients.lmb.update_function_url_config(**config)
 
         return clients.lmb.get_function_url_config(FunctionName=function_name)
-
