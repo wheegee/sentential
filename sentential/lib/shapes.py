@@ -80,6 +80,19 @@ def derive_paths(root: PosixPath = PosixPath(".")):
 #
 # Internally Defined Shapes
 #
+
+# TODO:
+# - tags: validation should sort by semver
+# - digests: validation should run a deduplication
+# - arch: wtf is going on with the ecr API around this?
+
+class Image(BaseModel):
+    id: str
+    digests: List[str]
+    tags: List[str]
+    versions: List[str]
+    # arch: str
+    
 class Provision(Shaper):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
     memory: int = Field(default=128, description="allocated memory (mb)")
@@ -105,14 +118,4 @@ class Provision(Shaper):
         valid_auth_types = ["NONE", "AWS"]
         if v not in valid_auth_types:
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
-
-
-#
-#
-#
-
-
-class Image(BaseModel):
-    id: str
-    tags: List[str]
-    arch: str
+        return v

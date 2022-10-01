@@ -1,4 +1,7 @@
 import typer
+from sentential.lib.drivers.local import LocalDriver
+from sentential.lib.drivers.aws import AwsDriver
+from sentential.lib.ontology import Ontology
 
 destroy = typer.Typer()
 
@@ -6,10 +9,11 @@ destroy = typer.Typer()
 @destroy.command()
 def local():
     """destroy lambda deployment in aws"""
-    pass
-
+    local = LocalDriver(Ontology())
+    print(local.destroy())
 
 @destroy.command()
 def aws():
     """destroy lambda deployment in aws"""
-    pass
+    aws = AwsDriver(Ontology())
+    print(aws.destroy())

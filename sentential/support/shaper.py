@@ -14,7 +14,7 @@ ALLOWED_LIST_TYPES = [List[str], List[int], List[float]]
 ALLOWED_TYPES = [str, int, float] + ALLOWED_LIST_TYPES
 
 
-class DisallowedType(BaseException):
+class ShaperError(BaseException):
     pass
 
 
@@ -27,7 +27,7 @@ class Shaper(BaseModel):
         for (name, field) in cls.__fields__.items():
             # disallow types
             if field.outer_type_ not in ALLOWED_TYPES:
-                raise DisallowedType(f"disallowed type {field.outer_type_}")
+                raise ShaperError(f"disallowed type {field.outer_type_}")
 
         # If data is populating from ssm, it's always a string.
         # A list is stored in ssm as "[ 'some', 'list' ]"

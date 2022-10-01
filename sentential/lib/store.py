@@ -50,6 +50,7 @@ class GenericStore(Common):
             f"/{self.context.partition}/{self.context.repository_name}/{prefix}/"
         )
 
+    @property
     def parameters(self) -> SimpleNamespace:
         return SimpleNamespace(**self.as_dict())
 
@@ -60,7 +61,12 @@ class GenericStore(Common):
             table.add_row(key, value)
         return table
 
-    def write(self, key: str, value: List[str]):
+    def write(self, key: str, value: List[str], delimeter: str = ","):
+        # Typer doesn't support Union[str, List[str]], understandably
+        # So desired behavior is implemented here, to the insult of typing
+
+        value = delimiter.join(value)   # type: ignore
+
         return clients.ssm.put_parameter(
             Name=f"{self.path}{key}",
             Value=str(value),
@@ -87,8 +93,10 @@ class ModeledStore(Common):
                 if field.name not in current_state.keys():
                     if hasattr(field, "default") and field.default != None:
                         self.write(field.name, field.default)
-        self._fetch.cache_clear()
+        # TODO: implement caching on _fetch
+        # self._fetch.cache_clear()
 
+    @property
     def parameters(self) -> Shaper:
         self._export_defaults()
         return self.model.constrained_parse_obj(self.as_dict())
@@ -115,6 +123,11 @@ class ModeledStore(Common):
         return table
 
     def write(self, key: str, value: List[str]):
+        # Typer doesn't support Union[str, List[str]], understandably
+        # So desired behavior is implemented here, to the insult of typing
+        if len(value) == 1:
+            value = value[0]  # type: ignore
+
         try:
             validation = self.model.constrained_validation_df({key: value})
             validation = validation.filter(pl.col("field") == key)

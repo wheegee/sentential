@@ -28,53 +28,78 @@ class LocalDriver(Driver):
         )
 
         if isinstance(image, DriverImage):
-            return Image(id=image.id, tags=image.repo_tags, arch=image.architecture)
+            versions = []
+            for tag in image.repo_tags:
+                versions.append(tag.split(":")[-1])
+
+            return Image(id=image.id, digests=image.repo_digests, tags=image.repo_tags, versions=versions) # arch=image.architecture
         else:
             raise LocalDriverError("build returned unexpected type")
+
+    def publish(self, version: str) -> str:
+        image = self.image(version)
+        repo_url = self.ontology.context.repository_url
+        shipping_tag = f"{repo_url}:{version}"
+        clients.docker.tag(image.id, shipping_tag)
+        clients.docker.push(shipping_tag)
+        return f"published {image.id} as {shipping_tag}"
 
     def images(self) -> List[Image]:
         images = []
         repo_name = self.ontology.context.repository_name
         repo_url = self.ontology.context.repository_url
         for image in clients.docker.images():
+            # TODO: this is really simple, but needs to be writte more clearly
             match = any(
                 [repo_name == tag.split(":")[0] for tag in image.repo_tags]
             ) or any([repo_url == tag.split(":")[0] for tag in image.repo_tags])
 
+            digests = []
+            for digest in image.repo_digests:
+                digests.append(digest.split("@")[-1])
+
+            versions = []
+            for tag in image.repo_tags:
+                versions.append(tag.split(":")[-1])
+
             if match:
                 images.append(
-                    Image(id=image.id, tags=image.repo_tags, arch=image.architecture)
+                    Image(id=image.id, tags=image.repo_tags, digests=digests, versions=versions) # arch=image.architecture
                 )
         return images
 
     def image(self, version: str) -> Image:
         for image in self.images():
-            if any(version == tag.split(":")[1] for tag in image.tags):
+            if version in image.versions:
                 return image
         raise LocalDriverError(f"no image found with for version {version}")
-
-    def publish(self, version: str) -> Image:
-        image = self.image(version)
-        clients.docker.push(f"{self.ontology.context.repository_url}:{version}")
-        return image
 
     def deployed(self) -> Image:
         running = [c for c in clients.docker.ps() if c.name == "sentential"]
         if running:
             container = running[0]
             image = clients.docker.image.inspect(container.image)
-            return Image(id=image.id, tags=image.repo_tags, arch=image.architecture)
+            
+            # TODO: DRY with above usage
+            digests = []
+            for digest in image.repo_digests:
+                digests.append(digest.split("@")[-1])
+            
+            versions = []
+            for tag in image.repo_tags:
+                versions.append(tag.split(":")[-1])
+            
+            return Image(id=image.id, tags=image.repo_tags, digests=digests, versions=versions) # arch=image.architecture
         else:
             raise LocalDriverError("could not find locally deployed function")
 
     def deploy(self, image: Image, public_url: bool) -> str:
         self.destroy()
-
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()
         default_env = {
             "AWS_REGION": self.ontology.context.region,
-            "PARTITION": self.ontology.context.partition,
+            "PARTITION": self.ontology.envs.path,
         }
 
         clients.docker.run(
