@@ -17,5 +17,6 @@ root.add_typer(logs, name="logs", help="logging")
 root.add_typer(images, name="images", help="list images")
 root.add_typer(deployments, name="deployments", help="list deployments")
 
+
 def main():
     root()
