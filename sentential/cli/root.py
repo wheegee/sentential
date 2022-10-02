@@ -26,12 +26,14 @@ def build(version: str = typer.Argument("latest", envvar="VERSION")):
 
 @root.command()
 def publish(version: str = typer.Argument("latest", envvar="VERSION")):
+    """publish lambda image"""
     local = LocalDriver(Ontology())
     print(local.publish(version))
 
 
 @root.command()
 def login():
+    """login to ecr"""
     clients.docker.login_ecr()
 
 
