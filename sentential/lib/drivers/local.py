@@ -4,7 +4,7 @@ from typing import Dict, List
 from sentential.lib.clients import clients
 from sentential.lib.drivers.spec import Driver
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import Image
+from sentential.lib.shapes import Image, Function
 from sentential.lib.template import Policy
 from python_on_whales.components.image.cli_wrapper import Image as DriverImage
 
@@ -63,13 +63,26 @@ class LocalDriver(Driver):
                 return image
         raise LocalDriverError(f"no image found with where version {version}")
 
-    def deployed(self) -> Image:
+    def deployed(self) -> Function:
         # TODO: "sentential" container name is not a good enough matching mechanism
         running = [c for c in clients.docker.ps() if c.name == "sentential"]
+        public_url = [c for c in clients.docker.ps() if c.name == "sentential-gw"]
         if running:
             container = running[0]
             running_image = clients.docker.image.inspect(container.image)
-            return self._image_where_id(running_image.id)
+            image = self._image_where_id(running_image.id)
+            
+            if public_url:
+                public_url = "http://localhost:8081"
+            else:
+                public_url = None
+
+            return Function(
+                image=image,
+                function_name="local",
+                arn="local",
+                public_url=public_url
+            )
         raise LocalDriverError(f"no image found with container name sentential")
 
     def deploy(self, image: Image, public_url: bool) -> str:

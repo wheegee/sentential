@@ -96,11 +96,20 @@ class Image(BaseModel):
 
     @validator("versions")
     def coerce_versions(cls, v):
-        return list(set(v))
+        uniq = list(set(v))
+        return uniq
 
     @validator("tags")
     def coerce_tags(cls, v):
-        return list(set(v))
+        uniq = list(set(v))
+        return uniq
+
+class Function(BaseModel):
+    image: Image
+    arn: str
+    function_name: str
+    public_url: Union[str, None]
+
 
 class Provision(Shaper):
     storage: int = Field(default=512, description="ephemeral storage (mb)")

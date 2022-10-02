@@ -1,10 +1,10 @@
 import json
 import os
 from time import sleep
-from typing import Dict, List, Optional, Type, TypedDict
+from typing import Dict, List, Optional
 from sentential.lib.drivers.spec import Driver
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import LAMBDA_ROLE_POLICY_JSON, Image
+from sentential.lib.shapes import LAMBDA_ROLE_POLICY_JSON, Image, Function
 from sentential.lib.clients import clients
 from sentential.lib.template import Policy
 
@@ -31,12 +31,28 @@ class AwsDriver(Driver):
         self.resource_name = f"{self.partition}-{self.region}-{self.repo_name}"
         self.policy_arn = f"arn:aws:iam::{self.account_id}:policy/{self.resource_name}"
 
-    def deployed(self) -> Image:
+    def deployed(self) -> Function:
         function_name = self.resource_name
         try:
             function = clients.lmb.get_function(FunctionName=function_name)
+            function_arn = function['Configuration']['FunctionArn']
             digest = function["Code"]["ResolvedImageUri"].split("@")[-1]
-            return self._image_where_digest(digest)
+            image = self._image_where_digest(digest)
+            public_url = None
+
+            try: 
+                public_url_config = clients.lmb.get_function_url_config(FunctionName=function_name)
+                public_url = public_url_config['FunctionUrl']
+            except clients.lmb.exceptions.ResourceNotFoundException:
+                pass
+
+            return Function(
+                image=image,
+                function_name=function_name,
+                arn=function_arn,
+                public_url=public_url
+            )
+
         except clients.lmb.exceptions.ResourceNotFoundException:
             raise AwsDriverError(f"could not find aws deployed function for {function_name}")
 
