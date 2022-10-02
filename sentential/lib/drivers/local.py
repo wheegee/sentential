@@ -1,6 +1,6 @@
 import os
 from tempfile import TemporaryDirectory
-from typing import List
+from typing import Dict, List
 from sentential.lib.clients import clients
 from sentential.lib.drivers.spec import Driver
 from sentential.lib.ontology import Ontology
@@ -8,6 +8,10 @@ from sentential.lib.shapes import Image
 from sentential.lib.template import Policy
 from python_on_whales.components.image.cli_wrapper import Image as DriverImage
 
+
+#
+# NOTE: Docker images locally are primary key'd (conceptually) off of their id, this is normalized by the Image type
+#
 
 class LocalDriverError(BaseException):
     pass
@@ -18,26 +22,17 @@ class LocalDriver(Driver):
         self.ontology = ontology
 
     def build(self, version: str) -> Image:
-        image = clients.docker.build(
+        built_image = clients.docker.build(
             self.ontology.context.path.root,
             load=True,
             tags=[
                 f"{self.ontology.context.repository_name}:{version}"
-            ],  # build with local handle format
+            ],
             build_args=self.ontology.args.as_dict(),
         )
 
-        if isinstance(image, DriverImage):
-            versions = []
-            for tag in image.repo_tags:
-                versions.append(tag.split(":")[-1])
-
-            return Image(
-                id=image.id,
-                digests=image.repo_digests,
-                tags=image.repo_tags,
-                versions=versions,
-            )  # arch=image.architecture
+        if isinstance(built_image, DriverImage):
+            return self._image_where_id(built_image.id)
         else:
             raise LocalDriverError("build returned unexpected type")
 
@@ -51,59 +46,31 @@ class LocalDriver(Driver):
 
     def images(self) -> List[Image]:
         images = []
-        repo_name = self.ontology.context.repository_name
-        repo_url = self.ontology.context.repository_url
-        for image in clients.docker.images():
-            # TODO: this is really simple, but needs to be writte more clearly
-            match = any(
-                [repo_name == tag.split(":")[0] for tag in image.repo_tags]
-            ) or any([repo_url == tag.split(":")[0] for tag in image.repo_tags])
-
-            digests = []
-            for digest in image.repo_digests:
-                digests.append(digest.split("@")[-1])
-
-            versions = []
-            for tag in image.repo_tags:
-                versions.append(tag.split(":")[-1])
-
-            if match:
-                images.append(
-                    Image(
-                        id=image.id,
-                        tags=image.repo_tags,
-                        digests=digests,
-                        versions=versions,
-                    )  # arch=image.architecture
-                )
+        for id, image in self._docker_data().items():
+            images.append(
+                Image(
+                    id=id,
+                    digest=image['digest'],
+                    tags=image['tags'],
+                    versions=image['versions'],
+                )  # arch=image.architecture
+            )
         return images
 
     def image(self, version: str) -> Image:
         for image in self.images():
             if version in image.versions:
                 return image
-        raise LocalDriverError(f"no image found with for version {version}")
+        raise LocalDriverError(f"no image found with where version {version}")
 
     def deployed(self) -> Image:
+        # TODO: "sentential" container name is not a good enough matching mechanism
         running = [c for c in clients.docker.ps() if c.name == "sentential"]
         if running:
             container = running[0]
-            image = clients.docker.image.inspect(container.image)
-
-            # TODO: DRY with above usage
-            digests = []
-            for digest in image.repo_digests:
-                digests.append(digest.split("@")[-1])
-
-            versions = []
-            for tag in image.repo_tags:
-                versions.append(tag.split(":")[-1])
-
-            return Image(
-                id=image.id, tags=image.repo_tags, digests=digests, versions=versions
-            )  # arch=image.architecture
-        else:
-            raise LocalDriverError("could not find locally deployed function")
+            running_image = clients.docker.image.inspect(container.image)
+            return self._image_where_id(running_image.id)
+        raise LocalDriverError(f"no image found with container name sentential")
 
     def deploy(self, image: Image, public_url: bool) -> str:
         self.destroy()
@@ -192,3 +159,45 @@ class LocalDriver(Driver):
             "AWS_SECRET_ACCESS_KEY": token["SecretAccessKey"],
             "AWS_SESSION_TOKEN": token["SessionToken"],
         }
+
+    def _docker_data(self) -> Dict:
+        docker_data = {}
+        repo_name = self.ontology.context.repository_name
+        for image in clients.docker.images():
+            # strip versions
+            repo_names_w_url = [tag.split(":")[0] for tag in image.repo_tags]
+            # strip urls
+            repo_names = [tag.split("/")[-1] for tag in repo_names_w_url]
+            # match against known repo name
+            match = any([repo_name == name for name in repo_names ])
+
+            if match: 
+                digest = None
+                for proposed_digest in image.repo_digests:
+                    proposed_digest = proposed_digest.split("@")[-1]
+
+                    # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plz
+                    if digest is not None:
+                        if digest != proposed_digest:
+                            raise LocalDriverError("image id and image digest not tightly coupled")
+                    
+                    digest = proposed_digest
+                
+                versions = []
+                for tag in image.repo_tags:
+                    versions.append(tag.split(":")[-1])
+
+                docker_data[image.id]={
+                    'id': image.id,
+                    'digest': digest,
+                    'tags': image.repo_tags,
+                    'versions': versions
+                }
+
+        return docker_data
+
+    def _image_where_id(self, id: str) -> Image:
+        for image in self.images():
+            if id == image.id:
+                return image
+        raise LocalDriverError(f"no image found with for id {id}")

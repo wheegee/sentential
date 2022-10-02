@@ -1,7 +1,7 @@
 import json
 import os
 from time import sleep
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Type, TypedDict
 from sentential.lib.drivers.spec import Driver
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import LAMBDA_ROLE_POLICY_JSON, Image
@@ -10,10 +10,12 @@ from sentential.lib.template import Policy
 
 # TODO: figure out how to get boto3 typeshed to work, so functions can return types instead of Dict
 
+#
+# NOTE: Docker images in ECR are primary key'd (conceptually) off of their digest, this is normalized by the Image type
+#
 
 class AwsDriverError(BaseException):
     pass
-
 
 class AwsDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
@@ -33,46 +35,20 @@ class AwsDriver(Driver):
         function_name = self.resource_name
         try:
             function = clients.lmb.get_function(FunctionName=function_name)
-            # tag = function["Code"]["ImageUri"].split("/")[1].split(":")[1]
-            return Image(id="todo", digests=["todo"], tags=["todo"], versions=["todo"])
+            digest = function["Code"]["ResolvedImageUri"].split("@")[-1]
+            return self._image_where_digest(digest)
         except clients.lmb.exceptions.ResourceNotFoundException:
-            raise AwsDriverError("could not find aws deployed function")
+            raise AwsDriverError(f"could not find aws deployed function for {function_name}")
 
     def images(self) -> List[Image]:
         images = []
-        describe_images = clients.ecr.describe_images(repositoryName=self.repo_name)[
-            "imageDetails"
-        ]
-        image_digests = [
-            {"imageDigest": image["imageDigest"]} for image in describe_images
-        ]
-        batch_get_images = clients.ecr.batch_get_image(
-            repositoryName=self.repo_name, imageIds=image_digests
-        )["images"]
-        image_config_digests = {}
-
-        for image in batch_get_images:
-            image_digest = image["imageId"]["imageDigest"]
-            image_config_digest = json.loads(image["imageManifest"])["config"]["digest"]
-            if image_digest not in image_config_digests:
-                image_config_digests[image_digest] = []
-            image_config_digests[image_digest].append(image_config_digest)
-
-        for image in describe_images:
-            image_digest = image["imageDigest"]
-            if "imageTags" in image:
-                tags = [f"{self.repo_url}:{tag}" for tag in image["imageTags"]]
-                versions = image["imageTags"]
-            else:
-                tags = []
-                versions = []
-
+        for digest, image in self._ecr_data().items(): 
             images.append(
                 Image(
-                    id=image["imageDigest"],
-                    digests=image_config_digests[image_digest],
-                    tags=tags,
-                    versions=versions,
+                    id=image['id'],
+                    digest=digest,
+                    tags=image['tags'],
+                    versions=image['versions'],
                 )
             )
 
@@ -82,7 +58,7 @@ class AwsDriver(Driver):
         for image in self.images():
             if version in image.versions:
                 return image
-        raise AwsDriverError(f"no image found with for version {version}")
+        raise AwsDriverError(f"no image found with where version is {version}")
 
     def deploy(self, image: Image, public_url: bool) -> str:
         self._put_role()
@@ -306,3 +282,48 @@ class AwsDriver(Driver):
             clients.lmb.update_function_url_config(**config)
 
         return clients.lmb.get_function_url_config(FunctionName=function_name)
+
+    def _ecr_data(self) -> Dict:
+        ecr_data = {}
+        describe_images = clients.ecr.describe_images(repositoryName=self.repo_name)[
+            "imageDetails"
+        ]
+        image_digests = [
+            {"imageDigest": image["imageDigest"]} for image in describe_images
+        ]
+        batch_get_images = clients.ecr.batch_get_image(
+            repositoryName=self.repo_name, imageIds=image_digests
+        )["images"]
+
+        for image in describe_images:
+            if 'imageTags' in image:
+                versions = image['imageTags']
+                tags = [f"{self.repo_url}:{tag}" for tag in image["imageTags"]]
+            else:
+                versions = []
+                tags = []
+
+            ecr_data[image['imageDigest']]={
+                'versions': versions,
+                'tags': tags
+            }
+        
+        for image in batch_get_images:
+            image_digest = image['imageId']['imageDigest']
+            image_manifest = json.loads(image['imageManifest'])
+            image_id = image_manifest['config']['digest']
+
+            # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plz
+            if 'id' in ecr_data[image_digest]:
+                if ecr_data[image_digest]['id'] != image_id:
+                    raise AwsDriverError("image id and image digest not tightly coupled")
+
+            ecr_data[image_digest]['id']=image_id
+        
+        return ecr_data
+
+    def _image_where_digest(self, digest: str) -> Image:
+        for image in self.images():
+            if digest == image.digest:
+                return image
+        raise AwsDriverError(f"no image found with where digest is {digest}")

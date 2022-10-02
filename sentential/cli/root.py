@@ -1,11 +1,10 @@
-from threading import local
 import typer
 from sentential.lib.clients import clients
 from sentential.lib.template import Init
 from sentential.lib.shapes import Runtimes
 from sentential.lib.drivers.local import LocalDriver
 from sentential.lib.ontology import Ontology
-from sentential.lib.drivers.aws import AwsDriver
+from sentential.lib.joinery import Joinery
 
 root = typer.Typer()
 
@@ -36,19 +35,7 @@ def login():
     """login to ecr"""
     clients.docker.login_ecr()
 
-
-# @root.command()
-# def publish(
-#     from_tag: str = typer.Argument("latest", envvar="CWI_TAG"),
-#     to_tag: str = typer.Argument(None, envvar="TAG"),
-#     major: bool = typer.Option(False),
-#     minor: bool = typer.Option(False),
-# ):
-#     """publish lambda image to aws"""
-#     pass
-
-
-# @root.command()
-# def ls():
-#     """show images"""
-#     pass
+@root.command()
+def ls():
+    """show images"""
+    joinery = Joinery(Ontology()).imagery()

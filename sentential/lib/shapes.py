@@ -89,11 +89,18 @@ def derive_paths(root: PosixPath = PosixPath(".")):
 
 class Image(BaseModel):
     id: str
-    digests: List[str]
+    digest: Union[str, None]
     tags: List[str]
     versions: List[str]
     # arch: str
 
+    @validator("versions")
+    def coerce_versions(cls, v):
+        return list(set(v))
+
+    @validator("tags")
+    def coerce_tags(cls, v):
+        return list(set(v))
 
 class Provision(Shaper):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
@@ -121,3 +128,5 @@ class Provision(Shaper):
         if v not in valid_auth_types:
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
         return v
+
+    
