@@ -61,10 +61,11 @@ class GenericStore(Common):
             table.add_row(key, value)
         return table
 
-    def write(self, key: str, value: List[str], delimeter: str = ","):
+    def write(self, key: str, value: List[str]):
         # Typer doesn't support Union[str, List[str]], understandably
         # So desired behavior is implemented here, to the insult of typing
 
+        delimiter = ","
         value = delimiter.join(value)  # type: ignore
 
         return clients.ssm.put_parameter(
@@ -76,6 +77,9 @@ class GenericStore(Common):
             KeyId=self.context.kms_key_id,
         )
 
+    def export_defaults(self) -> None:
+        return None
+
 
 class ModeledStore(Common):
     def __init__(self, context: Context, prefix: str, model: Type[Shaper]) -> None:
@@ -86,7 +90,7 @@ class ModeledStore(Common):
             f"/{self.context.partition}/{self.context.repository_name}/{prefix}/"
         )
 
-    def _export_defaults(self) -> None:
+    def export_defaults(self) -> None:
         if self.model:
             current_state = self.as_dict()
             for (name, field) in self.model.__fields__.items():
@@ -98,7 +102,6 @@ class ModeledStore(Common):
 
     @property
     def parameters(self) -> Shaper:
-        self._export_defaults()
         return self.model.constrained_parse_obj(self.as_dict())
 
     def read(self) -> Table:

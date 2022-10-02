@@ -22,6 +22,8 @@ class LocalDriver(Driver):
         self.ontology = ontology
 
     def build(self, version: str) -> Image:
+        self.ontology.args.export_defaults()
+
         built_image = clients.docker.build(
             self.ontology.context.path.root,
             load=True,
@@ -86,6 +88,7 @@ class LocalDriver(Driver):
         raise LocalDriverError(f"no image found with container name sentential")
 
     def deploy(self, image: Image, public_url: bool) -> str:
+        self.ontology.envs.export_defaults()
         self.destroy()
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_federation_token()

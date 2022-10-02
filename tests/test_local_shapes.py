@@ -35,8 +35,8 @@ def test_setup_fixtures(project, repo):
 
 def test_write(invoke):
     result = []
-    result.append(invoke(["arg", "write", "required_arg", "given_value"]))
-    result.append(invoke(["env", "write", "required_env", "given_value"]))
+    result.append(invoke(["args", "write", "required_arg", "given_value"]))
+    result.append(invoke(["envs", "write", "required_env", "given_value"]))
     assert all(result)
 
 
@@ -65,16 +65,16 @@ def test_local_destroy(invoke):
     assert result.exit_code == 0
 
 
-def test_arg_delete(invoke):
-    result = invoke(["arg", "clear"])
+def test_args_delete(invoke):
+    result = invoke(["args", "clear"])
     assert result.exit_code == 0
 
 
-def test_env_delete(invoke):
-    result = invoke(["env", "clear"])
+def test_envs_delete(invoke):
+    result = invoke(["envs", "clear"])
     assert result.exit_code == 0
 
 
-def test_config_delete(invoke):
-    result = invoke(["config", "clear"])
+def test_configs_delete(invoke):
+    result = invoke(["configs", "clear"])
     assert result.exit_code == 0

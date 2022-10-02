@@ -77,6 +77,7 @@ class AwsDriver(Driver):
         raise AwsDriverError(f"no image found with where version is {version}")
 
     def deploy(self, image: Image, public_url: bool) -> str:
+        self.ontology.envs.export_defaults()
         self._put_role()
         clients.iam.attach_role_policy(
             RoleName=self._put_role()["Role"]["RoleName"],
