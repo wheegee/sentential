@@ -1,9 +1,9 @@
 from typing import List
+import polars as pl
+from rich.table import Table
 from sentential.lib.drivers.aws import AwsDriver, AwsDriverError
 from sentential.lib.drivers.local import LocalDriver, LocalDriverError
 from sentential.lib.ontology import Ontology
-from rich.table import Table
-import polars as pl
 
 
 class Joinery:

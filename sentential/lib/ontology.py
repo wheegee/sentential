@@ -1,6 +1,6 @@
-import importlib
 import os
 import sys
+import importlib
 from typing import Union
 from sentential.lib.context import Context
 from sentential.lib.store import GenericStore, ModeledStore

@@ -1,7 +1,7 @@
+from enum import Enum
 from pathlib import PosixPath
 from typing import List, Union, Optional
 from pydantic import BaseModel, Field, validator
-from enum import Enum
 from sentential.support.shaper import Shaper
 
 #

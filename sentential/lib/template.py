@@ -1,8 +1,7 @@
 from shutil import copy
 from os import makedirs
-from os.path import dirname, abspath, exists
-from typing import Union
 from pathlib import PosixPath
+from os.path import dirname, abspath, exists
 from jinja2 import Environment, FileSystemLoader, Template
 from sentential.lib.shapes import derive_paths
 from sentential.lib.ontology import Ontology
