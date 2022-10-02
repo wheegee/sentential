@@ -14,8 +14,10 @@ from sentential.lib.template import Policy
 # NOTE: Docker images in ECR are primary key'd (conceptually) off of their digest, this is normalized by the Image type
 #
 
+
 class AwsDriverError(BaseException):
     pass
+
 
 class AwsDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
@@ -35,14 +37,16 @@ class AwsDriver(Driver):
         function_name = self.resource_name
         try:
             function = clients.lmb.get_function(FunctionName=function_name)
-            function_arn = function['Configuration']['FunctionArn']
+            function_arn = function["Configuration"]["FunctionArn"]
             digest = function["Code"]["ResolvedImageUri"].split("@")[-1]
             image = self._image_where_digest(digest)
             public_url = None
 
-            try: 
-                public_url_config = clients.lmb.get_function_url_config(FunctionName=function_name)
-                public_url = public_url_config['FunctionUrl']
+            try:
+                public_url_config = clients.lmb.get_function_url_config(
+                    FunctionName=function_name
+                )
+                public_url = public_url_config["FunctionUrl"]
             except clients.lmb.exceptions.ResourceNotFoundException:
                 pass
 
@@ -50,21 +54,23 @@ class AwsDriver(Driver):
                 image=image,
                 function_name=function_name,
                 arn=function_arn,
-                public_url=public_url
+                public_url=public_url,
             )
 
         except clients.lmb.exceptions.ResourceNotFoundException:
-            raise AwsDriverError(f"could not find aws deployed function for {function_name}")
+            raise AwsDriverError(
+                f"could not find aws deployed function for {function_name}"
+            )
 
     def images(self) -> List[Image]:
         images = []
-        for digest, image in self._ecr_data().items(): 
+        for digest, image in self._ecr_data().items():
             images.append(
                 Image(
-                    id=image['id'],
+                    id=image["id"],
                     digest=digest,
-                    tags=image['tags'],
-                    versions=image['versions'],
+                    tags=image["tags"],
+                    versions=image["versions"],
                 )
             )
 
@@ -313,30 +319,29 @@ class AwsDriver(Driver):
         )["images"]
 
         for image in describe_images:
-            if 'imageTags' in image:
-                versions = image['imageTags']
+            if "imageTags" in image:
+                versions = image["imageTags"]
                 tags = [f"{self.repo_url}:{tag}" for tag in image["imageTags"]]
             else:
                 versions = []
                 tags = []
 
-            ecr_data[image['imageDigest']]={
-                'versions': versions,
-                'tags': tags
-            }
-        
+            ecr_data[image["imageDigest"]] = {"versions": versions, "tags": tags}
+
         for image in batch_get_images:
-            image_digest = image['imageId']['imageDigest']
-            image_manifest = json.loads(image['imageManifest'])
-            image_id = image_manifest['config']['digest']
+            image_digest = image["imageId"]["imageDigest"]
+            image_manifest = json.loads(image["imageManifest"])
+            image_id = image_manifest["config"]["digest"]
 
             # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plz
-            if 'id' in ecr_data[image_digest]:
-                if ecr_data[image_digest]['id'] != image_id:
-                    raise AwsDriverError("image id and image digest not tightly coupled")
+            if "id" in ecr_data[image_digest]:
+                if ecr_data[image_digest]["id"] != image_id:
+                    raise AwsDriverError(
+                        "image id and image digest not tightly coupled"
+                    )
 
-            ecr_data[image_digest]['id']=image_id
-        
+            ecr_data[image_digest]["id"] = image_id
+
         return ecr_data
 
     def _image_where_digest(self, digest: str) -> Image:

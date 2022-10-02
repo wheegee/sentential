@@ -104,6 +104,7 @@ class Image(BaseModel):
         uniq = list(set(v))
         return uniq
 
+
 class Function(BaseModel):
     image: Image
     arn: str
@@ -137,5 +138,3 @@ class Provision(Shaper):
         if v not in valid_auth_types:
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
         return v
-
-    

@@ -13,6 +13,7 @@ from python_on_whales.components.image.cli_wrapper import Image as DriverImage
 # NOTE: Docker images locally are primary key'd (conceptually) off of their id, this is normalized by the Image type
 #
 
+
 class LocalDriverError(BaseException):
     pass
 
@@ -27,9 +28,7 @@ class LocalDriver(Driver):
         built_image = clients.docker.build(
             self.ontology.context.path.root,
             load=True,
-            tags=[
-                f"{self.ontology.context.repository_name}:{version}"
-            ],
+            tags=[f"{self.ontology.context.repository_name}:{version}"],
             build_args=self.ontology.args.as_dict(),
         )
 
@@ -52,9 +51,9 @@ class LocalDriver(Driver):
             images.append(
                 Image(
                     id=id,
-                    digest=image['digest'],
-                    tags=image['tags'],
-                    versions=image['versions'],
+                    digest=image["digest"],
+                    tags=image["tags"],
+                    versions=image["versions"],
                 )  # arch=image.architecture
             )
         return images
@@ -73,17 +72,14 @@ class LocalDriver(Driver):
             container = running[0]
             running_image = clients.docker.image.inspect(container.image)
             image = self._image_where_id(running_image.id)
-            
+
             if public_url:
                 public_url = "http://localhost:8081"
             else:
                 public_url = None
 
             return Function(
-                image=image,
-                function_name="local",
-                arn="local",
-                public_url=public_url
+                image=image, function_name="local", arn="local", public_url=public_url
             )
         raise LocalDriverError(f"no image found with container name sentential")
 
@@ -185,9 +181,9 @@ class LocalDriver(Driver):
             # strip urls
             repo_names = [tag.split("/")[-1] for tag in repo_names_w_url]
             # match against known repo name
-            match = any([repo_name == name for name in repo_names ])
+            match = any([repo_name == name for name in repo_names])
 
-            if match: 
+            if match:
                 digest = None
                 for proposed_digest in image.repo_digests:
                     proposed_digest = proposed_digest.split("@")[-1]
@@ -195,19 +191,21 @@ class LocalDriver(Driver):
                     # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plz
                     if digest is not None:
                         if digest != proposed_digest:
-                            raise LocalDriverError("image id and image digest not tightly coupled")
-                    
+                            raise LocalDriverError(
+                                "image id and image digest not tightly coupled"
+                            )
+
                     digest = proposed_digest
-                
+
                 versions = []
                 for tag in image.repo_tags:
                     versions.append(tag.split(":")[-1])
 
-                docker_data[image.id]={
-                    'id': image.id,
-                    'digest': digest,
-                    'tags': image.repo_tags,
-                    'versions': versions
+                docker_data[image.id] = {
+                    "id": image.id,
+                    "digest": digest,
+                    "tags": image.repo_tags,
+                    "versions": versions,
                 }
 
         return docker_data

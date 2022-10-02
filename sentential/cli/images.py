@@ -5,9 +5,11 @@ from rich import print
 
 images = typer.Typer()
 
+
 @images.command()
 def local():
     print(Joinery(Ontology()).local_images())
+
 
 @images.command()
 def aws():

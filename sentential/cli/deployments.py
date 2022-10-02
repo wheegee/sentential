@@ -5,6 +5,7 @@ from rich import print
 
 deployments = typer.Typer()
 
+
 @deployments.command()
 def all():
     print(Joinery(Ontology()).deployments())

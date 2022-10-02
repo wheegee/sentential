@@ -14,6 +14,7 @@ def reload_shapes():
 
     importlib.reload(shapes)
 
+
 class Ontology:
     def __init__(self) -> None:
         pass

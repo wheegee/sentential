@@ -5,6 +5,7 @@ from sentential.lib.ontology import Ontology
 from rich.table import Table
 import polars as pl
 
+
 class Joinery:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -25,27 +26,26 @@ class Joinery:
         for loc in [self.aws, self.local]:
             try:
                 function = loc.deployed()
-                deployed.append(function.dict(exclude={'image', 'function_name'}))
+                deployed.append(function.dict(exclude={"image", "function_name"}))
             except LocalDriverError:
                 pass
             except AwsDriverError:
                 pass
-        
+
         if deployed:
             return pl.from_dicts(deployed)
         else:
             return pl.DataFrame()
 
     def _local_df(self, drop: List[str] = []) -> pl.DataFrame:
-        local_images = [ image.dict() for image in self.local.images() ] 
+        local_images = [image.dict() for image in self.local.images()]
         local_images = pl.from_dicts(local_images)
         if drop:
             local_images = local_images.drop(*drop)
         return local_images
 
-
     def _aws_df(self, drop: List[str] = []) -> pl.DataFrame:
-        aws_images = [ image.dict() for image in self.aws.images() ] 
+        aws_images = [image.dict() for image in self.aws.images()]
         aws_images = pl.from_dicts(aws_images)
         if drop:
             aws_images = aws_images.drop(*drop)
@@ -55,5 +55,5 @@ class Joinery:
         columns = df.columns
         table = Table(*columns)
         for row in df.rows():
-            table.add_row(*[ str(cell) for cell in row ])
+            table.add_row(*[str(cell) for cell in row])
         return table
