@@ -1,10 +1,10 @@
 import json
 import os
 from time import sleep
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, cast
 from sentential.lib.drivers.spec import Driver
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import LAMBDA_ROLE_POLICY_JSON, Image, Function
+from sentential.lib.shapes import LAMBDA_ROLE_POLICY_JSON, Image, Function, Provision
 from sentential.lib.clients import clients
 from sentential.lib.template import Policy
 
@@ -18,7 +18,6 @@ from sentential.lib.template import Policy
 class AwsDriverError(BaseException):
     pass
 
-
 class AwsDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -29,9 +28,13 @@ class AwsDriver(Driver):
         self.repo_name = self.context.repository_name
         self.repo_url = self.context.repository_url
         self.envs = self.ontology.envs
-        self.provision = self.ontology.configs
         self.resource_name = f"{self.partition}-{self.region}-{self.repo_name}"
         self.policy_arn = f"arn:aws:iam::{self.account_id}:policy/{self.resource_name}"
+
+    @property
+    def provision(self) -> Provision:
+        # there must be a better way to do polymorphic type stuff...
+        return cast(Provision, self.ontology.configs.parameters)
 
     def deployed(self) -> Function:
         function_name = self.resource_name
@@ -222,12 +225,12 @@ class AwsDriver(Driver):
                 Description=f"sententially deployed {image_uri}",
                 Environment={"Variables": {"PARTITION": envs_path}},
                 # Architectures=[self.image.arch], # TODO: figure out wtf is going on with fetching arch.
-                EphemeralStorage={"Size": self.provision.parameters.storage},
-                MemorySize=self.provision.parameters.memory,
-                Timeout=self.provision.parameters.timeout,
+                EphemeralStorage={"Size": self.provision.storage},
+                MemorySize=self.provision.memory,
+                Timeout=self.provision.timeout,
                 VpcConfig={
-                    "SubnetIds": self.provision.parameters.subnet_ids,
-                    "SecurityGroupIds": self.provision.parameters.security_group_ids,
+                    "SubnetIds": self.provision.subnet_ids,
+                    "SecurityGroupIds": self.provision.security_group_ids,
                 },
             )
 
@@ -236,7 +239,7 @@ class AwsDriver(Driver):
                 StatementId="FunctionURLAllowPublicAccess",
                 Action="lambda:InvokeFunctionUrl",
                 Principal="*",
-                FunctionUrlAuthType=self.provision.parameters.auth_type,
+                FunctionUrlAuthType=self.provision.auth_type,
             )
 
             return function
@@ -246,12 +249,12 @@ class AwsDriver(Driver):
                 Role=role_arn,
                 Description=f"sententially deployed {image_uri}",
                 Environment={"Variables": {"PARTITION": envs_path}},
-                EphemeralStorage={"Size": self.provision.parameters.storage},
-                MemorySize=self.provision.parameters.memory,
-                Timeout=self.provision.parameters.timeout,
+                EphemeralStorage={"Size": self.provision.storage},
+                MemorySize=self.provision.memory,
+                Timeout=self.provision.timeout,
                 VpcConfig={
-                    "SubnetIds": self.provision.parameters.subnet_ids,
-                    "SecurityGroupIds": self.provision.parameters.security_group_ids,
+                    "SubnetIds": self.provision.subnet_ids,
+                    "SecurityGroupIds": self.provision.security_group_ids,
                 },
             )
 
@@ -278,7 +281,7 @@ class AwsDriver(Driver):
                 StatementId="FunctionURLAllowPublicAccess",
                 Action="lambda:InvokeFunctionUrl",
                 Principal="*",
-                FunctionUrlAuthType=self.provision.parameters.auth_type,
+                FunctionUrlAuthType=self.provision.auth_type,
             )
 
             if tags:
@@ -290,12 +293,12 @@ class AwsDriver(Driver):
         function_name = self.resource_name
         config = {
             "FunctionName": function_name,
-            "AuthType": self.provision.parameters.auth_type,
+            "AuthType": self.provision.auth_type,
             "Cors": {
-                "AllowHeaders": self.provision.parameters.allow_headers,
-                "AllowMethods": self.provision.parameters.allow_methods,
-                "AllowOrigins": self.provision.parameters.allow_origins,
-                "ExposeHeaders": self.provision.parameters.expose_headers,
+                "AllowHeaders": self.provision.allow_headers,
+                "AllowMethods": self.provision.allow_methods,
+                "AllowOrigins": self.provision.allow_origins,
+                "ExposeHeaders": self.provision.expose_headers,
             },
         }
 

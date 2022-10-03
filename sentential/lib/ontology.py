@@ -4,6 +4,7 @@ import importlib
 from typing import Union
 from sentential.lib.context import Context
 from sentential.lib.store import GenericStore, ModeledStore
+from sentential.lib.shapes import Provision as Model
 
 
 def reload_shapes():
@@ -45,6 +46,4 @@ class Ontology:
 
     @property
     def configs(cls) -> ModeledStore:
-        from sentential.lib.shapes import Provision as Model
-
         return ModeledStore(cls.context, "provision", Model)

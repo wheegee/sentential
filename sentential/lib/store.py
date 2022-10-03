@@ -80,7 +80,6 @@ class GenericStore(Common):
     def export_defaults(self) -> None:
         return None
 
-
 class ModeledStore(Common):
     def __init__(self, context: Context, prefix: str, model: Type[Shaper]) -> None:
         super().__init__()
@@ -97,8 +96,6 @@ class ModeledStore(Common):
                 if field.name not in current_state.keys():
                     if hasattr(field, "default") and field.default != None:
                         self.write(field.name, field.default)
-        # TODO: implement caching on _fetch
-        # self._fetch.cache_clear()
 
     @property
     def parameters(self) -> Shaper:
