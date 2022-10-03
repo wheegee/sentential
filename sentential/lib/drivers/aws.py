@@ -18,6 +18,7 @@ from sentential.lib.template import Policy
 class AwsDriverError(BaseException):
     pass
 
+
 class AwsDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology

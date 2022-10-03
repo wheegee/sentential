@@ -80,6 +80,7 @@ class GenericStore(Common):
     def export_defaults(self) -> None:
         return None
 
+
 class ModeledStore(Common):
     def __init__(self, context: Context, prefix: str, model: Type[Shaper]) -> None:
         super().__init__()
