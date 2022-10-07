@@ -2,10 +2,10 @@ import polars as pl
 from typing import List, Type
 from types import SimpleNamespace
 from rich.table import Table
-from builtins import KeyError, ValueError
+from builtins import ValueError
 from sentential.lib.clients import clients
 from sentential.lib.context import Context
-from sentential.support.shaper import Shaper
+from sentential.support.shaper import Shaper, ShaperError
 
 
 class StoreError(BaseException):
@@ -35,7 +35,7 @@ class Common:
         try:
             return clients.ssm.delete_parameter(Name=f"{self.path}{key}")
         except clients.ssm.exceptions.ParameterNotFound:
-            raise StoreError(f"no such key '{key}'")
+            raise StoreError(f"no key '{key}' persisted")
 
     def clear(self):
         for (key, value) in self.as_dict().items():
@@ -124,21 +124,17 @@ class ModeledStore(Common):
         return table
 
     def write(self, key: str, value: List[str]):
+
         # Typer doesn't support Union[str, List[str]], understandably
         # So desired behavior is implemented here, to the insult of typing
         if len(value) == 1:
             value = value[0]  # type: ignore
 
         try:
-            validation = self.model.constrained_validation_df({key: value})
-            validation = validation.filter(pl.col("field") == key)
-            if validation.row(0)[1] is not None:
-                raise ValueError(validation.row(0)[1])
-        except KeyError:
-            raise StoreError(
-                f"invalid key, valid options {list(self.model.__fields__.keys())}"
-            )
+            self.model.validate_field_value(key, value)
         except ValueError as e:
+            raise StoreError(e)
+        except ShaperError as e:
             raise StoreError(e)
 
         return clients.ssm.put_parameter(

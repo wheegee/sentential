@@ -8,7 +8,6 @@ from sentential.lib.shapes import Provision as Model
 
 
 def reload_shapes():
-    # This method is used to ensure cached objects in testing don't hold stale import information about shapes.py
     if os.getcwd() not in sys.path:
         sys.path.append(os.getcwd())
     import shapes

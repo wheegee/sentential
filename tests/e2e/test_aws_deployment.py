@@ -2,10 +2,9 @@ from time import sleep
 import pytest
 import requests
 import in_place
-from flaky import flaky
 from os.path import exists
 from shutil import copyfile
-
+from tests.helpers import retry
 
 def test_init(invoke):
     result = invoke(["init", "test", "python"])
@@ -40,6 +39,9 @@ def test_aws_build(invoke):
     result = invoke(["build"])
     assert result.exit_code == 0
 
+def test_aws_login_ecr(invoke):
+    result = invoke(['login'])
+    assert result.exit_code == 0
 
 def test_aws_publish(invoke):
     result = invoke(["publish"])
@@ -48,20 +50,20 @@ def test_aws_publish(invoke):
 
 def test_aws_deploy(invoke):
     result = invoke(["deploy", "aws", "latest", "--public-url"])
-    pytest.deployment_url = result.output
+    pytest.deployment_url = result.output  # type: ignore
     assert result.exit_code == 0
 
 
-@flaky(max_runs=60)
+@retry(30)
 def test_aws_lambda_health():
     sleep(1)
-    assert requests.get(pytest.deployment_url).status_code == 200
+    assert requests.get(pytest.deployment_url).status_code == 200  # type: ignore
 
 
-@flaky(max_runs=60)
+@retry(30)
 def test_aws_lambda():
     results = []
-    environment = dict(requests.get(pytest.deployment_url).json())
+    environment = dict(requests.get(pytest.deployment_url).json())  # type: ignore
     for envar in ["key"]:
         results.append(envar in environment.keys())
     assert all(results)

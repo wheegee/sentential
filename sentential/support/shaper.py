@@ -1,7 +1,6 @@
 from builtins import BaseException
-from email import message
 from pydantic import BaseModel, ValidationError, Extra, Field
-from typing import List
+from typing import Any, List, Tuple, cast
 from enum import Enum
 import polars as pl
 import ast
@@ -21,6 +20,24 @@ class ShaperError(BaseException):
 class Shaper(BaseModel):
     class Config:
         extra = Extra.forbid
+
+    @classmethod
+    def validate_field_value(cls, field: str, value: Any):
+        try:
+            validations = cls.constrained_validation_df({field: value})
+        except KeyError as e:
+            raise ShaperError(f"invalid key, valid options {list(cls.__fields__.keys())}")
+
+        validations = validations.filter(pl.col("field") == field)
+
+        if len(validations) != 1:
+            raise ShaperError(f"number of validations for {field} must be 1, found {len(validations)}")
+
+        validation = validations.row(0)
+        (key, validation_error) = cast(Tuple[str, str], validation)
+
+        if validation_error is not None:
+            raise ValueError(validation_error)
 
     @classmethod
     def constrained_parse_obj(cls, data: dict):
