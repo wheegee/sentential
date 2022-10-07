@@ -1,59 +1,91 @@
-from typing import List
-import polars as pl
-from rich.table import Table
-from sentential.lib.drivers.aws import AwsDriver, AwsDriverError
-from sentential.lib.drivers.local import LocalDriver, LocalDriverError
+from operator import concat
+from typing import Dict, List
+from rich.table import Table, box
+from sentential.lib.exceptions import JoineryError
+from sentential.lib.drivers.aws import AwsDriver
+from sentential.lib.drivers.local import LocalDriver
 from sentential.lib.ontology import Ontology
-
+from sentential.lib.shapes import Image, ImageView
 
 class Joinery:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.local = LocalDriver(self.ontology)
         self.aws = AwsDriver(self.ontology)
+        try:
+            self.local_deployment = self.local.deployed()
+        except:
+            self.local_deployment = None
 
-    def local_images(self) -> Table:
-        return self.to_table(self._local_df())
+        try:
+            self.aws_deployment = self.aws.deployed()
+        except:
+            self.aws_deployment = None
 
-    def aws_images(self) -> Table:
-        return self.to_table(self._aws_df())
+    def group_by_id(self) -> Dict[str, List[Image]]:
+        local_images = [ image for image in self.local.images() ]
+        aws_images = [ image for image in self.aws.images() ]
+        by_id = {}
+        for image in local_images + aws_images:
+            if image.id in by_id:
+                by_id[image.id].append(image)
+            else:
+                by_id[image.id]=[image]
+        return by_id
+        
 
-    def deployments(self) -> Table:
-        return self.to_table(self._deployed_df())
+    def merge_on_id(self) -> List[ImageView]:
+        merged = []
+        
+        for id, images in self.group_by_id().items():
+            digest = None 
+            tags = []
+            versions = []
+            href = []
+            for image in images:
+                if image.digest is not None:
+                    digest = image.digest
+                
+                if image.tags:
+                    tags = concat(tags, image.tags)
 
-    def _deployed_df(self) -> pl.DataFrame:
-        deployed = []
-        for loc in [self.aws, self.local]:
-            try:
-                function = loc.deployed()
-                deployed.append(function.dict(exclude={"image", "function_name"}))
-            except LocalDriverError:
-                pass
-            except AwsDriverError:
-                pass
+                if image.versions:
+                    versions = concat(versions, image.versions)
 
-        if deployed:
-            return pl.from_dicts(deployed)
-        else:
-            return pl.DataFrame()
+                if self.local_deployment:
+                    if self.local_deployment.image.id == image.id:
+                        public_url = self.local_deployment.public_url
+                        if public_url:
+                            href.append(f"[link={public_url}]local_url[/link]")           
 
-    def _local_df(self, drop: List[str] = []) -> pl.DataFrame:
-        local_images = [image.dict() for image in self.local.images()]
-        local_images = pl.from_dicts(local_images)
-        if drop:
-            local_images = local_images.drop(*drop)
-        return local_images
+                if self.aws_deployment:
+                    if self.aws_deployment.image.id == image.id:
+                        web_console_url = self.aws_deployment.web_console_url
+                        public_url = self.aws_deployment.public_url
+                        if web_console_url:
+                            href.append(f"[link={web_console_url}]web_console[/link]")
+                        if public_url:
+                            href.append(f"[link={public_url}]public_url[/link]")
 
-    def _aws_df(self, drop: List[str] = []) -> pl.DataFrame:
-        aws_images = [image.dict() for image in self.aws.images()]
-        aws_images = pl.from_dicts(aws_images)
-        if drop:
-            aws_images = aws_images.drop(*drop)
-        return aws_images
+            merged.append(ImageView(
+                id=id,
+                digest=digest,
+                tags=list(tags),
+                versions=list(versions),
+                href=href
+            ))
 
-    def to_table(self, df: pl.DataFrame) -> Table:
-        columns = df.columns
-        table = Table(*columns)
-        for row in df.rows():
-            table.add_row(*[str(cell) for cell in row])
+        return merged
+
+    def list(self, drop: List[str] = []) -> Table:
+        columns=list((ImageView.__fields__.keys()))
+
+        for header in drop:
+            if header in columns:
+                columns.remove(header)
+
+        data = [list(i.dict(exclude=set(drop)).values()) for i in self.merge_on_id()]
+        table = Table(box=box.SIMPLE, *columns)
+        for row in data:
+            table.add_row(*[str(value) for value in row])
         return table

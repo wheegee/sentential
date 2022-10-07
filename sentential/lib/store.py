@@ -3,14 +3,10 @@ from typing import List, Type
 from types import SimpleNamespace
 from rich.table import Table
 from builtins import ValueError
+from sentential.lib.exceptions import StoreError
 from sentential.lib.clients import clients
 from sentential.lib.context import Context
 from sentential.support.shaper import Shaper, ShaperError
-
-
-class StoreError(BaseException):
-    pass
-
 
 class Common:
     path: str

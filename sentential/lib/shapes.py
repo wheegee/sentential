@@ -1,8 +1,10 @@
 from enum import Enum
+from lib2to3.pgen2.token import OP
 from pathlib import PosixPath
 from typing import List, Union, Optional
 from pydantic import BaseModel, Field, validator
 from sentential.support.shaper import Shaper
+import polars as pl
 
 #
 # IAM
@@ -96,19 +98,42 @@ class Image(BaseModel):
 
     @validator("versions")
     def coerce_versions(cls, v):
-        uniq = list(set(v))
-        return uniq
+        if v is not None:
+            uniq = list(set(v))
+            return uniq
+        else:
+            return []
 
     @validator("tags")
     def coerce_tags(cls, v):
-        uniq = list(set(v))
-        return uniq
+        if v is not None: 
+            uniq = list(set(v))
+            return uniq
+        else:
+            return []
 
+class ImageView(Image):
+    href: List[str] = []
+
+    @validator("href")
+    def uniq(cls, v):
+        return list(set(v))
+
+    @validator("id")
+    def humanize_id(cls, v):
+        return v.replace("sha256:", "")[0:12]
+
+    @validator("digest")
+    def humanize_digest(cls, v):
+        if v:
+            return v.replace("sha256:", "")[0:12]
 
 class Function(BaseModel):
     image: Image
+    region: str
     arn: str
     function_name: str
+    web_console_url: Union[str, None]
     public_url: Union[str, None]
 
 

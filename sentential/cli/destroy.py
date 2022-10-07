@@ -10,11 +10,11 @@ destroy = typer.Typer()
 def local():
     """destroy lambda deployment in aws"""
     local = LocalDriver(Ontology())
-    print(local.destroy())
+    local.destroy()
 
 
 @destroy.command()
 def aws():
     """destroy lambda deployment in aws"""
     aws = AwsDriver(Ontology())
-    print(aws.destroy())
+    aws.destroy()

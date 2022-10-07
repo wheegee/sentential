@@ -1,6 +1,7 @@
 import os
 from tempfile import TemporaryDirectory
 from typing import Dict, List
+from sentential.lib.exceptions import LocalDriverError
 from sentential.lib.clients import clients
 from sentential.lib.drivers.spec import Driver
 from sentential.lib.ontology import Ontology
@@ -12,11 +13,6 @@ from python_on_whales.components.image.cli_wrapper import Image as DriverImage
 #
 # NOTE: Docker images locally are primary key'd (conceptually) off of their id, this is normalized by the Image type
 #
-
-
-class LocalDriverError(BaseException):
-    pass
-
 
 class LocalDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
@@ -36,6 +32,14 @@ class LocalDriver(Driver):
             return self._image_where_id(built_image.id)
         else:
             raise LocalDriverError("build returned unexpected type")
+
+    def pull(self, image: Image) -> List[str]:
+        tags_pulled = []
+        for tag in image.tags:
+            if self.ontology.context.repository_url in tag:
+                clients.docker.pull(tag)
+                tags_pulled.append(tag)
+        return tags_pulled
 
     def publish(self, version: str) -> str:
         image = self.image(version)
@@ -62,7 +66,7 @@ class LocalDriver(Driver):
         for image in self.images():
             if version in image.versions:
                 return image
-        raise LocalDriverError(f"no image found with where version {version}")
+        raise LocalDriverError(f"no image found where version {version}")
 
     def deployed(self) -> Function:
         # TODO: "sentential" container name is not a good enough matching mechanism
@@ -79,7 +83,12 @@ class LocalDriver(Driver):
                 public_url = None
 
             return Function(
-                image=image, function_name="local", arn="local", public_url=public_url
+                image=image,
+                region=self.ontology.context.region,
+                function_name="local", 
+                arn="local", 
+                public_url=public_url,
+                web_console_url=None
             )
         raise LocalDriverError(f"no image found with container name sentential")
 

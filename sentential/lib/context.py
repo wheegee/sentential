@@ -1,11 +1,8 @@
 import boto3
 from os import getenv
+from sentential.lib.exceptions import ContextError
 from sentential.lib.clients import clients
 from sentential.lib.shapes import derive_paths, Paths
-
-
-class ContextError(BaseException):
-    pass
 
 
 class Context:

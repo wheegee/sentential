@@ -1,6 +1,5 @@
 import typer
 from sentential.lib.clients import clients
-from sentential.lib.drivers.aws import AwsDriver
 from sentential.lib.template import Init
 from sentential.lib.shapes import Runtimes
 from sentential.lib.drivers.local import LocalDriver
@@ -36,3 +35,8 @@ def publish(version: str = typer.Argument("latest", envvar="VERSION")):
 def login():
     """login to ecr"""
     clients.docker.login_ecr()
+
+@root.command()
+def ls():
+    """list image information"""
+    print(Joinery(Ontology()).list(['tags']))

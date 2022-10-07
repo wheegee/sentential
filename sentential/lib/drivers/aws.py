@@ -2,6 +2,7 @@ import json
 import os
 from time import sleep
 from typing import Dict, List, Optional, cast
+from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.drivers.spec import Driver
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import LAMBDA_ROLE_POLICY_JSON, Image, Function, Provision
@@ -13,11 +14,6 @@ from sentential.lib.template import Policy
 #
 # NOTE: Docker images in ECR are primary key'd (conceptually) off of their digest, this is normalized by the Image type
 #
-
-
-class AwsDriverError(BaseException):
-    pass
-
 
 class AwsDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
@@ -31,6 +27,7 @@ class AwsDriver(Driver):
         self.envs = self.ontology.envs
         self.resource_name = f"{self.partition}-{self.region}-{self.repo_name}"
         self.policy_arn = f"arn:aws:iam::{self.account_id}:policy/{self.resource_name}"
+        self.web_console_url = f"https://{self.region}.console.aws.amazon.com/lambda/home#/functions/{self.resource_name}"
 
     @property
     def provision(self) -> Provision:
@@ -57,8 +54,10 @@ class AwsDriver(Driver):
             return Function(
                 image=image,
                 function_name=function_name,
+                region=self.ontology.context.region,
                 arn=function_arn,
                 public_url=public_url,
+                web_console_url=self.web_console_url
             )
 
         except clients.lmb.exceptions.ResourceNotFoundException:
@@ -84,7 +83,7 @@ class AwsDriver(Driver):
         for image in self.images():
             if version in image.versions:
                 return image
-        raise AwsDriverError(f"no image found with where version is {version}")
+        raise AwsDriverError(f"no image found where version is {version}")
 
     def deploy(self, image: Image, public_url: bool) -> str:
         self.ontology.envs.export_defaults()
@@ -352,4 +351,4 @@ class AwsDriver(Driver):
         for image in self.images():
             if digest == image.digest:
                 return image
-        raise AwsDriverError(f"no image found with where digest is {digest}")
+        raise AwsDriverError(f"no image found where digest is {digest}")

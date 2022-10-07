@@ -13,7 +13,13 @@ def local(
 ):
     """deploy lambda image to aws"""
     local = LocalDriver(Ontology())
-    image = local.image(version)
+    aws = AwsDriver(Ontology())
+    try:
+        image = local.image(version)
+    except: 
+        image = aws.image(version)
+        local.pull(image)
+        
     print(local.deploy(image, public_url))
 
 
