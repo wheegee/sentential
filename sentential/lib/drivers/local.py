@@ -14,6 +14,7 @@ from python_on_whales.components.image.cli_wrapper import Image as DriverImage
 # NOTE: Docker images locally are primary key'd (conceptually) off of their id, this is normalized by the Image type
 #
 
+
 class LocalDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -85,10 +86,10 @@ class LocalDriver(Driver):
             return Function(
                 image=image,
                 region=self.ontology.context.region,
-                function_name="local", 
-                arn="local", 
+                function_name="local",
+                arn="local",
                 public_url=public_url,
-                web_console_url=None
+                web_console_url=None,
             )
         raise LocalDriverError(f"no image found with container name sentential")
 

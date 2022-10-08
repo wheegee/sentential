@@ -14,6 +14,7 @@ root.add_typer(deploy, name="deploy", help="create deployment")
 root.add_typer(destroy, name="destroy", help="destroy deployment")
 root.add_typer(logs, name="logs", help="logging")
 
+
 def main():
     try:
         root()

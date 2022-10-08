@@ -36,7 +36,8 @@ def login():
     """login to ecr"""
     clients.docker.login_ecr()
 
+
 @root.command()
 def ls():
     """list image information"""
-    print(Joinery(Ontology()).list(['tags']))
+    print(Joinery(Ontology()).list(["tags"]))

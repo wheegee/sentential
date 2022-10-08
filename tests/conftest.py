@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from typer.testing import CliRunner
 from sentential.sntl import root as sntl
 
+
 @pytest.fixture(scope="module")
 def project():
     return getcwd()
@@ -34,4 +35,3 @@ def run_in_tmp_dir(project, repo):
 
 def pytest_configure():
     pytest.deployment_url = None
-

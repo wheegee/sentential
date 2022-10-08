@@ -16,10 +16,10 @@ def local(
     aws = AwsDriver(Ontology())
     try:
         image = local.image(version)
-    except: 
+    except:
         image = aws.image(version)
         local.pull(image)
-        
+
     print(local.deploy(image, public_url))
 
 

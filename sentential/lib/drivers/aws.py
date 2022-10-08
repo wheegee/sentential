@@ -15,6 +15,7 @@ from sentential.lib.template import Policy
 # NOTE: Docker images in ECR are primary key'd (conceptually) off of their digest, this is normalized by the Image type
 #
 
+
 class AwsDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -57,7 +58,7 @@ class AwsDriver(Driver):
                 region=self.ontology.context.region,
                 arn=function_arn,
                 public_url=public_url,
-                web_console_url=self.web_console_url
+                web_console_url=self.web_console_url,
             )
 
         except clients.lmb.exceptions.ResourceNotFoundException:

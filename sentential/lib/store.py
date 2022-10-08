@@ -8,6 +8,7 @@ from sentential.lib.clients import clients
 from sentential.lib.context import Context
 from sentential.support.shaper import Shaper, ShaperError
 
+
 class Common:
     path: str
     context: Context

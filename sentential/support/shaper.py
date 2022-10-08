@@ -26,12 +26,16 @@ class Shaper(BaseModel):
         try:
             validations = cls.constrained_validation_df({field: value})
         except KeyError as e:
-            raise ShaperError(f"invalid key, valid options {list(cls.__fields__.keys())}")
+            raise ShaperError(
+                f"invalid key, valid options {list(cls.__fields__.keys())}"
+            )
 
         validations = validations.filter(pl.col("field") == field)
 
         if len(validations) != 1:
-            raise ShaperError(f"number of validations for {field} must be 1, found {len(validations)}")
+            raise ShaperError(
+                f"number of validations for {field} must be 1, found {len(validations)}"
+            )
 
         validation = validations.row(0)
         (key, validation_error) = cast(Tuple[str, str], validation)

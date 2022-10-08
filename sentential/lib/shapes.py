@@ -106,11 +106,12 @@ class Image(BaseModel):
 
     @validator("tags")
     def coerce_tags(cls, v):
-        if v is not None: 
+        if v is not None:
             uniq = list(set(v))
             return uniq
         else:
             return []
+
 
 class ImageView(Image):
     href: List[str] = []
@@ -127,6 +128,7 @@ class ImageView(Image):
     def humanize_digest(cls, v):
         if v:
             return v.replace("sha256:", "")[0:12]
+
 
 class Function(BaseModel):
     image: Image

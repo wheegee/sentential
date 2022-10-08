@@ -7,6 +7,7 @@ from sentential.lib.drivers.local import LocalDriver
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Image, ImageView
 
+
 class Joinery:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -23,29 +24,28 @@ class Joinery:
             self.aws_deployment = None
 
     def group_by_id(self) -> Dict[str, List[Image]]:
-        local_images = [ image for image in self.local.images() ]
-        aws_images = [ image for image in self.aws.images() ]
+        local_images = [image for image in self.local.images()]
+        aws_images = [image for image in self.aws.images()]
         by_id = {}
         for image in local_images + aws_images:
             if image.id in by_id:
                 by_id[image.id].append(image)
             else:
-                by_id[image.id]=[image]
+                by_id[image.id] = [image]
         return by_id
-        
 
     def merge_on_id(self) -> List[ImageView]:
         merged = []
-        
+
         for id, images in self.group_by_id().items():
-            digest = None 
+            digest = None
             tags = []
             versions = []
             href = []
             for image in images:
                 if image.digest is not None:
                     digest = image.digest
-                
+
                 if image.tags:
                     tags = concat(tags, image.tags)
 
@@ -56,7 +56,7 @@ class Joinery:
                     if self.local_deployment.image.id == image.id:
                         public_url = self.local_deployment.public_url
                         if public_url:
-                            href.append(f"[link={public_url}]local_url[/link]")           
+                            href.append(f"[link={public_url}]local_url[/link]")
 
                 if self.aws_deployment:
                     if self.aws_deployment.image.id == image.id:
@@ -67,18 +67,20 @@ class Joinery:
                         if public_url:
                             href.append(f"[link={public_url}]public_url[/link]")
 
-            merged.append(ImageView(
-                id=id,
-                digest=digest,
-                tags=list(tags),
-                versions=list(versions),
-                href=href
-            ))
+            merged.append(
+                ImageView(
+                    id=id,
+                    digest=digest,
+                    tags=list(tags),
+                    versions=list(versions),
+                    href=href,
+                )
+            )
 
         return merged
 
     def list(self, drop: List[str] = []) -> Table:
-        columns=list((ImageView.__fields__.keys()))
+        columns = list((ImageView.__fields__.keys()))
 
         for header in drop:
             if header in columns:

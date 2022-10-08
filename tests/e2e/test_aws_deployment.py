@@ -6,6 +6,7 @@ from os.path import exists
 from shutil import copyfile
 from tests.helpers import retry
 
+
 def test_init(invoke):
     result = invoke(["init", "test", "python"])
     assert result.exit_code == 0
@@ -39,9 +40,11 @@ def test_aws_build(invoke):
     result = invoke(["build"])
     assert result.exit_code == 0
 
+
 def test_aws_login_ecr(invoke):
-    result = invoke(['login'])
+    result = invoke(["login"])
     assert result.exit_code == 0
+
 
 def test_aws_publish(invoke):
     result = invoke(["publish"])

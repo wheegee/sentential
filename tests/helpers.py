@@ -1,13 +1,16 @@
-
 from functools import wraps
 from time import sleep
+
 
 class RetryWrapperError(BaseException):
     pass
 
-def retry(times=10, ExceptionToCheck=AssertionError,):
-    def deco_retry(f):
 
+def retry(
+    times=10,
+    ExceptionToCheck=AssertionError,
+):
+    def deco_retry(f):
         @wraps(f)
         def f_retry(*args, **kwargs):
             mtries = times
