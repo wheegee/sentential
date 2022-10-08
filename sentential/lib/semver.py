@@ -7,6 +7,7 @@ from sentential.lib.shapes import Image
 
 SEMVER_REGEX = "^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
 
+
 class SemVer:
     def __init__(self, images: List[Image]) -> None:
         self.images = images
@@ -25,7 +26,7 @@ class SemVer:
         matcher = re.compile(SEMVER_REGEX)
         versions = self.versions
         versions = [version for version in versions if matcher.match(version)]
-        versions = sorted(versions, key=lambda v:LooseVersion(v))
+        versions = sorted(versions, key=lambda v: LooseVersion(v))
         return versions
 
     @property
@@ -33,7 +34,7 @@ class SemVer:
         if self.semver:
             return self.semver[-1]
         else:
-            return '0.0.0'
+            return "0.0.0"
 
     def next(self, major=False, minor=False) -> str:
         latest = semver.Version(self.latest)
