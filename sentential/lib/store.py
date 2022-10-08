@@ -1,7 +1,7 @@
 import polars as pl
 from typing import List, Type
 from types import SimpleNamespace
-from rich.table import Table
+from rich.table import Table, box
 from builtins import ValueError
 from sentential.lib.exceptions import StoreError
 from sentential.lib.clients import clients
@@ -52,7 +52,7 @@ class GenericStore(Common):
 
     def read(self) -> Table:
         data = self.as_dict()
-        table = Table("field", "value")
+        table = Table("field", "value", box=box.SIMPLE)
         for (key, value) in data.items():
             table.add_row(key, value)
         return table
@@ -114,7 +114,7 @@ class ModeledStore(Common):
             ]
         )
 
-        table = Table(*df.columns)
+        table = Table(*df.columns, box=box.SIMPLE)
         for row in df.rows():
             table.add_row(*[str(value) for value in row])
         return table

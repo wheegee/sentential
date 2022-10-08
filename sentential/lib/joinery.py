@@ -63,7 +63,7 @@ class Joinery:
                         web_console_url = self.aws_deployment.web_console_url
                         public_url = self.aws_deployment.public_url
                         if web_console_url:
-                            href.append(f"[link={web_console_url}]web_console[/link]")
+                            href.append(f"[link={web_console_url}]aws_console[/link]")
                         if public_url:
                             href.append(f"[link={public_url}]public_url[/link]")
 
