@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 from time import sleep
 from typing import Dict, List, Optional, cast
 from sentential.lib.exceptions import AwsDriverError
@@ -353,3 +354,59 @@ class AwsDriver(Driver):
             if digest == image.digest:
                 return image
         raise AwsDriverError(f"no image found where digest is {digest}")
+
+
+
+class AwsCompletion:
+    @classmethod
+    def sentential_domains(cls) -> List[Dict]:
+        sentential_domains = []
+        for domain in clients.api_gw.get_domain_names()['Items']:
+            if 'Tags' in domain:
+                if 'sentential' in domain['Tags']:
+                    sentential_domains.append(domain)
+        return sentential_domains
+
+    @classmethod
+    def all_urls(cls) -> List[str]:
+        all_urls = []
+        for domain in cls.sentential_domains():
+            d = domain['DomainName']
+            for mapping in clients.api_gw.get_api_mappings(DomainName=d)['Items']:
+                m = mapping['ApiMappingKey']
+                for route in clients.api_gw.get_routes(ApiId=mapping['ApiId'])['Items']:
+                    v, u = route['RouteKey'].split(" ")
+                    full = Path(f"{d}/{m}/{u}")
+                    all_urls.append(f"{v} {full}")
+        return all_urls
+
+    @classmethod
+    def url(cls, incomplete: str):
+        no_verbs = [url.split(" ")[1] for url in cls.all_urls()]
+        for name in no_verbs:
+            if name.startswith(incomplete):
+                yield name
+
+    @classmethod
+    def decompose(cls, complete: str) -> List[str]:
+        domain, *uri = complete.split("/")
+        uri = "/".join(uri)
+        map_key = "/"
+        id = ""
+        for mapping in clients.api_gw.get_api_mappings(DomainName=domain)['Items']:
+            id = mapping['ApiId']
+            if uri.startswith(mapping['ApiMappingKey']):
+                map_key = mapping['ApiMappingKey']
+                uri = uri.replace(map_key, "") # change to "replace first occurance of"
+        return [id, domain, map_key, uri]
+
+    @classmethod
+    def add_route(cls, api_id: str, verb: str, route: str):
+        return clients.api_gw.create_route(
+            ApiId=api_id,
+            RouteKey=f"{verb} {route}"
+        )
+
+    @classmethod
+    def delete_route(cls, api_id: str, route: str):
+        pass
