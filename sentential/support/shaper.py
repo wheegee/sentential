@@ -1,6 +1,6 @@
 from builtins import BaseException
 from pydantic import BaseModel, ValidationError, Extra, Field
-from typing import List
+from typing import Any, List, Tuple, cast
 from enum import Enum
 import polars as pl
 import ast
@@ -13,7 +13,7 @@ ALLOWED_LIST_TYPES = [List[str], List[int], List[float]]
 ALLOWED_TYPES = [str, int, float] + ALLOWED_LIST_TYPES
 
 
-class DisallowedType(BaseException):
+class ShaperError(BaseException):
     pass
 
 
@@ -22,11 +22,33 @@ class Shaper(BaseModel):
         extra = Extra.forbid
 
     @classmethod
+    def validate_field_value(cls, field: str, value: Any):
+        try:
+            validations = cls.constrained_validation_df({field: value})
+        except KeyError as e:
+            raise ShaperError(
+                f"invalid key, valid options {list(cls.__fields__.keys())}"
+            )
+
+        validations = validations.filter(pl.col("field") == field)
+
+        if len(validations) != 1:
+            raise ShaperError(
+                f"number of validations for {field} must be 1, found {len(validations)}"
+            )
+
+        validation = validations.row(0)
+        (key, validation_error) = cast(Tuple[str, str], validation)
+
+        if validation_error is not None:
+            raise ValueError(validation_error)
+
+    @classmethod
     def constrained_parse_obj(cls, data: dict):
         for (name, field) in cls.__fields__.items():
             # disallow types
             if field.outer_type_ not in ALLOWED_TYPES:
-                raise DisallowedType(f"disallowed type {field.outer_type_}")
+                raise ShaperError(f"disallowed type {field.outer_type_}")
 
         # If data is populating from ssm, it's always a string.
         # A list is stored in ssm as "[ 'some', 'list' ]"
@@ -66,11 +88,11 @@ class Shaper(BaseModel):
             cls.constrained_parse_obj(data)
             return pl.DataFrame([fields, [None for f in fields]], columns=columns)
         except ValidationError as e:
+            locations = [map(str, e["loc"]) for e in e.errors()]
+            locations = ["/".join(loc) for loc in locations]
+            messages = [e["msg"] for e in e.errors()]
             return pl.DataFrame(
-                [
-                    ["/".join(list(e["loc"])) for e in e.errors()],
-                    [e["msg"] for e in e.errors()],
-                ],
+                [locations, messages],
                 columns=columns,
             )
 

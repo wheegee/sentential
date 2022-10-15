@@ -4,6 +4,7 @@ import in_place
 from flaky import flaky
 from os.path import exists
 from shutil import copyfile
+import requests
 
 
 def test_init(invoke):
@@ -16,12 +17,14 @@ def test_files_exist():
         assert exists(file)
 
 
-def test_setup_fixtures(repo, project):
+def test_setup_fixtures(project, repo):
     copyfile(f"{project}/tests/fixtures/app.py", f"{repo.name}/src/app.py")
+    copyfile(f"{project}/tests/fixtures/shapes.py", f"{repo.name}/shapes.py")
     copyfile(
         f"{project}/tests/fixtures/requirements.txt",
         f"{repo.name}/src/requirements.txt",
     )
+
     with in_place.InPlace(f"{repo.name}/Dockerfile") as fp:
         for line in fp:
             if "# insert application specific build steps here" in line:
@@ -30,9 +33,11 @@ def test_setup_fixtures(repo, project):
                 fp.write(line)
 
 
-def test_env_write(invoke):
-    result = invoke(["env", "write", "key", "value"])
-    assert result.exit_code == 0
+def test_write(invoke):
+    result = []
+    result.append(invoke(["args", "write", "required_arg", "given_value"]))
+    result.append(invoke(["envs", "write", "required_env", "given_value"]))
+    assert all(result)
 
 
 def test_local_build(invoke):
@@ -50,7 +55,7 @@ def test_local_deploy(invoke):
 def test_local_lambda():
     results = []
     environment = dict(requests.get(pytest.deployment_url).json())
-    for envar in ["key"]:
+    for envar in ["required_env", "optional_env"]:
         results.append(envar in environment.keys())
     assert all(results)
 
@@ -60,16 +65,16 @@ def test_local_destroy(invoke):
     assert result.exit_code == 0
 
 
-def test_arg_delete(invoke):
-    result = invoke(["arg", "clear"])
+def test_args_delete(invoke):
+    result = invoke(["args", "clear"])
     assert result.exit_code == 0
 
 
-def test_env_delete(invoke):
-    result = invoke(["env", "clear"])
+def test_envs_delete(invoke):
+    result = invoke(["envs", "clear"])
     assert result.exit_code == 0
 
 
-def test_config_delete(invoke):
-    result = invoke(["config", "clear"])
+def test_configs_delete(invoke):
+    result = invoke(["configs", "clear"])
     assert result.exit_code == 0

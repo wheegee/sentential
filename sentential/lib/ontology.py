@@ -1,66 +1,48 @@
-from sentential.lib.aws import Repository
-from sentential.lib.aws import Lambda as AwsLambda
-from sentential.lib.const import CWI_TAG
-from sentential.lib.local import Lambda as LocalLambda
-from sentential.lib.local import Image as LocalImage
-from typing import List
-import semantic_version as semver
-from rich.table import Table
-from rich import print
+import os
+import sys
+import importlib
+from typing import Union
+from sentential.lib.context import Context
+from sentential.lib.store import GenericStore, ModeledStore
+from sentential.lib.shapes import Provision as Model
+
+
+def reload_shapes():
+    if os.getcwd() not in sys.path:
+        sys.path.append(os.getcwd())
+    import shapes
+
+    importlib.reload(shapes)
 
 
 class Ontology:
-    def __init__(self):
-        self.repo = Repository()
+    def __init__(self) -> None:
+        pass
 
-    def semvers(self) -> List[str]:
-        return [image.tag for image in self.repo.semver()]
+    @property
+    def context(cls) -> Context:
+        return Context()
 
-    def latest(self) -> str:
-        if self.repo.latest() is None:
-            return None
-        else:
-            return self.repo.latest().tag
+    @property
+    def args(cls) -> Union[GenericStore, ModeledStore]:
+        try:
+            reload_shapes()
+            from shapes import Args as Model  # type: ignore
 
-    def published(self, sha) -> bool:
-        for image in self.repo.semver():
-            if image.id == sha:
-                return True
-        return False
+            return ModeledStore(cls.context, "arg", Model)
+        except:
+            return GenericStore(cls.context, "arg")
 
-    def next(self, major=False, minor=False) -> str:
-        latest = "0.0.0" if self.latest() is None else self.latest()
-        latest = semver.Version(latest)
-        if major:
-            return latest.next_major()
-        if minor:
-            return latest.next_minor()
-        else:
-            return latest.next_patch()
+    @property
+    def envs(cls) -> Union[GenericStore, ModeledStore]:
+        try:
+            reload_shapes()
+            from shapes import Envs as Model  # type: ignore
 
-    def print(self) -> Table:
-        table = Table("sha", "tag", "arch", "deployed")
-        aws_deployed = AwsLambda.deployed()
-        local_deployed = LocalLambda.deployed()
-        current_working_image = LocalImage(CWI_TAG)
+            return ModeledStore(cls.context, "env", Model)
+        except:
+            return GenericStore(cls.context, "env")
 
-        data = {}
-        images = self.repo.semver()
-        if current_working_image.exists:
-            images.append(current_working_image)
-
-        for image in images:
-            data[image.id] = {"tag": [], "arch": [], "deployed": []}
-
-        for image in images:
-            data[image.id]["tag"].append(image.tag)
-            data[image.id]["arch"].append(image.arch)
-            if aws_deployed != None and aws_deployed.image.id == image.id:
-                data[image.id]["deployed"].append("aws")
-            if local_deployed != None and local_deployed.image.id == image.id:
-                data[image.id]["deployed"].append("local")
-
-        for sha, data in data.items():
-            table.add_row(sha, *[str(list(set(value))) for value in data.values()])
-
-        print(table)
+    @property
+    def configs(cls) -> ModeledStore:
+        return ModeledStore(cls.context, "provision", Model)

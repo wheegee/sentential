@@ -2,9 +2,9 @@ from time import sleep
 import pytest
 import requests
 import in_place
-from flaky import flaky
 from os.path import exists
 from shutil import copyfile
+from tests.helpers import retry
 
 
 def test_init(invoke):
@@ -31,13 +31,18 @@ def test_setup_fixtures(repo, project):
                 fp.write(line)
 
 
-def test_env_write(invoke):
-    result = invoke(["env", "write", "key", "value"])
+def test_write(invoke):
+    result = invoke(["envs", "write", "key", "value"])
     assert result.exit_code == 0
 
 
 def test_aws_build(invoke):
     result = invoke(["build"])
+    assert result.exit_code == 0
+
+
+def test_aws_login_ecr(invoke):
+    result = invoke(["login"])
     assert result.exit_code == 0
 
 
@@ -47,21 +52,21 @@ def test_aws_publish(invoke):
 
 
 def test_aws_deploy(invoke):
-    result = invoke(["deploy", "aws", "--public-url"])
-    pytest.deployment_url = result.output
+    result = invoke(["deploy", "aws", "latest", "--public-url"])
+    pytest.deployment_url = result.output  # type: ignore
     assert result.exit_code == 0
 
 
-@flaky(max_runs=60)
+@retry(30)
 def test_aws_lambda_health():
     sleep(1)
-    assert requests.get(pytest.deployment_url).status_code == 200
+    assert requests.get(pytest.deployment_url).status_code == 200  # type: ignore
 
 
-@flaky(max_runs=60)
+@retry(30)
 def test_aws_lambda():
     results = []
-    environment = dict(requests.get(pytest.deployment_url).json())
+    environment = dict(requests.get(pytest.deployment_url).json())  # type: ignore
     for envar in ["key"]:
         results.append(envar in environment.keys())
     assert all(results)
@@ -72,16 +77,16 @@ def test_aws_destroy(invoke):
     assert result.exit_code == 0
 
 
-def test_arg_delete(invoke):
-    result = invoke(["arg", "clear"])
+def test_args_delete(invoke):
+    result = invoke(["args", "clear"])
     assert result.exit_code == 0
 
 
-def test_env_delete(invoke):
-    result = invoke(["env", "clear"])
+def test_envs_delete(invoke):
+    result = invoke(["envs", "clear"])
     assert result.exit_code == 0
 
 
-def test_config_delete(invoke):
-    result = invoke(["config", "clear"])
+def test_configs_delete(invoke):
+    result = invoke(["configs", "clear"])
     assert result.exit_code == 0

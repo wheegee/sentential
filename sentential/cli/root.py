@@ -1,10 +1,11 @@
-from sentential.lib.const import CWI_TAG
-from sentential.lib.shapes.aws import Runtimes
-from sentential.lib.template import InitTime
-from sentential.lib.local import Image, Repository
-from sentential.lib.ontology import Ontology
-
 import typer
+from sentential.lib.clients import clients
+from sentential.lib.template import Init
+from sentential.lib.shapes import Runtimes
+from sentential.lib.drivers.local import LocalDriver
+from sentential.lib.ontology import Ontology
+from sentential.lib.joinery import Joinery
+from rich import print
 
 root = typer.Typer()
 
@@ -12,37 +13,31 @@ root = typer.Typer()
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
     """initialize sentential project"""
-    InitTime(repository_name).scaffold(f"public.ecr.aws/lambda/{runtime.value}:latest")
+    aws_supported_image = f"public.ecr.aws/lambda/{runtime.value}:latest"
+    Init(repository_name, aws_supported_image).scaffold()
 
 
 @root.command()
-def build(tag: str = typer.Argument(CWI_TAG, envvar="CWI_TAG")):
+def build(version: str = typer.Argument("latest", envvar="VERSION")):
     """build lambda image"""
-    Image.build(tag)
+    local = LocalDriver(Ontology())
+    print(local.build(version))
 
 
 @root.command()
-def publish(
-    from_tag: str = typer.Argument(CWI_TAG, envvar="CWI_TAG"),
-    to_tag: str = typer.Argument(None, envvar="TAG"),
-    major: bool = typer.Option(False),
-    minor: bool = typer.Option(False),
-):
-    """publish lambda image to aws"""
-    ontology = Ontology()
+def publish(version: str = typer.Argument("latest", envvar="VERSION")):
+    """publish lambda image"""
+    local = LocalDriver(Ontology())
+    print(local.publish(version))
 
-    if to_tag is None:
-        to_tag = ontology.next(major, minor)
 
-    image = Image(from_tag)
-
-    if ontology.published(image.id):
-        print(f"image {image.id} already published")
-    else:
-        Repository().publish(image.label_for_shipment(to_tag))
+@root.command()
+def login():
+    """login to ecr"""
+    clients.docker.login_ecr()
 
 
 @root.command()
 def ls():
-    """show images"""
-    Ontology().print()
+    """list image information"""
+    print(Joinery(Ontology()).list(["tags"]))

@@ -1,32 +1,34 @@
-from sentential.lib.const import CWI_TAG
-from sentential.lib.aws import Lambda as AwsLambda
-from sentential.lib.aws import Image as AwsImage
-from sentential.lib.local import Lambda as LocalLambda
-from sentential.lib.local import Image as LocalImage
-from sentential.lib.ontology import Ontology
 import typer
+from sentential.lib.drivers.aws import AwsDriver
+from sentential.lib.drivers.local import LocalDriver
+from sentential.lib.ontology import Ontology
 
 deploy = typer.Typer()
 
 
 @deploy.command()
-def aws(
-    tag: str = typer.Argument(None, envvar="TAG"),
+def local(
+    version: str = typer.Argument("latest", envvar="VERSION"),
     public_url: bool = typer.Option(False),
 ):
     """deploy lambda image to aws"""
-    ontology = Ontology()
+    local = LocalDriver(Ontology())
+    aws = AwsDriver(Ontology())
+    try:
+        image = local.image(version)
+    except:
+        image = aws.image(version)
+        local.pull(image)
 
-    if tag is None:
-        tag = ontology.latest()
-
-    AwsLambda(AwsImage(tag)).deploy(public_url)
+    print(local.deploy(image, public_url))
 
 
 @deploy.command()
-def local(
-    tag: str = typer.Argument(CWI_TAG, envvar="TAG"),
+def aws(
+    version: str = typer.Argument(..., envvar="VERSION"),
     public_url: bool = typer.Option(default=False),
 ):
     """build and deploy local lambda container"""
-    LocalLambda(LocalImage(tag)).deploy(public_url)
+    aws = AwsDriver(Ontology())
+    image = aws.image(version)
+    print(aws.deploy(image, public_url))
