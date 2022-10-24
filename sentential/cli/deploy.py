@@ -6,6 +6,7 @@ from sentential.lib.ontology import Ontology
 
 deploy = typer.Typer()
 
+
 @deploy.command()
 def local(
     version: str = typer.Argument("latest", envvar="VERSION"),
@@ -21,12 +22,13 @@ def local(
         local.pull(image)
 
     print(local.deploy(image, public_url))
-   
+
+
 @deploy.command()
 def aws(
     version: str = typer.Argument(..., envvar="VERSION"),
     public_url: bool = typer.Option(default=False),
-    mount: str = typer.Option(None, autocompletion=AwsApiGatewayDriver.autocomplete)
+    mount: str = typer.Option(None, autocompletion=AwsApiGatewayDriver.autocomplete),
 ):
     """deploy lambda image to aws"""
     ontology = Ontology()

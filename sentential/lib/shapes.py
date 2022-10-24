@@ -56,6 +56,7 @@ class ImageView(Image):
         if v:
             return v.replace("sha256:", "")[0:12]
 
+
 class Function(BaseModel):
     image: Image
     name: str
@@ -148,11 +149,14 @@ class AwsFunctionVpcConfig(BaseModel):
     SecurityGroupIds: List[str]
     VpcId: str
 
+
 class AwsFunctionEnvironment(BaseModel):
     Variables: Dict[str, str]
 
+
 class AwsFunctionEphemeralStorage(BaseModel):
     Size: int
+
 
 class AwsFunctionConfiguration(BaseModel):
     FunctionName: str
@@ -176,16 +180,19 @@ class AwsFunctionConfiguration(BaseModel):
     Architectures: List[str]
     EphemeralStorage: AwsFunctionEphemeralStorage
 
+
 class AwsFunctionCode(BaseModel):
     RepositoryType: str
     ImageUri: str
     ResolvedImageUri: str
+
 
 class AwsFunctionCors(BaseModel):
     AllowHeaders: List[str]
     AllowMethods: List[str]
     AllowOrigins: List[str]
     ExposeHeaders: List[str]
+
 
 class AwsFunctionPublicUrl(BaseModel):
     FunctionUrl: str
@@ -195,9 +202,11 @@ class AwsFunctionPublicUrl(BaseModel):
     CreationTime: datetime
     LastModifiedTime: datetime
 
+
 class AwsFunction(BaseModel):
     Configuration: AwsFunctionConfiguration
     Code: AwsFunctionCode
+
 
 #
 # Pathing
@@ -223,18 +232,20 @@ def derive_paths(root: PosixPath = PosixPath(".")):
         shapes=PosixPath(f"{root}/shapes.py"),
     )
 
+
 #
 # API Gateway
 #
 class ApiGatewayIntegration(BaseModel):
-    ConnectionType: str = 'INTERNET'
-    Description: str = 'managed by sentential'
+    ConnectionType: str = "INTERNET"
+    Description: str = "managed by sentential"
     IntegrationId: Optional[str] = None
-    IntegrationMethod: str = 'ANY'
-    IntegrationType: str = 'AWS_PROXY' 
+    IntegrationMethod: str = "ANY"
+    IntegrationType: str = "AWS_PROXY"
     IntegrationUri: str
     PayloadFormatVersion: str = "2.0"
     TimeoutInMillis: int = 30000
+
 
 class ApiGatewayRoute(BaseModel):
     ApiKeyRequired: bool
@@ -244,6 +255,7 @@ class ApiGatewayRoute(BaseModel):
     Target: Optional[str]
     Integration: Optional[ApiGatewayIntegration]
 
+
 class ApiGatewayMapping(BaseModel):
     ApiId: str
     ApiMappingId: str
@@ -251,11 +263,13 @@ class ApiGatewayMapping(BaseModel):
     Stage: str
     Routes: List[ApiGatewayRoute] = []
 
+
 class ApiGatewayDomain(BaseModel):
     DomainName: str
     DomainNameConfigurations: Optional[List[Dict]]
     Tags: Dict[str, str] = {}
     Mappings: List[ApiGatewayMapping] = []
+
 
 class ApiGatewayParsedUrl(BaseModel):
     ApiId: str
@@ -263,8 +277,9 @@ class ApiGatewayParsedUrl(BaseModel):
     ApiMappingKey: str
     RouteKey: str
     RouteId: Optional[str]
-    Verb: str = 'Any'
+    Verb: str = "Any"
     FullPath: str
+
 
 class LambdaPermission(BaseModel):
     FunctionName: str
@@ -278,6 +293,3 @@ class LambdaPermission(BaseModel):
     RevisionId: str
     PrincipalOrgID: str
     FunctionUrlAuthType: str = "None"
-
-
-

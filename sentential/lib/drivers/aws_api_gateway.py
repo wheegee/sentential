@@ -1,7 +1,14 @@
 from sentential.lib.exceptions import ApiGatewayResourceNotFound
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import Function, ApiGatewayDomain, ApiGatewayIntegration, ApiGatewayMapping, ApiGatewayParsedUrl, ApiGatewayRoute
+from sentential.lib.shapes import (
+    Function,
+    ApiGatewayDomain,
+    ApiGatewayIntegration,
+    ApiGatewayMapping,
+    ApiGatewayParsedUrl,
+    ApiGatewayRoute,
+)
 
 from furl import furl
 from typing import List
@@ -12,10 +19,12 @@ def normalize_url(url: str) -> str:
     normalized_url = "/".join(furl(url).path.normalize().segments)
     return normalized_url
 
+
 def normalize_route(url: str) -> str:
     normalized_route = furl(url).path.normalize()
     decoded = "/".join(normalized_route.segments)
     return f"/{decoded}"
+
 
 class AwsApiGatewayDriver:
     def __init__(self, ontology: Ontology) -> None:
@@ -30,25 +39,29 @@ class AwsApiGatewayDriver:
     @classmethod
     def sentential_domains(cls) -> List[ApiGatewayDomain]:
         sentential_domains = []
-        for domain in clients.api_gw.get_domain_names()['Items']:
+        for domain in clients.api_gw.get_domain_names()["Items"]:
             domain = ApiGatewayDomain(**domain)
-            if 'sentential' in domain.Tags.keys():
-                    sentential_domains.append(domain)
+            if "sentential" in domain.Tags.keys():
+                sentential_domains.append(domain)
         return sentential_domains
 
     @classmethod
     def domains(self) -> List[ApiGatewayDomain]:
         domains = self.sentential_domains()
         for domain in domains:
-            for mapping in clients.api_gw.get_api_mappings(DomainName=domain.DomainName)['Items']:
+            for mapping in clients.api_gw.get_api_mappings(
+                DomainName=domain.DomainName
+            )["Items"]:
                 mapping = ApiGatewayMapping(**mapping)
                 domain.Mappings.append(mapping)
-                for route in clients.api_gw.get_routes(ApiId=mapping.ApiId)['Items']:
+                for route in clients.api_gw.get_routes(ApiId=mapping.ApiId)["Items"]:
                     route = ApiGatewayRoute(**route)
                     mapping.Routes.append(route)
                     if route.Target:
                         integration_id = route.Target.split("/")[-1]
-                        integration = clients.api_gw.get_integration(ApiId=mapping.ApiId, IntegrationId=integration_id)
+                        integration = clients.api_gw.get_integration(
+                            ApiId=mapping.ApiId, IntegrationId=integration_id
+                        )
                         route.Integration = ApiGatewayIntegration(**integration)
         return domains
 
@@ -59,7 +72,9 @@ class AwsApiGatewayDriver:
             for mapping in domain.Mappings:
                 for route in mapping.Routes:
                     uri = route.RouteKey.split(" ")[-1]
-                    full_path = normalize_url(f"{domain.DomainName}/{mapping.ApiMappingKey}/{uri}")
+                    full_path = normalize_url(
+                        f"{domain.DomainName}/{mapping.ApiMappingKey}/{uri}"
+                    )
                     urls.append(str(full_path))
         if len(urls) == 0:
             return ["no discoverable api gateway endpoints (just link to docs)"]
@@ -73,10 +88,14 @@ class AwsApiGatewayDriver:
                 # if matching route exists under mapping, return it
                 for mapping in domain.Mappings:
                     for route in mapping.Routes:
-                        existant_verb, existant_mount = route.RouteKey.split(' ')
-                        found_path = normalize_route(f"/{mapping.ApiMappingKey}/{existant_mount}")
+                        existant_verb, existant_mount = route.RouteKey.split(" ")
+                        found_path = normalize_route(
+                            f"/{mapping.ApiMappingKey}/{existant_mount}"
+                        )
                         if parsed.path == found_path:
-                            full_path = normalize_url(f"{domain.DomainName}/{found_path}")
+                            full_path = normalize_url(
+                                f"{domain.DomainName}/{found_path}"
+                            )
                             return ApiGatewayParsedUrl(
                                 ApiId=mapping.ApiId,
                                 ApiMappingId=mapping.ApiMappingId,
@@ -84,7 +103,7 @@ class AwsApiGatewayDriver:
                                 RouteId=route.RouteId,
                                 RouteKey=route.RouteKey,
                                 Verb=existant_verb,
-                                FullPath=str(full_path)
+                                FullPath=str(full_path),
                             )
 
                 # else return new path under matching mapping
@@ -94,41 +113,51 @@ class AwsApiGatewayDriver:
                     map_key_path = f"/{mapping.ApiMappingKey}"
                     if parsed.path.startswith(map_key_path):
                         full_path = normalize_url(f"{domain.DomainName}/{parsed.path}")
-                        route_key = normalize_route(parsed.path.replace(map_key_path, "", 1))
+                        route_key = normalize_route(
+                            parsed.path.replace(map_key_path, "", 1)
+                        )
                         return ApiGatewayParsedUrl(
                             ApiId=mapping.ApiId,
                             ApiMappingId=mapping.ApiMappingId,
                             ApiMappingKey=mapping.ApiMappingKey,
                             RouteId=None,
                             RouteKey=f"ANY {route_key}",
-                            FullPath=str(full_path)
+                            FullPath=str(full_path),
                         )
 
         # else explode
-        raise ApiGatewayResourceNotFound(f"invalid url ({url}): bad formatting, or attempting to mount to non-existant domain/mapping")
+        raise ApiGatewayResourceNotFound(
+            f"invalid url ({url}): bad formatting, or attempting to mount to non-existant domain/mapping"
+        )
 
-    def _ensure_integration(self, parsed_url: ApiGatewayParsedUrl, function: Function) -> ApiGatewayIntegration:
+    def _ensure_integration(
+        self, parsed_url: ApiGatewayParsedUrl, function: Function
+    ) -> ApiGatewayIntegration:
         desired_integration = ApiGatewayIntegration(IntegrationUri=function.arn)
 
-        # if the desired integration already exists, return it 
-        for integration in clients.api_gw.get_integrations(ApiId=parsed_url.ApiId)['Items']:
+        # if the desired integration already exists, return it
+        for integration in clients.api_gw.get_integrations(ApiId=parsed_url.ApiId)[
+            "Items"
+        ]:
             current_integration = ApiGatewayIntegration(**integration)
             if current_integration.IntegrationId is not None:
                 current_integration.IntegrationId = None
                 if desired_integration == current_integration:
                     response = clients.api_gw.get_integration(
                         ApiId=parsed_url.ApiId,
-                        IntegrationId=integration['IntegrationId']
+                        IntegrationId=integration["IntegrationId"],
                     )
                     return ApiGatewayIntegration(**response)
 
         # else create the desired integration and return it
-        desired_integration = desired_integration.dict(exclude={'IntegrationId'})
-        desired_integration['ApiId'] = parsed_url.ApiId
+        desired_integration = desired_integration.dict(exclude={"IntegrationId"})
+        desired_integration["ApiId"] = parsed_url.ApiId
         response = clients.api_gw.create_integration(**desired_integration)
         return ApiGatewayIntegration(**response)
 
-    def _ensure_route(self, parsed_url: ApiGatewayParsedUrl, integration: ApiGatewayIntegration) -> ApiGatewayRoute:
+    def _ensure_route(
+        self, parsed_url: ApiGatewayParsedUrl, integration: ApiGatewayIntegration
+    ) -> ApiGatewayRoute:
         target = f"integrations/{integration.IntegrationId}"
         try:
             response = clients.api_gw.create_route(
@@ -141,7 +170,7 @@ class AwsApiGatewayDriver:
                 ApiId=parsed_url.ApiId,
                 RouteId=parsed_url.RouteId,
                 RouteKey=parsed_url.RouteKey,
-                Target=target
+                Target=target,
             )
         return ApiGatewayRoute(**response)
 
@@ -160,9 +189,9 @@ class AwsApiGatewayDriver:
             StatementId=self.statement_id,
             Action="lambda:InvokeFunction",
             Principal="apigateway.amazonaws.com",
-            SourceArn=f"arn:aws:execute-api:{self.region}:{self.account_id}:{parsed_url.ApiId}/*/*{route}"
+            SourceArn=f"arn:aws:execute-api:{self.region}:{self.account_id}:{parsed_url.ApiId}/*/*{route}",
         )
-        return response 
+        return response
 
     def put_route(self, url: str, function: Function) -> ApiGatewayRoute:
         parsed_url = self.parse(url)
@@ -181,16 +210,15 @@ class AwsApiGatewayDriver:
                             # These try catches are a little iffy, they exist because mappings duplicate everything...
                             try:
                                 clients.api_gw.delete_route(
-                                    ApiId=mapping.ApiId,
-                                    RouteId=route.RouteId
+                                    ApiId=mapping.ApiId, RouteId=route.RouteId
                                 )
                             except clients.api_gw.exceptions.NotFoundException:
                                 pass
-                            
-                            try: 
+
+                            try:
                                 clients.api_gw.delete_integration(
                                     ApiId=mapping.ApiId,
-                                    IntegrationId=route.Integration.IntegrationId
+                                    IntegrationId=route.Integration.IntegrationId,
                                 )
                             except clients.api_gw.exceptions.NotFoundException:
                                 pass

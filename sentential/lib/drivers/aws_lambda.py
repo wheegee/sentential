@@ -5,7 +5,14 @@ from typing import Dict, List, Optional, cast
 from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.drivers.spec import Driver
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import LAMBDA_ROLE_POLICY_JSON, AwsFunctionPublicUrl, Image, AwsFunction, Function, Provision
+from sentential.lib.shapes import (
+    LAMBDA_ROLE_POLICY_JSON,
+    AwsFunctionPublicUrl,
+    Image,
+    AwsFunction,
+    Function,
+    Provision,
+)
 from sentential.lib.clients import clients
 from sentential.lib.template import Policy
 
@@ -68,7 +75,7 @@ class AwsLambdaDriver(Driver):
             role_name=function.Configuration.Role.split("/")[-1],
             region=self.context.region,
             web_console_url=self.web_console_url,
-            public_url=public_url
+            public_url=public_url,
         )
 
     def images(self) -> List[Image]:
@@ -356,5 +363,3 @@ class AwsLambdaDriver(Driver):
             if digest == image.digest:
                 return image
         raise AwsDriverError(f"no image found where digest is {digest}")
-
-
