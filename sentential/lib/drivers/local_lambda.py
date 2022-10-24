@@ -15,7 +15,7 @@ from python_on_whales.components.image.cli_wrapper import Image as DriverImage
 #
 
 
-class LocalDriver(Driver):
+class LocalLambdaDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
@@ -86,8 +86,10 @@ class LocalDriver(Driver):
             return Function(
                 image=image,
                 region=self.ontology.context.region,
-                function_name="local",
+                name="local",
                 arn="local",
+                role_name="local",
+                role_arn="local",
                 public_url=public_url,
                 web_console_url=None,
             )

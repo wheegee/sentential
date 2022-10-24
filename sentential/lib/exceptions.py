@@ -20,3 +20,6 @@ class StoreError(SntlException):
 
 class JoineryError(SntlException):
     pass
+
+class ApiGatewayResourceNotFound(SntlException):
+    pass

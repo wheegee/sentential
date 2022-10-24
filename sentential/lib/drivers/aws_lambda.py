@@ -1,12 +1,11 @@
 import json
 import os
-from pathlib import Path
 from time import sleep
 from typing import Dict, List, Optional, cast
 from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.drivers.spec import Driver
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import LAMBDA_ROLE_POLICY_JSON, Image, Function, Provision
+from sentential.lib.shapes import LAMBDA_ROLE_POLICY_JSON, AwsFunctionPublicUrl, Image, AwsFunction, Function, Provision
 from sentential.lib.clients import clients
 from sentential.lib.template import Policy
 
@@ -17,7 +16,7 @@ from sentential.lib.template import Policy
 #
 
 
-class AwsDriver(Driver):
+class AwsLambdaDriver(Driver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.context = self.ontology.context
@@ -37,35 +36,40 @@ class AwsDriver(Driver):
         return cast(Provision, self.ontology.configs.parameters)
 
     def deployed(self) -> Function:
-        function_name = self.resource_name
         try:
-            function = clients.lmb.get_function(FunctionName=function_name)
-            function_arn = function["Configuration"]["FunctionArn"]
-            digest = function["Code"]["ResolvedImageUri"].split("@")[-1]
-            image = self._image_where_digest(digest)
-            public_url = None
-
-            try:
-                public_url_config = clients.lmb.get_function_url_config(
-                    FunctionName=function_name
-                )
-                public_url = public_url_config["FunctionUrl"]
-            except clients.lmb.exceptions.ResourceNotFoundException:
-                pass
-
-            return Function(
-                image=image,
-                function_name=function_name,
-                region=self.ontology.context.region,
-                arn=function_arn,
-                public_url=public_url,
-                web_console_url=self.web_console_url,
-            )
-
+            response = clients.lmb.get_function(FunctionName=self.resource_name)
+            function = AwsFunction(**response)
         except clients.lmb.exceptions.ResourceNotFoundException:
             raise AwsDriverError(
-                f"could not find aws deployed function for {function_name}"
+                f"could not find aws deployed function for {self.resource_name}"
             )
+
+        try:
+            response = clients.lmb.get_function_url_config(
+                FunctionName=function.Configuration.FunctionName
+            )
+            function_public_url = AwsFunctionPublicUrl(**response)
+        except clients.lmb.exceptions.ResourceNotFoundException:
+            function_public_url = None
+
+        if function_public_url:
+            public_url = function_public_url.FunctionUrl
+        else:
+            public_url = None
+
+        digest = function.Code.ResolvedImageUri.split("@")[-1]
+        image = self._image_where_digest(digest)
+
+        return Function(
+            image=image,
+            name=function.Configuration.FunctionName,
+            arn=function.Configuration.FunctionArn,
+            role_arn=function.Configuration.Role,
+            role_name=function.Configuration.Role.split("/")[-1],
+            region=self.context.region,
+            web_console_url=self.web_console_url,
+            public_url=public_url
+        )
 
     def images(self) -> List[Image]:
         images = []
@@ -87,7 +91,7 @@ class AwsDriver(Driver):
                 return image
         raise AwsDriverError(f"no image found where version is {version}")
 
-    def deploy(self, image: Image, public_url: bool) -> str:
+    def deploy(self, image: Image, public_url: bool) -> Function:
         self.ontology.envs.export_defaults()
         self._put_role()
         clients.iam.attach_role_policy(
@@ -95,29 +99,27 @@ class AwsDriver(Driver):
             PolicyArn=self._put_policy()["Policy"]["Arn"],
         )
 
-        function = self._put_lambda(image)
+        self._put_lambda(image)
 
         if public_url:
-            return self._put_url()["FunctionUrl"]
-        else:
-            return function["FunctionArn"]
+            self._put_url()
 
-    def destroy(self):
-        role_name = self.resource_name
-        function_name = self.resource_name
+        return self.deployed()
+
+    def destroy(self, function: Function) -> None:
         try:
-            clients.lmb.delete_function_url_config(FunctionName=function_name)
+            clients.lmb.delete_function_url_config(FunctionName=function.name)
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
 
         try:
-            clients.lmb.delete_function(FunctionName=function_name)
+            clients.lmb.delete_function(FunctionName=function.name)
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
 
         try:
             clients.iam.detach_role_policy(
-                PolicyArn=self.policy_arn, RoleName=role_name
+                PolicyArn=self.policy_arn, RoleName=function.role_name
             )
 
             policy_versions = clients.iam.list_policy_versions(
@@ -134,7 +136,7 @@ class AwsDriver(Driver):
             pass
 
         try:
-            clients.iam.delete_role(RoleName=role_name)
+            clients.iam.delete_role(RoleName=function.role_name)
         except clients.iam.exceptions.NoSuchEntityException:
             pass
 
@@ -356,57 +358,3 @@ class AwsDriver(Driver):
         raise AwsDriverError(f"no image found where digest is {digest}")
 
 
-
-class AwsCompletion:
-    @classmethod
-    def sentential_domains(cls) -> List[Dict]:
-        sentential_domains = []
-        for domain in clients.api_gw.get_domain_names()['Items']:
-            if 'Tags' in domain:
-                if 'sentential' in domain['Tags']:
-                    sentential_domains.append(domain)
-        return sentential_domains
-
-    @classmethod
-    def all_urls(cls) -> List[str]:
-        all_urls = []
-        for domain in cls.sentential_domains():
-            d = domain['DomainName']
-            for mapping in clients.api_gw.get_api_mappings(DomainName=d)['Items']:
-                m = mapping['ApiMappingKey']
-                for route in clients.api_gw.get_routes(ApiId=mapping['ApiId'])['Items']:
-                    v, u = route['RouteKey'].split(" ")
-                    full = Path(f"{d}/{m}/{u}")
-                    all_urls.append(f"{v} {full}")
-        return all_urls
-
-    @classmethod
-    def url(cls, incomplete: str):
-        no_verbs = [url.split(" ")[1] for url in cls.all_urls()]
-        for name in no_verbs:
-            if name.startswith(incomplete):
-                yield name
-
-    @classmethod
-    def decompose(cls, complete: str) -> List[str]:
-        domain, *uri = complete.split("/")
-        uri = "/".join(uri)
-        map_key = "/"
-        id = ""
-        for mapping in clients.api_gw.get_api_mappings(DomainName=domain)['Items']:
-            id = mapping['ApiId']
-            if uri.startswith(mapping['ApiMappingKey']):
-                map_key = mapping['ApiMappingKey']
-                uri = uri.replace(map_key, "") # change to "replace first occurance of"
-        return [id, domain, map_key, uri]
-
-    @classmethod
-    def add_route(cls, api_id: str, verb: str, route: str):
-        return clients.api_gw.create_route(
-            ApiId=api_id,
-            RouteKey=f"{verb} {route}"
-        )
-
-    @classmethod
-    def delete_route(cls, api_id: str, route: str):
-        pass
