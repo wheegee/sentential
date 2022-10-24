@@ -42,13 +42,14 @@ class LocalLambdaDriver(Driver):
                 tags_pulled.append(tag)
         return tags_pulled
 
-    def publish(self, version: str) -> str:
-        image = self.image(version)
+    def publish(self, source_version: str, destination_version: str) -> Image:
+        image = self.image(source_version)
         repo_url = self.ontology.context.repository_url
-        shipping_tag = f"{repo_url}:{version}"
+        shipping_tag = f"{repo_url}:{destination_version}"
         clients.docker.tag(image.id, shipping_tag)
         clients.docker.push(shipping_tag)
-        return f"published {image.id} as {shipping_tag}"
+        print(f"published {image.id} as {shipping_tag}")
+        return self.image(destination_version)
 
     def images(self) -> List[Image]:
         images = []

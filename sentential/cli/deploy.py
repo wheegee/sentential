@@ -3,13 +3,14 @@ from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.drivers.aws_api_gateway import AwsApiGatewayDriver
 from sentential.lib.ontology import Ontology
+from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG
 
 deploy = typer.Typer()
 
 
 @deploy.command()
 def local(
-    version: str = typer.Argument("latest", envvar="VERSION"),
+    version: str = typer.Argument(CURRENT_WORKING_IMAGE_TAG, envvar="VERSION"),
     public_url: bool = typer.Option(False),
 ):
     """build and deploy local lambda container"""
@@ -40,3 +41,8 @@ def aws(
         aws_api_gateway.put_route(mount, function)
     if function.public_url:
         print(function.public_url)
+
+@deploy.command()
+def wut():
+    print(AwsApiGatewayDriver.sentential_domains())
+    print(AwsApiGatewayDriver.autocomplete())

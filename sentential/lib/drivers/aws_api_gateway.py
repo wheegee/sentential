@@ -46,8 +46,8 @@ class AwsApiGatewayDriver:
         return sentential_domains
 
     @classmethod
-    def domains(self) -> List[ApiGatewayDomain]:
-        domains = self.sentential_domains()
+    def domains(cls) -> List[ApiGatewayDomain]:
+        domains = cls.sentential_domains()
         for domain in domains:
             for mapping in clients.api_gw.get_api_mappings(
                 DomainName=domain.DomainName
@@ -69,6 +69,7 @@ class AwsApiGatewayDriver:
     def autocomplete(cls) -> List[str]:
         urls = []
         for domain in cls.domains():
+            urls.append(normalize_url(domain.DomainName))
             for mapping in domain.Mappings:
                 for route in mapping.Routes:
                     uri = route.RouteKey.split(" ")[-1]
@@ -78,7 +79,7 @@ class AwsApiGatewayDriver:
                     urls.append(str(full_path))
         if len(urls) == 0:
             return ["no discoverable api gateway endpoints (just link to docs)"]
-        return urls
+        return list(set(urls))
 
     def parse(self, url: str) -> ApiGatewayParsedUrl:
         parsed = urlparse(f"https://{url}")
@@ -202,23 +203,27 @@ class AwsApiGatewayDriver:
 
     def delete_routes(self, function: Function) -> None:
         domains = self.domains()
+        to_delete = []
         for domain in domains:
             for mapping in domain.Mappings:
                 for route in mapping.Routes:
                     if route.Integration:
                         if route.Integration.IntegrationUri == function.arn:
-                            # These try catches are a little iffy, they exist because mappings duplicate everything...
-                            try:
-                                clients.api_gw.delete_route(
-                                    ApiId=mapping.ApiId, RouteId=route.RouteId
-                                )
-                            except clients.api_gw.exceptions.NotFoundException:
-                                pass
+                            to_delete.append([mapping, route])
 
-                            try:
-                                clients.api_gw.delete_integration(
-                                    ApiId=mapping.ApiId,
-                                    IntegrationId=route.Integration.IntegrationId,
-                                )
-                            except clients.api_gw.exceptions.NotFoundException:
-                                pass
+        for mapping, route in to_delete:
+            try:
+                clients.api_gw.delete_route(
+                    ApiId=mapping.ApiId, RouteId=route.RouteId
+                )
+            except clients.api_gw.exceptions.NotFoundException:
+                pass
+
+        for mapping, route in to_delete:
+            try:
+                clients.api_gw.delete_integration(
+                    ApiId=mapping.ApiId,
+                    IntegrationId=route.Integration.IntegrationId,
+                )
+            except clients.api_gw.exceptions.NotFoundException:
+                pass
