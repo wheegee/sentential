@@ -24,7 +24,7 @@ types-boto3 = "^1.0.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
-python-semantic-release = "^7.31.2"
+python-semantic-release = "^7.32.2"
 in_place = "^0.5.0"
 
 [build-system]
