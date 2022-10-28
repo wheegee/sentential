@@ -246,6 +246,7 @@ class ApiGatewayIntegration(BaseModel):
     IntegrationUri: str
     PayloadFormatVersion: str = "2.0"
     TimeoutInMillis: int = 30000
+    RequestParameters: Optional[Dict[str, str]] = {}
 
 
 class ApiGatewayRoute(BaseModel):
@@ -255,6 +256,7 @@ class ApiGatewayRoute(BaseModel):
     RouteKey: str
     Target: Optional[str]
     Integration: Optional[ApiGatewayIntegration]
+    
 
 
 class ApiGatewayMapping(BaseModel):
@@ -279,6 +281,7 @@ class ApiGatewayParsedUrl(BaseModel):
     RouteKey: str
     RouteId: Optional[str]
     Verb: str = "Any"
+    Route: str
     FullPath: str
 
 

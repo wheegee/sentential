@@ -103,6 +103,7 @@ class AwsApiGatewayDriver:
                                 ApiMappingKey=mapping.ApiMappingKey,
                                 RouteId=route.RouteId,
                                 RouteKey=route.RouteKey,
+                                Route=str(furl(existant_mount).path.remove("/{proxy+}").remove("/{proxy}")),
                                 Verb=existant_verb,
                                 FullPath=str(full_path),
                             )
@@ -123,6 +124,7 @@ class AwsApiGatewayDriver:
                             ApiMappingKey=mapping.ApiMappingKey,
                             RouteId=None,
                             RouteKey=f"ANY {route_key}",
+                            Route=str(furl(route_key).path.remove("/{proxy+}").remove("/{proxy}")),
                             FullPath=str(full_path),
                         )
 
@@ -134,7 +136,13 @@ class AwsApiGatewayDriver:
     def _ensure_integration(
         self, parsed_url: ApiGatewayParsedUrl, function: Function
     ) -> ApiGatewayIntegration:
-        desired_integration = ApiGatewayIntegration(IntegrationUri=function.arn)
+        desired_integration = ApiGatewayIntegration(
+            IntegrationUri=function.arn,
+            RequestParameters={
+                    "overwrite:path": "/$request.path.proxy",
+                    "overwrite:header.X-Forwarded-Prefix": parsed_url.Route
+                }
+            )
 
         # if the desired integration already exists, return it
         for integration in clients.api_gw.get_integrations(ApiId=parsed_url.ApiId)[
@@ -190,7 +198,7 @@ class AwsApiGatewayDriver:
             StatementId=self.statement_id,
             Action="lambda:InvokeFunction",
             Principal="apigateway.amazonaws.com",
-            SourceArn=f"arn:aws:execute-api:{self.region}:{self.account_id}:{parsed_url.ApiId}/*/*{route}",
+            SourceArn=f"arn:aws:execute-api:{self.region}:{self.account_id}:{parsed_url.ApiId}/*/*/{{proxy+}}",
         )
         return response
 
