@@ -42,6 +42,7 @@ def aws(
     if function.public_url:
         print(function.public_url)
 
+
 @deploy.command()
 def wut():
     print(AwsApiGatewayDriver.sentential_domains())

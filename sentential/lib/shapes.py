@@ -15,7 +15,8 @@ from sentential.support.shaper import Shaper
 # - digests: validation should run a deduplication
 # - arch: wtf is going on with the ecr API around this?
 
-CURRENT_WORKING_IMAGE_TAG="cwi"
+CURRENT_WORKING_IMAGE_TAG = "cwi"
+
 
 class Image(BaseModel):
     id: str
@@ -256,7 +257,6 @@ class ApiGatewayRoute(BaseModel):
     RouteKey: str
     Target: Optional[str]
     Integration: Optional[ApiGatewayIntegration]
-    
 
 
 class ApiGatewayMapping(BaseModel):

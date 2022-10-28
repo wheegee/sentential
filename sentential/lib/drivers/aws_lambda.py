@@ -325,7 +325,7 @@ class AwsLambdaDriver(Driver):
         describe_images = clients.ecr.describe_images(repositoryName=self.repo_name)[
             "imageDetails"
         ]
-        
+
         if len(describe_images) == 0:
             return {}
 

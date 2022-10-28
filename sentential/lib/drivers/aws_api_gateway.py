@@ -103,7 +103,11 @@ class AwsApiGatewayDriver:
                                 ApiMappingKey=mapping.ApiMappingKey,
                                 RouteId=route.RouteId,
                                 RouteKey=route.RouteKey,
-                                Route=str(furl(existant_mount).path.remove("/{proxy+}").remove("/{proxy}")),
+                                Route=str(
+                                    furl(existant_mount)
+                                    .path.remove("/{proxy+}")
+                                    .remove("/{proxy}")
+                                ),
                                 Verb=existant_verb,
                                 FullPath=str(full_path),
                             )
@@ -124,7 +128,11 @@ class AwsApiGatewayDriver:
                             ApiMappingKey=mapping.ApiMappingKey,
                             RouteId=None,
                             RouteKey=f"ANY {route_key}",
-                            Route=str(furl(route_key).path.remove("/{proxy+}").remove("/{proxy}")),
+                            Route=str(
+                                furl(route_key)
+                                .path.remove("/{proxy+}")
+                                .remove("/{proxy}")
+                            ),
                             FullPath=str(full_path),
                         )
 
@@ -139,10 +147,10 @@ class AwsApiGatewayDriver:
         desired_integration = ApiGatewayIntegration(
             IntegrationUri=function.arn,
             RequestParameters={
-                    "overwrite:path": "/$request.path.proxy",
-                    "overwrite:header.X-Forwarded-Prefix": parsed_url.Route
-                }
-            )
+                "overwrite:path": "/$request.path.proxy",
+                "overwrite:header.X-Forwarded-Prefix": parsed_url.Route,
+            },
+        )
 
         # if the desired integration already exists, return it
         for integration in clients.api_gw.get_integrations(ApiId=parsed_url.ApiId)[
@@ -221,9 +229,7 @@ class AwsApiGatewayDriver:
 
         for mapping, route in to_delete:
             try:
-                clients.api_gw.delete_route(
-                    ApiId=mapping.ApiId, RouteId=route.RouteId
-                )
+                clients.api_gw.delete_route(ApiId=mapping.ApiId, RouteId=route.RouteId)
             except clients.api_gw.exceptions.NotFoundException:
                 pass
 

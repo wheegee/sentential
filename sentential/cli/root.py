@@ -13,6 +13,7 @@ from rich import print
 
 root = typer.Typer()
 
+
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
     """initialize sentential project"""
@@ -48,6 +49,7 @@ def ls():
     """list image information"""
     print(Joinery(Ontology()).list(["tags"]))
 
+
 @root.command()
 def clean(remote: bool = typer.Option(False)):
     """clean images"""
@@ -57,15 +59,12 @@ def clean(remote: bool = typer.Option(False)):
 
     for image in local.images():
         clients.docker.image.remove(image.id, force=True)
-    
+
     if remote:
         images = []
         for image in aws.images():
-            images.append({
-                "imageDigest": image.digest
-            })
+            images.append({"imageDigest": image.digest})
 
         clients.ecr.batch_delete_image(
-            repositoryName=ontology.context.repository_name,
-            imageIds=images
+            repositoryName=ontology.context.repository_name, imageIds=images
         )
