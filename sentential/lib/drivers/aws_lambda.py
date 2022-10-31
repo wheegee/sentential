@@ -1,5 +1,6 @@
 import json
 import os
+from platform import architecture
 from time import sleep
 from typing import Dict, List, Optional, cast
 from sentential.lib.exceptions import AwsDriverError
@@ -225,6 +226,7 @@ class AwsLambdaDriver(LambdaDriver):
         function_name = self.resource_name
         role_arn = clients.iam.get_role(RoleName=role_name)["Role"]["Arn"]
         image_uri = f"{self.repo_url}:{image.versions[0]}"  # TODO: do we want to deploy latest version on image, or version declared?
+        image_arch = "x86_64" if image_arch == "x86_64" else image_arch
         envs_path = self.envs.path
         sleep(10)
         try:
@@ -235,7 +237,7 @@ class AwsLambdaDriver(LambdaDriver):
                 Code={"ImageUri": image_uri},
                 Description=f"sententially deployed {image_uri}",
                 Environment={"Variables": {"PARTITION": envs_path}},
-                # Architectures=[self.image.arch], # TODO: figure out wtf is going on with fetching arch.
+                Architectures=[image_arch],
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
                 Timeout=self.provision.timeout,
@@ -349,10 +351,11 @@ class AwsLambdaDriver(LambdaDriver):
 
         for image in batch_get_images:
             image_digest = image["imageId"]["imageDigest"]
+            image_id = image["imageId"]["imageDigest"]
             image_manifest = json.loads(image["imageManifest"])
-            image_id = image_manifest["config"]["digest"]
+            print(image_manifest)
 
-            # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plz
+            # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plzs
             if "id" in ecr_data[image_digest]:
                 if ecr_data[image_digest]["id"] != image_id:
                     raise AwsDriverError(
