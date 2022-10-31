@@ -58,7 +58,7 @@ class LocalLambdaDriver(LambdaDriver):
         clients.docker.tag(image.id, arch_tag)
         clients.docker.push(arch_tag)
         clients.docker.manifest.create(shipping_tag, arch_tag, True)
-        clients.docker.manifest.annotate(shipping_tag, arch_tag, arch = arch)
+        clients.docker.manifest.annotate(shipping_tag, arch_tag, arch=arch)
         clients.docker.manifest.push(shipping_tag)
         return f"published {image.id} as {shipping_tag}"
 
