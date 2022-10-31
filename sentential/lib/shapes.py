@@ -7,23 +7,19 @@ from pydantic import BaseModel, Field, validator
 from sentential.support.shaper import Shaper
 
 #
-# Internally Defined Shapes
+# Global Constants
 #
-
-# TODO:
-# - tags: validation should sort by semver
-# - digests: validation should run a deduplication
-# - arch: wtf is going on with the ecr API around this?
-
 CURRENT_WORKING_IMAGE_TAG = "cwi"
 
-
+#
+# Internally Defined Shapes
+#
 class Image(BaseModel):
     id: str
     digest: Union[str, None]
     tags: List[str]
     versions: List[str]
-    # arch: str
+    # arch: str TODO: https://github.com/gabrieldemarmiesse/python-on-whales/pull/378
 
     @validator("versions")
     def coerce_versions(cls, v):
