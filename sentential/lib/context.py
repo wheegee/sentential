@@ -26,7 +26,7 @@ class Context:
         return getenv("AWS_KMS_KEY_ALIAS", default="aws/ssm")
 
     @property
-    def called_identity(self) -> AWSCallerIdentity:
+    def caller_identity(self) -> AWSCallerIdentity:
         response = clients.sts.get_caller_identity()
         return AWSCallerIdentity(**response)
 
@@ -35,7 +35,7 @@ class Context:
         if "PARTITION" in environ:
             return str(getenv("PARTITION"))
         else:
-            user_id = self.called_identity.UserId
+            user_id = self.caller_identity.UserId
             if ":" in user_id:
                 # The ID before ':' in an assumed role seems to remain constant... time will tell.
                 return str(user_id.split(":")[0])
