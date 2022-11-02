@@ -9,6 +9,7 @@ class Clients:
         self.sts = boto3.client("sts")
         self.ecr = boto3.client("ecr")
         self.ssm = boto3.client("ssm")
+        self.api_gw = boto3.client("apigatewayv2")
         self.cloudwatch = boto3.client("logs")
         self.docker = docker
 

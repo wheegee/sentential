@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class Driver(ABC):
+class LambdaDriver(ABC):
     @abstractmethod
     def deployed(cls):
         ...

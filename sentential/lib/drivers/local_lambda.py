@@ -3,7 +3,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict, List
 from sentential.lib.exceptions import LocalDriverError
 from sentential.lib.clients import clients
-from sentential.lib.drivers.spec import Driver
+from sentential.lib.drivers.spec import LambdaDriver
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Image, Function
 from sentential.lib.template import Policy
@@ -15,7 +15,7 @@ from python_on_whales.components.image.cli_wrapper import Image as DriverImage
 #
 
 
-class LocalDriver(Driver):
+class LocalLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
@@ -42,13 +42,14 @@ class LocalDriver(Driver):
                 tags_pulled.append(tag)
         return tags_pulled
 
-    def publish(self, version: str) -> str:
-        image = self.image(version)
+    def publish(self, source_version: str, destination_version: str) -> Image:
+        image = self.image(source_version)
         repo_url = self.ontology.context.repository_url
-        shipping_tag = f"{repo_url}:{version}"
+        shipping_tag = f"{repo_url}:{destination_version}"
         clients.docker.tag(image.id, shipping_tag)
         clients.docker.push(shipping_tag)
-        return f"published {image.id} as {shipping_tag}"
+        print(f"published {image.id} as {shipping_tag}")
+        return self.image(destination_version)
 
     def images(self) -> List[Image]:
         images = []
@@ -86,8 +87,10 @@ class LocalDriver(Driver):
             return Function(
                 image=image,
                 region=self.ontology.context.region,
-                function_name="local",
+                name="local",
                 arn="local",
+                role_name="local",
+                role_arn="local",
                 public_url=public_url,
                 web_console_url=None,
             )

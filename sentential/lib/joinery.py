@@ -1,9 +1,8 @@
 from operator import concat
 from typing import Dict, List
 from rich.table import Table, box
-from sentential.lib.exceptions import JoineryError
-from sentential.lib.drivers.aws import AwsDriver
-from sentential.lib.drivers.local import LocalDriver
+from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
+from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Image, ImageView
 
@@ -11,8 +10,8 @@ from sentential.lib.shapes import Image, ImageView
 class Joinery:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
-        self.local = LocalDriver(self.ontology)
-        self.aws = AwsDriver(self.ontology)
+        self.local = LocalLambdaDriver(self.ontology)
+        self.aws = AwsLambdaDriver(self.ontology)
         try:
             self.local_deployment = self.local.deployed()
         except:

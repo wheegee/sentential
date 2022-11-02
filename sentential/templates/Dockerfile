@@ -7,7 +7,7 @@ RUN echo 'entry $PARTITION -- $@' >> /opt/wrapper.sh
 RUN chmod 755 /bin/entry /opt/wrapper.sh
 
 FROM runtime AS {{ repository_name }}
-COPY ./src/* ${LAMBDA_TASK_ROOT}
+COPY ./src/ ${LAMBDA_TASK_ROOT}
 
 # insert application specific build steps here
 
