@@ -1,6 +1,6 @@
 import boto3
 from python_on_whales import docker
-
+from sentential.lib.exceptions import AWS_EXCEPTIONS
 
 class Clients:
     def __init__(self) -> None:
@@ -13,5 +13,8 @@ class Clients:
         self.cloudwatch = boto3.client("logs")
         self.docker = docker
 
-
-clients = Clients()
+try:
+    clients = Clients()
+except AWS_EXCEPTIONS as e:
+    print(f"AWS: {e}")
+    exit(1)
