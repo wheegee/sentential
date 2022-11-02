@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.5.0 (2022-11-02)
+### Feature
+* Make default partition generation safe against AWS API validators ([#115](https://github.com/wheegee/sentential/issues/115)) ([`5b09679`](https://github.com/wheegee/sentential/commit/5b096796f077af7ef677a700f4c298d1fb793796))
+
 ## v0.4.0 (2022-10-15)
 ### Feature
 * Inadvisable! ([#91](https://github.com/wheegee/sentential/issues/91)) ([`50ee490`](https://github.com/wheegee/sentential/commit/50ee4908698a7ce6e74126fffdddde2b0425be52))
