@@ -1,8 +1,8 @@
 import boto3
-from os import getenv
+from os import getenv, environ
 from sentential.lib.exceptions import ContextError
 from sentential.lib.clients import clients
-from sentential.lib.shapes import derive_paths, Paths
+from sentential.lib.shapes import derive_paths, Paths, AWSCallerIdentity
 
 
 class Context:
@@ -26,10 +26,21 @@ class Context:
         return getenv("AWS_KMS_KEY_ALIAS", default="aws/ssm")
 
     @property
+    def caller_identity(self) -> AWSCallerIdentity:
+        response = clients.sts.get_caller_identity()
+        return AWSCallerIdentity(**response)
+
+    @property
     def partition(self) -> str:
-        return getenv(
-            "PARTITION", default=clients.sts.get_caller_identity().get("UserId")
-        )
+        if "PARTITION" in environ:
+            return str(getenv("PARTITION"))
+        else:
+            user_id = self.caller_identity.UserId
+            if ":" in user_id:
+                # The ID before ':' in an assumed role seems to remain constant... time will tell.
+                return str(user_id.split(":")[0])
+            else:
+                return user_id
 
     @property
     def region(self) -> str:
@@ -41,11 +52,11 @@ class Context:
 
     @property
     def account_id(self) -> str:
-        return clients.sts.get_caller_identity().get("Account")
+        return self.caller_identity.Account
 
     @property
     def kms_key_id(self) -> str:
-        # TODO: if region has not yet written an ssm param with the default key, the kms key will not yet exist \o/
+        # TODO: if region has not yet written an ssm param with the default key, the kms key will not yet exist \o/. Implement initialization of default key.
         return [
             ssm_key["TargetKeyId"]
             for ssm_key in boto3.client("kms").list_aliases()["Aliases"]

@@ -114,6 +114,12 @@ class AWSPolicyDocument(BaseModel):
     Statement: List[AWSPolicyStatement]
 
 
+class AWSCallerIdentity(BaseModel):
+    UserId: str
+    Account: str
+    Arn: str
+
+
 #
 # Lambda
 #
