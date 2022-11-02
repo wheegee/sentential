@@ -26,7 +26,6 @@ class Joinery:
         local_images = [image for image in self.local.images()]
         aws_images = [image for image in self.aws.images()]
         by_id = {}
-
         for image in local_images + aws_images:
             if image.id in by_id:
                 by_id[image.id].append(image)

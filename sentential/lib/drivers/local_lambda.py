@@ -3,7 +3,7 @@ from tempfile import TemporaryDirectory
 from typing import Dict, List
 from sentential.lib.exceptions import LocalDriverError
 from sentential.lib.clients import clients
-from sentential.lib.drivers.spec import Driver
+from sentential.lib.drivers.spec import LambdaDriver
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Image, Function
 from sentential.lib.template import Policy
@@ -15,7 +15,7 @@ from python_on_whales.components.image.cli_wrapper import Image as DriverImage
 #
 
 
-class LocalLambdaDriver(Driver):
+class LocalLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 

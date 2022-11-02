@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v0.4.0 (2022-10-15)
+### Feature
+* Inadvisable! ([#91](https://github.com/wheegee/sentential/issues/91)) ([`50ee490`](https://github.com/wheegee/sentential/commit/50ee4908698a7ce6e74126fffdddde2b0425be52))
+
+## v0.3.0 (2022-09-13)
+### Feature
+* General release ([#73](https://github.com/wheegee/sentential/issues/73)) ([`4ace2bb`](https://github.com/wheegee/sentential/commit/4ace2bb561eec042bd2460b51277fb4d3b3007be))
+
 ## v0.2.1 (2022-08-08)
 ### Fix
 * Remove unused code ([`9f331d5`](https://github.com/wheegee/sentential/commit/9f331d5c023c7f5047dae75c2ac73acf9fe04049))

@@ -3,7 +3,7 @@ import os
 from time import sleep
 from typing import Dict, List, Optional, cast
 from sentential.lib.exceptions import AwsDriverError
-from sentential.lib.drivers.spec import Driver
+from sentential.lib.drivers.spec import LambdaDriver
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
@@ -23,7 +23,7 @@ from sentential.lib.template import Policy
 #
 
 
-class AwsLambdaDriver(Driver):
+class AwsLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.context = self.ontology.context
