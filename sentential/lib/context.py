@@ -52,7 +52,7 @@ class Context:
 
     @property
     def account_id(self) -> str:
-        return clients.sts.get_caller_identity().get("Account")
+        return self.caller_identity.Account
 
     @property
     def kms_key_id(self) -> str:
