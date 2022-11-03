@@ -336,7 +336,8 @@ class AwsLambdaDriver(LambdaDriver):
         ]
 
         batch_get_images = clients.ecr.batch_get_image(
-            repositoryName=self.repo_name, imageIds=image_digests
+            repositoryName=self.repo_name,
+            imageIds=image_digests,
         )["images"]
 
         for image in describe_images:
@@ -350,10 +351,15 @@ class AwsLambdaDriver(LambdaDriver):
             ecr_data[image["imageDigest"]] = {"versions": versions, "tags": tags}
 
         for image in batch_get_images:
-            image_digest = image["imageId"]["imageDigest"]
-            image_id = image["imageId"]["imageDigest"]
             image_manifest = json.loads(image["imageManifest"])
-            print(image_manifest)
+            image_digest = image["imageId"]["imageDigest"]
+            image_id = "n/a"
+
+            if (
+                image_manifest["mediaType"]
+                != "application/vnd.docker.distribution.manifest.list.v2+json"
+            ):
+                image_id = image_manifest["config"]["digest"]
 
             # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plzs
             if "id" in ecr_data[image_digest]:
@@ -364,6 +370,7 @@ class AwsLambdaDriver(LambdaDriver):
 
             ecr_data[image_digest]["id"] = image_id
 
+        # print(ecr_data)
         return ecr_data
 
     def _image_where_digest(self, digest: str) -> Image:
