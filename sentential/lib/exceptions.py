@@ -16,6 +16,8 @@ AWS_EXCEPTIONS = gather_aws_exceptions()
 class SntlException(BaseException):
     pass
 
+class ShapeError(SntlException):
+    pass
 
 class AwsDriverError(SntlException):
     pass

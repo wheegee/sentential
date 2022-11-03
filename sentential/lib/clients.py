@@ -5,6 +5,7 @@ from sentential.lib.exceptions import AWS_EXCEPTIONS
 
 class Clients:
     def __init__(self) -> None:
+        self.boto3 = boto3
         self.lmb = boto3.client("lambda")
         self.iam = boto3.client("iam")
         self.sts = boto3.client("sts")
