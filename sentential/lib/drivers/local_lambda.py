@@ -5,7 +5,14 @@ from sentential.lib.exceptions import LocalDriverError
 from sentential.lib.clients import clients
 from sentential.lib.drivers.spec import LambdaDriver
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import AWSAssumeRole, AWSCredentials, AWSFederatedUser, AWSFederationToken, Image, Function
+from sentential.lib.shapes import (
+    AWSAssumeRole,
+    AWSCredentials,
+    AWSFederatedUser,
+    AWSFederationToken,
+    Image,
+    Function,
+)
 from sentential.lib.template import Policy
 from python_on_whales.components.image.cli_wrapper import Image as DriverImage
 
@@ -104,9 +111,9 @@ class LocalLambdaDriver(LambdaDriver):
         credentials_env = {
             "AWS_ACCESS_KEY_ID": credentials.AccessKeyId,
             "AWS_SECRET_ACCESS_KEY": credentials.SecretAccessKey,
-            "AWS_SESSION_TOKEN": credentials.SessionToken
+            "AWS_SESSION_TOKEN": credentials.SessionToken,
         }
-        
+
         default_env = {
             "AWS_REGION": self.ontology.context.region,
             "PARTITION": self.ontology.envs.path,
@@ -184,10 +191,11 @@ class LocalLambdaDriver(LambdaDriver):
         session = clients.boto3.Session()
         session_creds = session.get_credentials()
         fallback = AWSCredentials(
-                AccessKeyId=session_creds.access_key,
-                SecretAccessKey=session_creds.secret_key,
-                SessionToken=session_creds.token,
-                Expiration=None)
+            AccessKeyId=session_creds.access_key,
+            SecretAccessKey=session_creds.secret_key,
+            SessionToken=session_creds.token,
+            Expiration=None,
+        )
 
         try:
             if identity.type == "user":
@@ -198,21 +206,25 @@ class LocalLambdaDriver(LambdaDriver):
                 return AWSFederationToken(**response).Credentials
 
             elif identity.type == "assumed-role":
-                role_arn = "/".join(identity.Arn.split("/")[:-1]).replace("assumed-role", "role")
+                role_arn = "/".join(identity.Arn.split("/")[:-1]).replace(
+                    "assumed-role", "role"
+                )
                 response = clients.sts.assume_role(
                     RoleArn=role_arn,
                     RoleSessionName=f"{self.ontology.context.partition}-local-emulation",
                     Policy=policy_json,
                 )
                 return AWSAssumeRole(**response).Credentials
-            
+
             else:
                 raise LocalDriverError("neither federation nor self assume worked")
 
         except:
-            print("WARNING: using local unscoped local credentials for local deployment (documentation link)")
+            print(
+                "WARNING: using local unscoped local credentials for local deployment (documentation link)"
+            )
             return fallback
-            
+
     def _docker_data(self) -> Dict:
         docker_data = {}
         repo_name = self.ontology.context.repository_name

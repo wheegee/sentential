@@ -114,22 +114,26 @@ class AWSPolicyDocument(BaseModel):
     Version: str = "2012-10-17"
     Statement: List[AWSPolicyStatement]
 
+
 class AWSCallerIdentity(BaseModel):
     UserId: str
     Account: str
     Arn: str
     type: Optional[bool]
-    
-    @validator('type', always=True)
+
+    @validator("type", always=True)
     def derive_type(cls, value, values):
-        if ":federated-user/" in values['Arn']:
-            return 'federated-user'
-        elif ":assumed-role/" in values['Arn']:
-            return 'assumed-role'
-        elif ":user/" in values['Arn']:
+        if ":federated-user/" in values["Arn"]:
+            return "federated-user"
+        elif ":assumed-role/" in values["Arn"]:
+            return "assumed-role"
+        elif ":user/" in values["Arn"]:
             return "user"
         else:
-            raise ShapeError(f"could not determine credential type of...\n{values['Arn']}")
+            raise ShapeError(
+                f"could not determine credential type of...\n{values['Arn']}"
+            )
+
 
 class AWSCredentials(BaseModel):
     AccessKeyId: str
@@ -137,22 +141,27 @@ class AWSCredentials(BaseModel):
     SessionToken: Optional[str]
     Expiration: Optional[datetime]
 
+
 class AWSFederatedUser(BaseModel):
     FederatedUserId: str
     Arn: str
 
+
 class AWSAssumedRoleUser(BaseModel):
     AssumedRoleId: str
     Arn: str
+
 
 class AWSFederationToken(BaseModel):
     Credentials: AWSCredentials
     FederatedUser: AWSFederatedUser
     PackedPolicySize: int
 
+
 class AWSAssumeRole(BaseModel):
     Credentials: AWSCredentials
     AssumedRoleUser: AWSAssumedRoleUser
+
 
 #
 # Lambda
