@@ -5,6 +5,7 @@ from sentential.lib.clients import clients
 from sentential.lib.shapes import derive_paths, Paths, AWSCallerIdentity
 from sentential.lib.exceptions import SntlException
 
+
 class Context:
     @property
     def repository_name(self) -> str:
