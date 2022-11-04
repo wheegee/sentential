@@ -58,13 +58,14 @@ def clean(remote: bool = typer.Option(False)):
     local = LocalLambdaDriver(ontology)
 
     for image in local.images():
+        clients.docker.container.remove("sentential", force=True)
         clients.docker.image.remove(image.id, force=True)
 
     if remote:
         images = []
         for image in aws.images():
             images.append({"imageDigest": image.digest})
-
-        clients.ecr.batch_delete_image(
-            repositoryName=ontology.context.repository_name, imageIds=images
-        )
+        if images:
+            clients.ecr.batch_delete_image(
+                repositoryName=ontology.context.repository_name, imageIds=images
+            )

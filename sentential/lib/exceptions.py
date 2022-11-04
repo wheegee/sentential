@@ -17,6 +17,10 @@ class SntlException(BaseException):
     pass
 
 
+class ShapeError(SntlException):
+    pass
+
+
 class AwsDriverError(SntlException):
     pass
 
