@@ -52,7 +52,7 @@ def test_aws_publish(invoke):
 
 
 def test_aws_deploy(invoke):
-    result = invoke(["deploy", "aws", "latest", "--public-url"])
+    result = invoke(["deploy", "aws", "--public-url"])
     pytest.deployment_url = result.output  # type: ignore
     assert result.exit_code == 0
 
