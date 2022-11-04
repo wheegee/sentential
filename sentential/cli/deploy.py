@@ -37,10 +37,9 @@ def aws(
     if version is None:
         # TODO: this should be a required parameter, doing this to make tests work for now.
         version = SemVer(aws_lambda.images()).latest
-        
+
     image = aws_lambda.image(version)
     function = aws_lambda.deploy(image, public_url)
 
     if function.public_url:
         print(function.public_url)
-
