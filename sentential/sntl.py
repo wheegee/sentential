@@ -25,5 +25,5 @@ def main():
         print(f"AWS: {e}")
         exit(1)
     except DockerException as e:
-        print(f"DOCKER: {e.stderr}".replace("\n",""))
+        print(f"DOCKER: {e.stderr}".replace("\n", ""))
         exit(e.return_code)

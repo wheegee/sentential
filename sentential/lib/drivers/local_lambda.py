@@ -112,10 +112,10 @@ class LocalLambdaDriver(LambdaDriver):
             "AWS_ACCESS_KEY_ID": credentials.AccessKeyId,
             "AWS_SECRET_ACCESS_KEY": credentials.SecretAccessKey,
         }
-        
+
         if credentials.SessionToken:
             credentials_env["AWS_SESSION_TOKEN"] = credentials.SessionToken
-        
+
         default_env = {
             "AWS_REGION": self.ontology.context.region,
             "PARTITION": self.ontology.envs.path,
