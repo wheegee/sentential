@@ -3,7 +3,7 @@ from os import getenv, environ
 from sentential.lib.exceptions import ContextError
 from sentential.lib.clients import clients
 from sentential.lib.shapes import derive_paths, Paths, AWSCallerIdentity
-
+from sentential.lib.exceptions import SntlException
 
 class Context:
     @property
@@ -56,12 +56,17 @@ class Context:
 
     @property
     def kms_key_id(self) -> str:
-        # TODO: if region has not yet written an ssm param with the default key, the kms key will not yet exist \o/. Implement initialization of default key.
-        return [
-            ssm_key["TargetKeyId"]
-            for ssm_key in boto3.client("kms").list_aliases()["Aliases"]
-            if self.kms_key_alias in ssm_key["AliasName"]
-        ][0]
+        try:
+            return [
+                ssm_key["TargetKeyId"]
+                for ssm_key in boto3.client("kms").list_aliases()["Aliases"]
+                if self.kms_key_alias in ssm_key["AliasName"]
+            ][0]
+        except KeyError:
+            if "AWS_KMS_KEY_ALIAS" in environ:
+                raise SntlException("Key specified by AWS_KMS_KEY_ALIAS does not exist")
+            else:
+                raise SntlException('If region has not yet written an ssm parameter with the default key, the default kms key will not yet exist \o/.')
 
     @property
     def repository_url(self) -> str:
