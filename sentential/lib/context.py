@@ -25,7 +25,7 @@ class Context:
     def kms_key_alias(self) -> str:
         return getenv("AWS_KMS_KEY_ALIAS", default="aws/ssm")
 
-    @property # TODO: make this a cached property
+    @property  # TODO: make this a cached property
     def caller_identity(self) -> AWSCallerIdentity:
         response = clients.sts.get_caller_identity()
         return AWSCallerIdentity(**response)
