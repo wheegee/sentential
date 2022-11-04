@@ -66,7 +66,9 @@ class Context:
         except IndexError:
             raise SntlException("Key specified by AWS_KMS_KEY_ALIAS does not exist")
         except KeyError:
-            raise SntlException('If region has not yet written an ssm parameter with the default key, the default kms key will not yet exist \o/.')
+            raise SntlException(
+                "If region has not yet written an ssm parameter with the default key, the default kms key will not yet exist \o/."
+            )
 
     @property
     def repository_url(self) -> str:
