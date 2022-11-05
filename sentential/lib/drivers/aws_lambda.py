@@ -1,6 +1,5 @@
 import json
 import os
-from platform import architecture
 from time import sleep
 from typing import Dict, List, Optional, cast
 from sentential.lib.exceptions import AwsDriverError
