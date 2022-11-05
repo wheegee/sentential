@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from lib2to3.pgen2.token import OP
 from pathlib import PosixPath
 from typing import List, Union, Optional, Dict
 from pydantic import BaseModel, Field, validator
