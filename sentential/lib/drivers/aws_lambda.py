@@ -227,7 +227,7 @@ class AwsLambdaDriver(LambdaDriver):
         function_name = self.resource_name
         role_arn = clients.iam.get_role(RoleName=role_name)["Role"]["Arn"]
         image_uri = f"{self.repo_url}:{image.versions[0]}"  # TODO: do we want to deploy latest version on image, or version declared?
-        image_arch = "x86_64" if image.arch == "amd64" else image.arch # this is not configurable after Lambda creation, and thus cannot be changed
+        image_arch = "x86_64" if image.arch == "amd64" else image.arch
         envs_path = self.envs.path
         sleep(10)
         try:
@@ -279,6 +279,7 @@ class AwsLambdaDriver(LambdaDriver):
             clients.lmb.update_function_code(
                 FunctionName=function_name,
                 ImageUri=image_uri,
+                Architectures=[image_arch],
                 Publish=True,
             )
 
