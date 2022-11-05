@@ -20,7 +20,7 @@ class Image(BaseModel):
     digest: Union[str, None]
     tags: List[str]
     versions: List[str]
-    # arch: str TODO: https://github.com/gabrieldemarmiesse/python-on-whales/pull/378
+    arch: str
 
     @validator("versions")
     def coerce_versions(cls, v):

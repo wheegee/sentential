@@ -88,6 +88,7 @@ class AwsLambdaDriver(LambdaDriver):
                     digest=digest,
                     tags=image["tags"],
                     versions=image["versions"],
+                    arch=image["arch"],
                 )
             )
 
@@ -95,7 +96,7 @@ class AwsLambdaDriver(LambdaDriver):
 
     def image(self, version: str) -> Image:
         for image in self.images():
-            if version in image.versions:
+            if f"{image.arch}-{version}" in image.versions:
                 return image
         raise AwsDriverError(f"no image found where version is {version}")
 
@@ -226,7 +227,7 @@ class AwsLambdaDriver(LambdaDriver):
         function_name = self.resource_name
         role_arn = clients.iam.get_role(RoleName=role_name)["Role"]["Arn"]
         image_uri = f"{self.repo_url}:{image.versions[0]}"  # TODO: do we want to deploy latest version on image, or version declared?
-        image_arch = "x86_64" if image_arch == "x86_64" else image_arch
+        image_arch = "x86_64" if image.arch == "amd64" else image.arch # this is not configurable after Lambda creation, and thus cannot be changed
         envs_path = self.envs.path
         sleep(10)
         try:
@@ -331,35 +332,56 @@ class AwsLambdaDriver(LambdaDriver):
         if len(describe_images) == 0:
             return {}
 
-        image_digests = [
-            {"imageDigest": image["imageDigest"]} for image in describe_images
+        image_index_digests = [
+            {"imageDigest": image["imageDigest"]}
+            for image in describe_images
+            if image["imageManifestMediaType"]
+            == "application/vnd.docker.distribution.manifest.list.v2+json"
         ]
 
-        batch_get_images = clients.ecr.batch_get_image(
+        image_digests = [
+            {"imageDigest": image["imageDigest"]}
+            for image in describe_images
+            if image["imageManifestMediaType"]
+            == "application/vnd.docker.distribution.manifest.v2+json"
+        ]
+
+        detail_image_indexes = clients.ecr.batch_get_image(
+            repositoryName=self.repo_name,
+            imageIds=image_index_digests,
+        )["images"]
+
+        detail_images = clients.ecr.batch_get_image(
             repositoryName=self.repo_name,
             imageIds=image_digests,
         )["images"]
 
+        image_platforms = {}
+
+        for index in detail_image_indexes:
+            index_manifest = json.loads(index["imageManifest"])
+            for manifest in index_manifest["manifests"]:
+                image_platforms[manifest["digest"]] = manifest["platform"]
+
         for image in describe_images:
-            if "imageTags" in image:
-                versions = image["imageTags"]
-                tags = [f"{self.repo_url}:{tag}" for tag in image["imageTags"]]
-            else:
-                versions = []
-                tags = []
-
-            ecr_data[image["imageDigest"]] = {"versions": versions, "tags": tags}
-
-        for image in batch_get_images:
-            image_manifest = json.loads(image["imageManifest"])
-            image_digest = image["imageId"]["imageDigest"]
-            image_id = "n/a"
-
             if (
-                image_manifest["mediaType"]
-                != "application/vnd.docker.distribution.manifest.list.v2+json"
+                image["imageManifestMediaType"]
+                == "application/vnd.docker.distribution.manifest.v2+json"
             ):
-                image_id = image_manifest["config"]["digest"]
+                if "imageTags" in image:
+                    versions = image["imageTags"]
+                    tags = [f"{self.repo_url}:{tag}" for tag in image["imageTags"]]
+                else:
+                    versions = []
+                    tags = []
+
+                ecr_data[image["imageDigest"]] = {"versions": versions, "tags": tags}
+
+        for image in detail_images:
+            image_digest = image["imageId"]["imageDigest"]
+            image_manifest = json.loads(image["imageManifest"])
+            image_id = image_manifest["config"]["digest"]
+            image_arch = image_platforms[image_digest]["architecture"]
 
             # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plzs
             if "id" in ecr_data[image_digest]:
@@ -369,8 +391,8 @@ class AwsLambdaDriver(LambdaDriver):
                     )
 
             ecr_data[image_digest]["id"] = image_id
+            ecr_data[image_digest]["arch"] = image_arch
 
-        # print(ecr_data)
         return ecr_data
 
     def _image_where_digest(self, digest: str) -> Image:

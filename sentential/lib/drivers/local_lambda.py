@@ -53,14 +53,16 @@ class LocalLambdaDriver(LambdaDriver):
         image = self.image(source_version)
         repo_url = self.ontology.context.repository_url
         arch = clients.docker.image.inspect(image.id).architecture
-        arch_tag = f"{repo_url}:{arch}-{version}"
-        shipping_tag = f"{repo_url}:{version}"
+        arch_tag = f"{repo_url}:{arch}-{destination_version}"
+        shipping_tag = f"{repo_url}:{destination_version}"
         clients.docker.tag(image.id, arch_tag)
+        clients.docker.tag(image.id, shipping_tag)
         clients.docker.push(arch_tag)
         clients.docker.manifest.create(shipping_tag, arch_tag, True)
         clients.docker.manifest.annotate(shipping_tag, arch_tag, arch=arch)
-        clients.docker.manifest.push(shipping_tag)
-        return f"published {image.id} as {shipping_tag}"
+        clients.docker.manifest.push(shipping_tag, True)
+        print(f"published {image.id} as {shipping_tag}")
+        return self.image(destination_version)
 
     def images(self) -> List[Image]:
         images = []
@@ -71,7 +73,8 @@ class LocalLambdaDriver(LambdaDriver):
                     digest=image["digest"],
                     tags=image["tags"],
                     versions=image["versions"],
-                )  # arch=image.architecture
+                    arch=image["arch"],
+                )
             )
         return images
 
@@ -265,6 +268,7 @@ class LocalLambdaDriver(LambdaDriver):
                     "digest": digest,
                     "tags": image.repo_tags,
                     "versions": versions,
+                    "arch": image.architecture,
                 }
 
         return docker_data

@@ -40,6 +40,7 @@ class Joinery:
             digest = None
             tags = []
             versions = []
+            arch = None
             href = []
             for image in images:
                 if image.digest is not None:
@@ -49,7 +50,14 @@ class Joinery:
                     tags = concat(tags, image.tags)
 
                 if image.versions:
-                    versions = concat(versions, image.versions)
+                    versions = [
+                        version
+                        for version in concat(versions, image.versions)
+                        if "64-" not in version
+                    ]
+
+                if image.arch:
+                    arch = image.arch
 
                 if self.local_deployment:
                     if self.local_deployment.image.id == image.id:
@@ -72,6 +80,7 @@ class Joinery:
                     digest=digest,
                     tags=list(tags),
                     versions=list(versions),
+                    arch=arch,
                     href=href,
                 )
             )
