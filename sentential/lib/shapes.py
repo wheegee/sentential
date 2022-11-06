@@ -95,6 +95,28 @@ class Provision(Shaper):
 
 
 #
+# ECR
+#
+class AWSImageDescription(BaseModel):
+    imageDigest: str
+    imageTags: Optional[List[str]]
+    imageManifestMediaType: str
+
+
+class AWSImageDescriptions(BaseModel):
+    images: List[AWSImageDescription]
+
+
+class AWSImageDetail(BaseModel):
+    imageId: Dict[str, str]
+    imageManifest: str
+
+
+class AWSImageDetails(BaseModel):
+    images: List[AWSImageDetail]
+
+
+#
 # IAM
 #
 class AWSPolicyStatement(BaseModel):

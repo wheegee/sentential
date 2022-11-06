@@ -7,6 +7,10 @@ from sentential.lib.drivers.spec import LambdaDriver
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
+    AWSImageDescription,
+    AWSImageDescriptions,
+    AWSImageDetail,
+    AWSImageDetails,
     AwsFunctionPublicUrl,
     Image,
     AwsFunction,
@@ -78,6 +82,16 @@ class AwsLambdaDriver(LambdaDriver):
             public_url=public_url,
         )
 
+    def image_index_digests(self):
+        image_index_digests = [
+            image.imageDigest
+            for image in self._describe_images().images
+            if image.imageManifestMediaType
+            == "application/vnd.docker.distribution.manifest.list.v2+json"
+        ]
+
+        return image_index_digests
+
     def images(self) -> List[Image]:
         images = []
         for digest, image in self._ecr_data().items():
@@ -95,6 +109,9 @@ class AwsLambdaDriver(LambdaDriver):
 
     def image(self, version: str) -> Image:
         for image in self.images():
+            # print(f"{image.arch}-{version}")
+            # print(image.versions)
+            # TODO: the prepending of arch is a hack until Lambda supports image indexes as valid URIs
             if f"{image.arch}-{version}" in image.versions:
                 return image
         raise AwsDriverError(f"no image found where version is {version}")
@@ -325,61 +342,52 @@ class AwsLambdaDriver(LambdaDriver):
 
     def _ecr_data(self) -> Dict:
         ecr_data = {}
-        describe_images = clients.ecr.describe_images(repositoryName=self.repo_name)[
-            "imageDetails"
-        ]
+        image_platforms = {}
 
-        if len(describe_images) == 0:
+        image_descriptions = self._describe_images().images
+
+        if len(image_descriptions) == 0:
             return {}
 
         image_index_digests = [
-            {"imageDigest": image["imageDigest"]}
-            for image in describe_images
-            if image["imageManifestMediaType"]
+            {"imageDigest": image.imageDigest}
+            for image in image_descriptions
+            if image.imageManifestMediaType
             == "application/vnd.docker.distribution.manifest.list.v2+json"
         ]
 
         image_digests = [
-            {"imageDigest": image["imageDigest"]}
-            for image in describe_images
-            if image["imageManifestMediaType"]
+            {"imageDigest": image.imageDigest}
+            for image in image_descriptions
+            if image.imageManifestMediaType
             == "application/vnd.docker.distribution.manifest.v2+json"
         ]
 
-        detail_image_indexes = clients.ecr.batch_get_image(
-            repositoryName=self.repo_name,
-            imageIds=image_index_digests,
-        )["images"]
-
-        detail_images = clients.ecr.batch_get_image(
-            repositoryName=self.repo_name,
-            imageIds=image_digests,
-        )["images"]
-
-        image_platforms = {}
+        detail_image_indexes = self._detail_images(image_index_digests).images
+        detail_images = self._detail_images(image_digests).images
 
         for index in detail_image_indexes:
-            index_manifest = json.loads(index["imageManifest"])
+            index_manifest = json.loads(index.imageManifest)
             for manifest in index_manifest["manifests"]:
                 image_platforms[manifest["digest"]] = manifest["platform"]
 
-        for image in describe_images:
+        for image in image_descriptions:
             if (
-                image["imageManifestMediaType"]
+                image.imageManifestMediaType
                 == "application/vnd.docker.distribution.manifest.v2+json"
             ):
-                if "imageTags" in image:
-                    versions = image["imageTags"]
-                    tags = [f"{self.repo_url}:{tag}" for tag in image["imageTags"]]
+                if "imageTags" in image.__fields__:
+                    versions = image.imageTags
+                    tags = [f"{self.repo_url}:{tag}" for tag in image.imageTags]
                 else:
                     versions = []
                     tags = []
 
-                ecr_data[image["imageDigest"]] = {"versions": versions, "tags": tags}
+                ecr_data[image.imageDigest] = {"versions": versions, "tags": tags}
 
         for image in detail_images:
-            image_digest = image["imageId"]["imageDigest"]
-            image_manifest = json.loads(image["imageManifest"])
+            image_digest = image.imageId["imageDigest"]
+            image_manifest = json.loads(image.imageManifest)
             image_id = image_manifest["config"]["digest"]
             image_arch = image_platforms[image_digest]["architecture"]
 
@@ -400,3 +408,22 @@ class AwsLambdaDriver(LambdaDriver):
             if digest == image.digest:
                 return image
         raise AwsDriverError(f"no image found where digest is {digest}")
+
+    def _describe_images(self) -> AWSImageDescriptions:
+        images = []
+        describe_images = clients.ecr.describe_images(repositoryName=self.repo_name)[
+            "imageDetails"
+        ]
+        for image in describe_images:
+            images.append(AWSImageDescription(**image))
+        return AWSImageDescriptions(images=images)
+
+    def _detail_images(self, image_digests) -> AWSImageDetails:
+        images = []
+        batch_get_image = clients.ecr.batch_get_image(
+            repositoryName=self.repo_name,
+            imageIds=image_digests,
+        )["images"]
+        for image in batch_get_image:
+            images.append(AWSImageDetail(**image))
+        return AWSImageDetails(images=images)

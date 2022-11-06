@@ -62,10 +62,14 @@ def clean(remote: bool = typer.Option(False)):
         clients.docker.image.remove(image.id, force=True)
 
     if remote:
+        image_indexes = [
+            {"imageDigest": digest} for digest in aws.image_index_digests()
+        ]
         images = []
         for image in aws.images():
             images.append({"imageDigest": image.digest})
-        if images:
+        if image_indexes or images:
             clients.ecr.batch_delete_image(
-                repositoryName=ontology.context.repository_name, imageIds=images
+                repositoryName=ontology.context.repository_name,
+                imageIds=image_indexes + images,
             )
