@@ -1,3 +1,4 @@
+from calendar import c
 from datetime import datetime
 from enum import Enum
 from lib2to3.pgen2.token import OP
@@ -93,6 +94,27 @@ class Provision(Shaper):
         if v not in valid_auth_types:
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
         return v
+
+class Paths(BaseModel):
+    root: PosixPath
+    sntl: PosixPath
+    src: PosixPath
+    dockerfile: PosixPath
+    wrapper: PosixPath
+    policy: PosixPath
+    shapes: PosixPath
+
+
+def derive_paths(root: PosixPath = PosixPath(".")):
+    return Paths(
+        root=root,
+        sntl=PosixPath(f"{root}/.sntl"),
+        src=PosixPath(f"{root}/src"),
+        dockerfile=PosixPath(f"{root}/Dockerfile"),
+        wrapper=PosixPath(f"{root}/.sntl/wrapper.sh"),
+        policy=PosixPath(f"{root}/policy.json"),
+        shapes=PosixPath(f"{root}/shapes.py"),
+    )
 
 
 #
@@ -254,30 +276,18 @@ class AwsFunction(BaseModel):
     Configuration: AwsFunctionConfiguration
     Code: AwsFunctionCode
 
-
-#
-# Pathing
-#
-class Paths(BaseModel):
-    root: PosixPath
-    sntl: PosixPath
-    src: PosixPath
-    dockerfile: PosixPath
-    wrapper: PosixPath
-    policy: PosixPath
-    shapes: PosixPath
-
-
-def derive_paths(root: PosixPath = PosixPath(".")):
-    return Paths(
-        root=root,
-        sntl=PosixPath(f"{root}/.sntl"),
-        src=PosixPath(f"{root}/src"),
-        dockerfile=PosixPath(f"{root}/Dockerfile"),
-        wrapper=PosixPath(f"{root}/.sntl/wrapper.sh"),
-        policy=PosixPath(f"{root}/policy.json"),
-        shapes=PosixPath(f"{root}/shapes.py"),
-    )
+class LambdaPermission(BaseModel):
+    FunctionName: str
+    StatementId: str
+    Action: str
+    Principal: str
+    SourceArn: str
+    SourceAccount: str
+    EventSourceToken: str
+    Qualifier: str
+    RevisionId: str
+    PrincipalOrgID: str
+    FunctionUrlAuthType: str = "None"
 
 
 #
@@ -294,6 +304,8 @@ class ApiGatewayIntegration(BaseModel):
     TimeoutInMillis: int = 30000
     RequestParameters: Optional[Dict[str, str]] = {}
 
+class ApiGatewayIntegrations(BaseModel):
+    Items: List[ApiGatewayIntegration]
 
 class ApiGatewayRoute(BaseModel):
     ApiKeyRequired: bool
@@ -303,6 +315,8 @@ class ApiGatewayRoute(BaseModel):
     Target: Optional[str]
     Integration: Optional[ApiGatewayIntegration]
 
+class ApiGatewayRoutes(BaseModel):
+    Items: List[ApiGatewayRoute]
 
 class ApiGatewayMapping(BaseModel):
     ApiId: str
@@ -311,13 +325,18 @@ class ApiGatewayMapping(BaseModel):
     Stage: str
     Routes: List[ApiGatewayRoute] = []
 
+class ApiGatewayMappings(BaseModel):
+    Items: List[ApiGatewayMapping]
 
 class ApiGatewayDomain(BaseModel):
+    ApiMappingSelectionExpression: str
     DomainName: str
     DomainNameConfigurations: Optional[List[Dict]]
     Tags: Dict[str, str] = {}
     Mappings: List[ApiGatewayMapping] = []
 
+class ApiGatewayDomains(BaseModel):
+    Items: List[ApiGatewayDomain]
 
 class ApiGatewayParsedUrl(BaseModel):
     ApiId: str
@@ -329,16 +348,3 @@ class ApiGatewayParsedUrl(BaseModel):
     Route: str
     FullPath: str
 
-
-class LambdaPermission(BaseModel):
-    FunctionName: str
-    StatementId: str
-    Action: str
-    Principal: str
-    SourceArn: str
-    SourceAccount: str
-    EventSourceToken: str
-    Qualifier: str
-    RevisionId: str
-    PrincipalOrgID: str
-    FunctionUrlAuthType: str = "None"

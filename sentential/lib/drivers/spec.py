@@ -1,4 +1,6 @@
-from abc import ABC, abstractmethod
+from abc import ABC, abstractclassmethod, abstractmethod
+
+from sentential.lib.shapes import Function
 
 
 class LambdaDriver(ABC):
@@ -28,4 +30,18 @@ class LambdaDriver(ABC):
 
     @abstractmethod
     def invoke(self, payload: str):
+        ...
+
+class MountDriver(ABC):
+    @abstractclassmethod
+    def autocomplete(cls):
+        ...
+
+    def mount(self, function: Function):
+        ...
+    
+    def umount(self, function: Function):
+        ...
+
+    def ls(self):
         ...

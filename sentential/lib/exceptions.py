@@ -41,5 +41,5 @@ class JoineryError(SntlException):
     pass
 
 
-class ApiGatewayResourceNotFound(SntlException):
+class MountError(SntlException):
     pass

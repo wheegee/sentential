@@ -1,4 +1,5 @@
 import typer
+from sentential.lib.drivers.aws_api_gateway import AwsApiGatewayDriver
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.ontology import Ontology
@@ -29,11 +30,13 @@ def local(
 def aws(
     version: str = typer.Argument(None, envvar="VERSION"),
     public_url: bool = typer.Option(default=False),
+    mount: str = typer.Option(None, autocompletion=AwsApiGatewayDriver.autocomplete)
 ):
     """deploy lambda image to aws"""
-
     ontology = Ontology()
     aws_lambda = AwsLambdaDriver(ontology)
+    aws_api_gw = AwsApiGatewayDriver(ontology)
+
     if version is None:
         # TODO: this should be a required parameter, doing this to make tests work for now.
         version = SemVer(aws_lambda.images()).latest
@@ -41,5 +44,9 @@ def aws(
     image = aws_lambda.image(version)
     function = aws_lambda.deploy(image, public_url)
 
+    if mount:
+        aws_api_gw.mount(mount, function)
+
     if function.public_url:
         print(function.public_url)
+

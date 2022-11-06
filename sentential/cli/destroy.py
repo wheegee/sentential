@@ -19,5 +19,7 @@ def aws():
     """destroy lambda deployment in aws"""
     ontology = Ontology()
     aws_function = AwsLambdaDriver(ontology)
+    aws_api_gateway = AwsApiGatewayDriver(ontology)
     deployed = aws_function.deployed()
     aws_function.destroy(deployed)
+    aws_api_gateway.umount(deployed)
