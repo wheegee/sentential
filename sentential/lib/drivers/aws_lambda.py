@@ -109,8 +109,6 @@ class AwsLambdaDriver(LambdaDriver):
 
     def image(self, version: str) -> Image:
         for image in self.images():
-            # print(f"{image.arch}-{version}")
-            # print(image.versions)
             # TODO: the prepending of arch is a hack until Lambda supports image indexes as valid URIs
             if f"{image.arch}-{version}" in image.versions:
                 return image
@@ -391,7 +389,7 @@ class AwsLambdaDriver(LambdaDriver):
             image_id = image_manifest["config"]["digest"]
             image_arch = image_platforms[image_digest]["architecture"]
 
-            # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plzs
+            # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plz
             if "id" in ecr_data[image_digest]:
                 if ecr_data[image_digest]["id"] != image_id:
                     raise AwsDriverError(
