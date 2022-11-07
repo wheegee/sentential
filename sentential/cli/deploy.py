@@ -1,5 +1,4 @@
 import typer
-from sentential.lib.drivers.aws_api_gateway import AwsApiGatewayDriver
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.ontology import Ontology
@@ -15,38 +14,41 @@ def local(
     public_url: bool = typer.Option(False),
 ):
     """build and deploy local lambda container"""
-    local = LocalLambdaDriver(Ontology())
-    aws = AwsLambdaDriver(Ontology())
+    ontology = Ontology()
+    local = LocalLambdaDriver(ontology)
+    aws = AwsLambdaDriver(ontology)
+
     try:
         image = local.image(version)
     except:
         image = aws.image(version)
         local.pull(image)
 
-    print(local.deploy(image, public_url))
+    function = local.deploy(image, public_url)
+
+    if function.public_url:
+        print(function.public_url)
+    else:
+        print(function.arn)
 
 
 @deploy.command()
 def aws(
     version: str = typer.Argument(None, envvar="VERSION"),
-    public_url: bool = typer.Option(default=False),
-    mount: str = typer.Option(None, autocompletion=AwsApiGatewayDriver.autocomplete)
+    public_url: bool = typer.Option(False),
 ):
     """deploy lambda image to aws"""
     ontology = Ontology()
     aws_lambda = AwsLambdaDriver(ontology)
-    aws_api_gw = AwsApiGatewayDriver(ontology)
 
     if version is None:
-        # TODO: this should be a required parameter, doing this to make tests work for now.
         version = SemVer(aws_lambda.images()).latest
 
     image = aws_lambda.image(version)
     function = aws_lambda.deploy(image, public_url)
 
-    if mount:
-        aws_api_gw.mount(mount, function)
-
     if function.public_url:
         print(function.public_url)
+    else:
+        print(function.arn)
 

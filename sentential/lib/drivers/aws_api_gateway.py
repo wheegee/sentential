@@ -3,27 +3,29 @@ from sentential.lib.exceptions import MountError
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import (
+    Function,
     ApiGatewayDomains,
     ApiGatewayIntegrations,
     ApiGatewayMappings,
     ApiGatewayRoutes,
-    Function,
     ApiGatewayDomain,
     ApiGatewayIntegration,
-    ApiGatewayMapping,
     ApiGatewayParsedUrl,
     ApiGatewayRoute,
 )
 
 from pathlib import Path
-from furl import furl
 from typing import List
-from urllib.parse import urlparse
 
-def url_parse(url: str) -> furl:
-    parsed = furl(url)
-    parsed.path.normalize()
-    return parsed
+def pathify(segements: List[str]) -> str:
+    """take in url segments, drop blanks, join them again, and deduplicate slashes"""
+    joined = "/".join(segment for segment in segements if segment)
+    return str(Path(joined))
+
+def deproxy(url: str) -> str:
+    """remove api gateway proxy strings from url"""
+    url = url.replace("{proxy+}","").replace("{proxy}","")
+    return str(Path(url))
 
 class AwsApiGatewayDriver(MountDriver):
     def __init__(self, ontology: Ontology) -> None:
@@ -39,12 +41,14 @@ class AwsApiGatewayDriver(MountDriver):
     def autocomplete(cls) -> List[str]:
         urls = []
         for domain in cls._domains():
-            urls.append(domain.DomainName)
+            found_domain = domain.DomainName
+            urls.append(found_domain)
             for mapping in domain.Mappings:
+                found_mapping = mapping.ApiMappingKey
                 for route in mapping.Routes:
-                    uri = route.RouteKey.split(" ")[-1]
-                    full_path = str(furl(f"{domain.DomainName}/{mapping.ApiMappingKey}/{uri}"))
-                    urls.append(full_path)
+                    found_verb, found_route = route.RouteKey.split(" ")
+                    url = deproxy(pathify([found_domain, found_mapping, found_route]))
+                    urls.append(url)
 
         if len(urls) == 0:
             return ["no discoverable api gateway endpoints (link to docs)"]
@@ -55,7 +59,7 @@ class AwsApiGatewayDriver(MountDriver):
         """
         This method returns domain objects with their related mappings, routes, and integrations
         domain =(has_many)=> mappings =(has_many)=> routes =(has_one)=> integration
-        ex: domain.mappings[0].routes[0].integration
+        ex: domain.mappings[*].routes[*].integration
         """
         response = clients.api_gw.get_domain_names()
         domains = ApiGatewayDomains(**response).Items
@@ -78,6 +82,56 @@ class AwsApiGatewayDriver(MountDriver):
                         )
                         route.Integration = ApiGatewayIntegration(**response)
         return domains
+
+    @classmethod
+    def _parse(cls, url: str) -> ApiGatewayParsedUrl:
+        given_url = str(Path(url))
+        given_host, *given_route = given_url.split("/")
+        given_route = deproxy(pathify(given_route))
+        domains = cls._domains()
+        # Try to find route already in existance.
+        for domain in domains:
+            found_host = domain.DomainName
+            if found_host == given_host:
+                for mapping in domain.Mappings:
+                    found_mapping = mapping.ApiMappingKey
+                    for route in mapping.Routes:
+                        found_verb, found_route = route.RouteKey.split(" ")
+                        found_url = deproxy(pathify([found_host, found_mapping, found_route]))
+                        if found_url == given_url:
+                            return ApiGatewayParsedUrl(
+                                ApiId=mapping.ApiId,
+                                ApiMappingId=mapping.ApiMappingId,
+                                ApiMappingKey=mapping.ApiMappingKey,
+                                RouteId=route.RouteId,
+                                RouteKey=route.RouteKey,
+                                Route=f"/{given_route}",
+                                Verb=found_verb,
+                                FullPath=given_url,
+                            )
+
+        # If no matching route integration already, return a new one under valid mapping.
+        for domain in domains:
+            found_host = domain.DomainName
+            domain.Mappings.sort(key=lambda m: len(m.ApiMappingKey), reverse=True)
+            if found_host == given_host:
+                for mapping in domain.Mappings:
+                    if given_route.startswith(mapping.ApiMappingKey):
+                        return ApiGatewayParsedUrl(
+                            ApiId=mapping.ApiId,
+                            ApiMappingId=mapping.ApiMappingId,
+                            ApiMappingKey=mapping.ApiMappingKey,
+                            RouteId=None,
+                            RouteKey=f"ANY /{given_route}/{{proxy+}}",
+                            Route=f"/{given_route}",
+                            Verb="ANY",
+                            FullPath=given_url,
+                        )
+        
+        # else explode
+        raise MountError(
+            f"could not find valid domain and/or mapping for {given_url}"
+        )
 
     def mount(self, url: str, function: Function) -> ApiGatewayRoute:
         parsed_url = self._parse(url)
@@ -110,61 +164,28 @@ class AwsApiGatewayDriver(MountDriver):
             except clients.api_gw.exceptions.NotFoundException:
                 pass
 
-
-    def _parse(self, path: str) -> ApiGatewayParsedUrl:
-        # coerce schema if none
-        if "https://" in path:
+        try:
+            clients.lmb.remove_permission(
+                FunctionName=function.name,
+                StatementId=self.statement_id,
+            )
+        except clients.lmb.exceptions.ResourceNotFoundException:
             pass
-        elif "http://" in path:
-            pass
-        else:
-            path = f"https://{path}"
 
-        parsed = url_parse(path)
 
-        for d in self._domains():
-            # Try to find route already in existance.
-            if d.DomainName == parsed.host:
-                scheme = "https://"
-                domain = f"{scheme}{d.DomainName}"
-                for m in d.Mappings:
-                    mapping = f"{m.ApiMappingKey}"
-                    for r in m.Routes:
-                        verb, route = r.RouteKey.split(" ")
-                        found = url_parse(f"{domain}/{mapping}/{route}") 
-                        if parsed.url == found.url:
-                            return ApiGatewayParsedUrl(
-                                ApiId=m.ApiId,
-                                ApiMappingId=m.ApiMappingId,
-                                ApiMappingKey=m.ApiMappingKey,
-                                RouteId=r.RouteId,
-                                RouteKey=r.RouteKey,
-                                Route=route,
-                                Verb=verb,
-                                FullPath=str(found.path),
-                            )
-
-            # If no matching route integration already, return a new one.
-                # sort so that "startswith" conditional matches against longest to shortest possibilities
-                # example: if mappings ["/v1/api", "/v1"] exist, a given path of '/v1/api/subapp/' will register under '/v1/api' not '/v1'
-                d.Mappings.sort(key=lambda m: len(m.ApiMappingKey), reverse=True)
-                for m in d.Mappings:
-                    mapping = m.ApiMappingKey
-                    if str(parsed.path).startswith(mapping):
-                        return ApiGatewayParsedUrl(
-                            ApiId=m.ApiId,
-                            ApiMappingId=m.ApiMappingId,
-                            ApiMappingKey=m.ApiMappingKey,
-                            RouteId=None,
-                            RouteKey=f"ANY {parsed.path}",
-                            Route=str(parsed.path),
-                            FullPath=str(parsed.path),
-                        )
-        
-        # else explode
-        raise MountError(
-            f"invalid url ({path}): bad formatting, could not find matching domain or mapping"
-        )
+    def ls(self, function: Function) -> List[ApiGatewayParsedUrl]:
+        results = []
+        for domain in self._domains():
+            found_domain = domain.DomainName
+            for mapping in domain.Mappings:
+                found_mapping = mapping.ApiMappingKey
+                for route in mapping.Routes:
+                    if route.Integration:
+                        if route.Integration.IntegrationUri == function.arn:
+                            found_verb, found_route = route.RouteKey.split(" ")
+                            url = deproxy(pathify([found_domain, found_mapping, found_route]))
+                            results.append(url)
+        return results
 
     def _ensure_integration(
         self, parsed_url: ApiGatewayParsedUrl, function: Function
@@ -183,8 +204,10 @@ class AwsApiGatewayDriver(MountDriver):
         integrations = ApiGatewayIntegrations(**response).Items
         for integration in integrations:
             if integration.IntegrationId is not None:
+                integration_id = integration.IntegrationId
                 integration.IntegrationId = None # set to none so comparison below can possibly be 1:1
                 if desired_integration == integration:
+                    integration.IntegrationId = integration_id
                     return integration
 
         # else create the desired integration and return it
@@ -198,8 +221,10 @@ class AwsApiGatewayDriver(MountDriver):
     ) -> ApiGatewayRoute:
         target = f"integrations/{integration.IntegrationId}"
         
-        verb, route = parsed_url.RouteKey.split(" ")
-        if route.endswith("/"):
+        route = parsed_url.Route
+        verb = parsed_url.Verb
+
+        if route.endswith("/"):     
             route += '{proxy+}'
         elif not route.endswith("/"):
             route += '/{proxy+}'

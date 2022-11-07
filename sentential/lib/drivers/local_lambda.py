@@ -8,7 +8,6 @@ from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import (
     AWSAssumeRole,
     AWSCredentials,
-    AWSFederatedUser,
     AWSFederationToken,
     Image,
     Function,
@@ -103,7 +102,7 @@ class LocalLambdaDriver(LambdaDriver):
             )
         raise LocalDriverError(f"no image found with container name sentential")
 
-    def deploy(self, image: Image, public_url: bool) -> str:
+    def deploy(self, image: Image, public_url: bool) -> Function:
         self.ontology.envs.export_defaults()
         self.destroy()
         clients.docker.network.create("sentential-bridge")
@@ -144,10 +143,18 @@ class LocalLambdaDriver(LambdaDriver):
                 envs={"LAMBDA_ENDPOINT": "http://sentential:8080"},
             )
 
-        if public_url:
-            return "http://localhost:8081"
-        else:
-            return "http://localhost:9000"
+        return Function(
+            name=self.ontology.context.repository_name,
+            image=image,
+            region="local",
+            arn="http://localhost:9000",
+            role_arn="local",
+            role_name="local",
+            web_console_url=None,
+            public_url=("http://localhost:8081" if public_url else None) 
+        )
+        
+
 
     def destroy(self):
         clients.docker.remove(["sentential"], force=True, volumes=True)
