@@ -95,6 +95,7 @@ class Provision(Shaper):
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
         return v
 
+
 class Paths(BaseModel):
     root: PosixPath
     sntl: PosixPath
@@ -276,6 +277,7 @@ class AwsFunction(BaseModel):
     Configuration: AwsFunctionConfiguration
     Code: AwsFunctionCode
 
+
 class LambdaPermission(BaseModel):
     FunctionName: str
     StatementId: str
@@ -304,8 +306,10 @@ class ApiGatewayIntegration(BaseModel):
     TimeoutInMillis: int = 30000
     RequestParameters: Optional[Dict[str, str]] = {}
 
+
 class ApiGatewayIntegrations(BaseModel):
     Items: List[ApiGatewayIntegration]
+
 
 class ApiGatewayRoute(BaseModel):
     ApiKeyRequired: bool
@@ -315,8 +319,10 @@ class ApiGatewayRoute(BaseModel):
     Target: Optional[str]
     Integration: Optional[ApiGatewayIntegration]
 
+
 class ApiGatewayRoutes(BaseModel):
     Items: List[ApiGatewayRoute]
+
 
 class ApiGatewayMapping(BaseModel):
     ApiId: str
@@ -325,8 +331,10 @@ class ApiGatewayMapping(BaseModel):
     Stage: str
     Routes: List[ApiGatewayRoute] = []
 
+
 class ApiGatewayMappings(BaseModel):
     Items: List[ApiGatewayMapping]
+
 
 class ApiGatewayDomain(BaseModel):
     ApiMappingSelectionExpression: str
@@ -335,8 +343,10 @@ class ApiGatewayDomain(BaseModel):
     Tags: Dict[str, str] = {}
     Mappings: List[ApiGatewayMapping] = []
 
+
 class ApiGatewayDomains(BaseModel):
     Items: List[ApiGatewayDomain]
+
 
 class ApiGatewayParsedUrl(BaseModel):
     ApiId: str
@@ -347,4 +357,3 @@ class ApiGatewayParsedUrl(BaseModel):
     Verb: str = "Any"
     Route: str
     FullPath: str
-

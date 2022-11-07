@@ -51,4 +51,3 @@ def aws(
         print(function.public_url)
     else:
         print(function.arn)
-

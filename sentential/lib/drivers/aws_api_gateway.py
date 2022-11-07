@@ -17,15 +17,18 @@ from sentential.lib.shapes import (
 from pathlib import Path
 from typing import List
 
+
 def pathify(segements: List[str]) -> str:
     """take in url segments, drop blanks, join them again, and deduplicate slashes"""
     joined = "/".join(segment for segment in segements if segment)
     return str(Path(joined))
 
+
 def deproxy(url: str) -> str:
     """remove api gateway proxy strings from url"""
-    url = url.replace("{proxy+}","").replace("{proxy}","")
+    url = url.replace("{proxy+}", "").replace("{proxy}", "")
     return str(Path(url))
+
 
 class AwsApiGatewayDriver(MountDriver):
     def __init__(self, ontology: Ontology) -> None:
@@ -64,7 +67,7 @@ class AwsApiGatewayDriver(MountDriver):
         response = clients.api_gw.get_domain_names()
         domains = ApiGatewayDomains(**response).Items
         # filter domains to those with sentential tagging
-        domains = [ domain for domain in domains if "sentential" in domain.Tags.keys() ]
+        domains = [domain for domain in domains if "sentential" in domain.Tags.keys()]
 
         for domain in domains:
             response = clients.api_gw.get_api_mappings(DomainName=domain.DomainName)
@@ -97,7 +100,9 @@ class AwsApiGatewayDriver(MountDriver):
                     found_mapping = mapping.ApiMappingKey
                     for route in mapping.Routes:
                         found_verb, found_route = route.RouteKey.split(" ")
-                        found_url = deproxy(pathify([found_host, found_mapping, found_route]))
+                        found_url = deproxy(
+                            pathify([found_host, found_mapping, found_route])
+                        )
                         if found_url == given_url:
                             return ApiGatewayParsedUrl(
                                 ApiId=mapping.ApiId,
@@ -127,11 +132,9 @@ class AwsApiGatewayDriver(MountDriver):
                             Verb="ANY",
                             FullPath=given_url,
                         )
-        
+
         # else explode
-        raise MountError(
-            f"could not find valid domain and/or mapping for {given_url}"
-        )
+        raise MountError(f"could not find valid domain and/or mapping for {given_url}")
 
     def mount(self, url: str, function: Function) -> ApiGatewayRoute:
         parsed_url = self._parse(url)
@@ -172,7 +175,6 @@ class AwsApiGatewayDriver(MountDriver):
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
 
-
     def ls(self, function: Function) -> List[ApiGatewayParsedUrl]:
         results = []
         for domain in self._domains():
@@ -183,7 +185,9 @@ class AwsApiGatewayDriver(MountDriver):
                     if route.Integration:
                         if route.Integration.IntegrationUri == function.arn:
                             found_verb, found_route = route.RouteKey.split(" ")
-                            url = deproxy(pathify([found_domain, found_mapping, found_route]))
+                            url = deproxy(
+                                pathify([found_domain, found_mapping, found_route])
+                            )
                             results.append(url)
         return results
 
@@ -205,7 +209,9 @@ class AwsApiGatewayDriver(MountDriver):
         for integration in integrations:
             if integration.IntegrationId is not None:
                 integration_id = integration.IntegrationId
-                integration.IntegrationId = None # set to none so comparison below can possibly be 1:1
+                integration.IntegrationId = (
+                    None  # set to none so comparison below can possibly be 1:1
+                )
                 if desired_integration == integration:
                     integration.IntegrationId = integration_id
                     return integration
@@ -220,14 +226,14 @@ class AwsApiGatewayDriver(MountDriver):
         self, parsed_url: ApiGatewayParsedUrl, integration: ApiGatewayIntegration
     ) -> ApiGatewayRoute:
         target = f"integrations/{integration.IntegrationId}"
-        
+
         route = parsed_url.Route
         verb = parsed_url.Verb
 
-        if route.endswith("/"):     
-            route += '{proxy+}'
+        if route.endswith("/"):
+            route += "{proxy+}"
         elif not route.endswith("/"):
-            route += '/{proxy+}'
+            route += "/{proxy+}"
 
         route_key_proxied = f"{verb} {route}"
 

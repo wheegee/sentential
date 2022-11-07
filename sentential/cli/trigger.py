@@ -5,13 +5,17 @@ from sentential.lib.ontology import Ontology
 
 trigger = typer.Typer()
 
+
 @trigger.command()
-def mount(path: str = typer.Argument(..., autocompletion=AwsApiGatewayDriver.autocomplete)):
+def mount(
+    path: str = typer.Argument(..., autocompletion=AwsApiGatewayDriver.autocomplete)
+):
     """mount a thing"""
     ontology = Ontology()
     deployed = AwsLambdaDriver(ontology).deployed()
     api_gw = AwsApiGatewayDriver(ontology)
     api_gw.mount(path, deployed)
+
 
 @trigger.command()
 def umount():
@@ -20,6 +24,7 @@ def umount():
     deployed = AwsLambdaDriver(ontology).deployed()
     api_gw = AwsApiGatewayDriver(ontology)
     api_gw.umount(deployed)
+
 
 @trigger.command()
 def ls():

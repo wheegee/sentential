@@ -151,10 +151,8 @@ class LocalLambdaDriver(LambdaDriver):
             role_arn="local",
             role_name="local",
             web_console_url=None,
-            public_url=("http://localhost:8081" if public_url else None) 
+            public_url=("http://localhost:8081" if public_url else None),
         )
-        
-
 
     def destroy(self):
         clients.docker.remove(["sentential"], force=True, volumes=True)
