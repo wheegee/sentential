@@ -376,7 +376,7 @@ class AwsLambdaDriver(LambdaDriver):
             ):
                 if image.imageTags:
                     versions = image.imageTags
-                    tags = [f"{self.repo_url}:{tag}" for tag in image.imageTags ]
+                    tags = [f"{self.repo_url}:{tag}" for tag in image.imageTags]
                 else:
                     versions = []
                     tags = []
@@ -411,7 +411,7 @@ class AwsLambdaDriver(LambdaDriver):
         response = clients.ecr.describe_images(repositoryName=self.repo_name)
         return AWSImageDescriptions(**response)
 
-    def _detail_images(self, image_digests: List[Dict[str,str]]) -> AWSImageDetails:
+    def _detail_images(self, image_digests: List[Dict[str, str]]) -> AWSImageDetails:
         response = clients.ecr.batch_get_image(
             repositoryName=self.repo_name,
             imageIds=image_digests,
