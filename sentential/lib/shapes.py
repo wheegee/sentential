@@ -99,12 +99,12 @@ class Provision(Shaper):
 #
 class AWSImageDescription(BaseModel):
     imageDigest: str
-    imageTags: Optional[List[str]]
+    imageTags: List[str] = []
     imageManifestMediaType: str
 
 
 class AWSImageDescriptions(BaseModel):
-    images: List[AWSImageDescription]
+    imageDetails: List[AWSImageDescription]
 
 
 class AWSImageDetail(BaseModel):

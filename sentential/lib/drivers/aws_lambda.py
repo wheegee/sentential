@@ -82,10 +82,10 @@ class AwsLambdaDriver(LambdaDriver):
             public_url=public_url,
         )
 
-    def image_index_digests(self):
+    def image_index_digests(self) -> List[str]:
         image_index_digests = [
             image.imageDigest
-            for image in self._describe_images().images
+            for image in self._describe_images().imageDetails
             if image.imageManifestMediaType
             == "application/vnd.docker.distribution.manifest.list.v2+json"
         ]
@@ -342,19 +342,19 @@ class AwsLambdaDriver(LambdaDriver):
         ecr_data = {}
         image_platforms = {}
 
-        image_descriptions = self._describe_images().images
+        image_descriptions = self._describe_images().imageDetails
 
         if len(image_descriptions) == 0:
             return {}
 
-        image_index_digests = [
+        image_index_digests: List[Dict[str, str]] = [
             {"imageDigest": image.imageDigest}
             for image in image_descriptions
             if image.imageManifestMediaType
             == "application/vnd.docker.distribution.manifest.list.v2+json"
         ]
 
-        image_digests = [
+        image_digests: List[Dict[str, str]] = [
             {"imageDigest": image.imageDigest}
             for image in image_descriptions
             if image.imageManifestMediaType
@@ -374,9 +374,9 @@ class AwsLambdaDriver(LambdaDriver):
                 image.imageManifestMediaType
                 == "application/vnd.docker.distribution.manifest.v2+json"
             ):
-                if "imageTags" in image.__fields__:
+                if image.imageTags:
                     versions = image.imageTags
-                    tags = [f"{self.repo_url}:{tag}" for tag in image.imageTags]
+                    tags = [f"{self.repo_url}:{tag}" for tag in image.imageTags ]
                 else:
                     versions = []
                     tags = []
@@ -408,20 +408,12 @@ class AwsLambdaDriver(LambdaDriver):
         raise AwsDriverError(f"no image found where digest is {digest}")
 
     def _describe_images(self) -> AWSImageDescriptions:
-        images = []
-        describe_images = clients.ecr.describe_images(repositoryName=self.repo_name)[
-            "imageDetails"
-        ]
-        for image in describe_images:
-            images.append(AWSImageDescription(**image))
-        return AWSImageDescriptions(images=images)
+        response = clients.ecr.describe_images(repositoryName=self.repo_name)
+        return AWSImageDescriptions(**response)
 
-    def _detail_images(self, image_digests) -> AWSImageDetails:
-        images = []
-        batch_get_image = clients.ecr.batch_get_image(
+    def _detail_images(self, image_digests: List[Dict[str,str]]) -> AWSImageDetails:
+        response = clients.ecr.batch_get_image(
             repositoryName=self.repo_name,
             imageIds=image_digests,
-        )["images"]
-        for image in batch_get_image:
-            images.append(AWSImageDetail(**image))
-        return AWSImageDetails(images=images)
+        )
+        return AWSImageDetails(**response)
