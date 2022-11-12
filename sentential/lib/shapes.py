@@ -291,17 +291,19 @@ class LambdaPermission(BaseModel):
     PrincipalOrgID: str
     FunctionUrlAuthType: str = "None"
 
+class LambdaPermissionResponse(BaseModel):
+    Statement: str
 
 #
 # API Gateway
 #
 class ApiGatewayIntegration(BaseModel):
+    IntegrationId: Optional[str]
+    IntegrationUri: str
     ConnectionType: str = "INTERNET"
     Description: str = "managed by sentential"
-    IntegrationId: Optional[str] = None
     IntegrationMethod: str = "ANY"
     IntegrationType: str = "AWS_PROXY"
-    IntegrationUri: str
     PayloadFormatVersion: str = "2.0"
     TimeoutInMillis: int = 30000
     RequestParameters: Optional[Dict[str, str]] = {}
@@ -312,13 +314,19 @@ class ApiGatewayIntegrations(BaseModel):
 
 
 class ApiGatewayRoute(BaseModel):
-    ApiKeyRequired: bool
-    AuthorizationType: str
-    RouteId: str
     RouteKey: str
+    RouteId: Optional[str] = None
+    ApiKeyRequired: bool = False
+    AuthorizationType: str = 'NONE'
     Target: Optional[str]
     Integration: Optional[ApiGatewayIntegration]
 
+class ExistingRoute(ApiGatewayRoute):
+    ApiId: str
+
+class NewRoute(BaseModel):
+    ApiId: str
+    RouteKey: str
 
 class ApiGatewayRoutes(BaseModel):
     Items: List[ApiGatewayRoute]
@@ -339,7 +347,7 @@ class ApiGatewayMappings(BaseModel):
 class ApiGatewayDomain(BaseModel):
     ApiMappingSelectionExpression: str
     DomainName: str
-    DomainNameConfigurations: Optional[List[Dict]]
+    DomainNameConfigurations: List[Dict] = [{}]
     Tags: Dict[str, str] = {}
     Mappings: List[ApiGatewayMapping] = []
 
@@ -354,6 +362,14 @@ class ApiGatewayParsedUrl(BaseModel):
     ApiMappingKey: str
     RouteKey: str
     RouteId: Optional[str]
+    IntegrationId: Optional[str]
     Verb: str = "Any"
     Route: str
     FullPath: str
+
+
+class ApiGatewayMount(BaseModel):
+    Domain: ApiGatewayDomain
+    Mapping: ApiGatewayMapping
+    Route: ApiGatewayRoute
+    Url: Optional[str]

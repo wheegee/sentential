@@ -3,35 +3,44 @@ from sentential.lib.exceptions import MountError
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import (
+    ApiGatewayIntegrations,
+    ApiGatewayRoute,
+    ExistingRoute,
     Function,
     ApiGatewayDomains,
-    ApiGatewayIntegrations,
     ApiGatewayMappings,
     ApiGatewayRoutes,
     ApiGatewayDomain,
     ApiGatewayIntegration,
-    ApiGatewayParsedUrl,
-    ApiGatewayRoute,
+    LambdaPermissionResponse,
+    NewRoute,
 )
 
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
+def pathify(segments: List[str]) -> str:
+    """take in url segments, drop blanks, join them again, and deduplicate slashes, prepend with slash"""
+    joined = "/".join(segment for segment in segments if segment)
+    pathed = str(Path(joined))
+    if pathed == ".":
+        return "/"
+    return f"/{pathed}" 
 
-def pathify(segements: List[str]) -> str:
+def fqdnify(segments: List[str]) -> str:
     """take in url segments, drop blanks, join them again, and deduplicate slashes"""
-    joined = "/".join(segment for segment in segements if segment)
-    return str(Path(joined))
-
+    joined = "/".join(segment for segment in segments if segment)
+    fqdned = str(Path(joined))
+    return fqdned
 
 def deproxy(url: str) -> str:
     """remove api gateway proxy strings from url"""
     url = url.replace("{proxy+}", "").replace("{proxy}", "")
     return str(Path(url))
 
-
 class AwsApiGatewayDriver(MountDriver):
-    def __init__(self, ontology: Ontology) -> None:
+    def __init__(self, ontology: Ontology, function: Function) -> None:
+        self.function = function
         self.ontology = ontology
         self.context = self.ontology.context
         self.account_id = self.context.account_id
@@ -41,35 +50,22 @@ class AwsApiGatewayDriver(MountDriver):
         self.statement_id = f"{self.partition}-{self.region}-{self.repo_name}"
 
     @classmethod
-    def autocomplete(cls) -> List[str]:
-        urls = []
-        for domain in cls._domains():
-            found_domain = domain.DomainName
-            urls.append(found_domain)
-            for mapping in domain.Mappings:
-                found_mapping = mapping.ApiMappingKey
-                for route in mapping.Routes:
-                    found_verb, found_route = route.RouteKey.split(" ")
-                    url = deproxy(pathify([found_domain, found_mapping, found_route]))
-                    urls.append(url)
-
-        if len(urls) == 0:
-            return ["no discoverable api gateway endpoints (link to docs)"]
-        return list(set(urls))
+    def _domains(cls) -> List[ApiGatewayDomain]:
+        response = clients.api_gw.get_domain_names()
+        domains = ApiGatewayDomains(**response).Items
+        # filter domains to those with sentential tagging
+        domains = [domain for domain in domains if "sentential" in domain.Tags.keys()]
+        return domains
 
     @classmethod
-    def _domains(cls) -> List[ApiGatewayDomain]:
+    def _all_mounts(cls) -> List[ApiGatewayDomain]:
         """
         This method returns domain objects with their related mappings, routes, and integrations
         domain =(has_many)=> mappings =(has_many)=> routes =(has_one)=> integration
         ex: domain.mappings[*].routes[*].integration
         """
-        response = clients.api_gw.get_domain_names()
-        domains = ApiGatewayDomains(**response).Items
-        # filter domains to those with sentential tagging
-        domains = [domain for domain in domains if "sentential" in domain.Tags.keys()]
-
-        for domain in domains:
+        all_mounts = cls._domains()
+        for domain in all_mounts:
             response = clients.api_gw.get_api_mappings(DomainName=domain.DomainName)
             mappings = ApiGatewayMappings(**response).Items
             for mapping in mappings:
@@ -84,122 +80,121 @@ class AwsApiGatewayDriver(MountDriver):
                             ApiId=mapping.ApiId, IntegrationId=integration_id
                         )
                         route.Integration = ApiGatewayIntegration(**response)
-        return domains
+        return all_mounts
 
     @classmethod
-    def _parse(cls, url: str) -> ApiGatewayParsedUrl:
-        given_url = str(Path(url))
-        given_host, *given_route = given_url.split("/")
-        given_route = deproxy(pathify(given_route))
-        domains = cls._domains()
-        # Try to find route already in existance.
+    def _to_urls(cls, domains: List[ApiGatewayDomain], include_roots: bool = False) -> List[str]:
+        # NOTE: include_roots is for convenience when autocompleting, not to be used anywhere else
+        urls = []
         for domain in domains:
-            found_host = domain.DomainName
-            if found_host == given_host:
-                for mapping in domain.Mappings:
-                    found_mapping = mapping.ApiMappingKey
-                    for route in mapping.Routes:
-                        found_verb, found_route = route.RouteKey.split(" ")
-                        found_url = deproxy(
-                            pathify([found_host, found_mapping, found_route])
-                        )
-                        if found_url == given_url:
-                            return ApiGatewayParsedUrl(
-                                ApiId=mapping.ApiId,
-                                ApiMappingId=mapping.ApiMappingId,
-                                ApiMappingKey=mapping.ApiMappingKey,
-                                RouteId=route.RouteId,
-                                RouteKey=route.RouteKey,
-                                Route=f"/{given_route}",
-                                Verb=found_verb,
-                                FullPath=given_url,
-                            )
+            found_domain = domain.DomainName
+            if include_roots:
+                urls.append(found_domain)
+            for mapping in domain.Mappings:
+                for route in mapping.Routes:
+                    found_verb, found_route = route.RouteKey.split(" ")
+                    url = deproxy(fqdnify([found_domain, found_route]))
+                    urls.append(url)
 
-        # If no matching route integration already, return a new one under valid mapping.
+        return list(set(urls))
+
+    @classmethod
+    def autocomplete(cls) -> List[str]:
+        return cls._to_urls(cls._all_mounts(), True)
+
+    def _mounts(self) -> List[ApiGatewayDomain]:
+        domains = self._all_mounts()
         for domain in domains:
-            found_host = domain.DomainName
-            domain.Mappings.sort(key=lambda m: len(m.ApiMappingKey), reverse=True)
-            if found_host == given_host:
-                for mapping in domain.Mappings:
-                    if given_route.startswith(mapping.ApiMappingKey):
-                        return ApiGatewayParsedUrl(
-                            ApiId=mapping.ApiId,
-                            ApiMappingId=mapping.ApiMappingId,
-                            ApiMappingKey=mapping.ApiMappingKey,
-                            RouteId=None,
-                            RouteKey=f"ANY /{given_route}/{{proxy+}}",
-                            Route=f"/{given_route}",
-                            Verb="ANY",
-                            FullPath=given_url,
-                        )
+            for mapping in domain.Mappings:
+                for route in mapping.Routes:
+                    if route.Integration:
+                        if route.Integration.IntegrationUri != self.function.arn:
+                            mapping.Routes.remove(route)
+                
+                if len(mapping.Routes) == 0:
+                    domain.Mappings.remove(mapping)
+            if len(domain.Mappings) == 0:
+                domains.remove(domain)
 
-        # else explode
-        raise MountError(f"could not find valid domain and/or mapping for {given_url}")
+        return domains
 
-    def mount(self, url: str, function: Function) -> ApiGatewayRoute:
-        parsed_url = self._parse(url)
-        integration = self._ensure_integration(parsed_url, function)
+    def mounts(self) -> List[str]:
+        mounts = self._to_urls(self._mounts())
+        return mounts
+
+    def mount(self, url: str) -> ApiGatewayRoute:
+        parsed_url: Union[NewRoute, ExistingRoute] = self._parse(url)
+        integration: ApiGatewayIntegration = self._ensure_integration(parsed_url)
         route = self._ensure_route(parsed_url, integration)
-        permission = self._ensure_permission(parsed_url, function)
+        permission = self._ensure_permission(parsed_url)
         return route
 
-    def umount(self, function: Function) -> None:
-        to_delete = []
-        for domain in self._domains():
-            for mapping in domain.Mappings:
-                for route in mapping.Routes:
-                    if route.Integration:
-                        if route.Integration.IntegrationUri == function.arn:
-                            to_delete.append([mapping, route])
+    def umount(self, url: str) -> None:
+        unmounted = []
+        if url == "ALL":
+            for domain in self._mounts():
+                for mapping in domain.Mappings:
+                    for route in mapping.Routes:
+                        if route.Integration:
+                            # TODO: figure out how to get this more strictly typed without breaking the other things.
+                            self._umount(mapping.ApiId, route.RouteId, route.Integration.IntegrationId)
 
-        for mapping, route in to_delete:
-            try:
-                clients.api_gw.delete_route(ApiId=mapping.ApiId, RouteId=route.RouteId)
-            except clients.api_gw.exceptions.NotFoundException:
-                pass
+        elif url:
+            parsed_url = self._parse(url)
+            if isinstance(parsed_url, ExistingRoute):
+                # TODO: figure out how to get this more strictly typed without breaking the other things.
+                self._umount(parsed_url.ApiId, parsed_url.RouteId, parsed_url.Integration.IntegrationId )
+            elif isinstance(parsed_url, NewRoute):
+                raise MountError(f"no such mount {url}")
 
-        for mapping, route in to_delete:
-            try:
-                clients.api_gw.delete_integration(
-                    ApiId=mapping.ApiId,
-                    IntegrationId=route.Integration.IntegrationId,
+
+    def _parse(self, url: str) -> Union[ExistingRoute, NewRoute]:
+        given_host, *given_path = url.split("/")
+        given_path = pathify(given_path)
+        parsed_url = None
+        domains = self._all_mounts()
+        for domain in domains:
+            if domain.DomainName == given_host:
+                for mapping in domain.Mappings:
+                    for route in mapping.Routes:
+                        found_verb, found_path = route.RouteKey.split(" ")
+                        if deproxy(found_path) == given_path:
+                            if route.Integration:
+                                if route.Integration.IntegrationUri == self.function.arn:
+                                    existing = dict(route)
+                                    existing['ApiId'] = mapping.ApiId
+                                    return ExistingRoute(**existing)
+                                else:
+                                    raise MountError(f"{route.Integration.IntegrationId} already mounted to {url}")
+        
+        for domain in domains:
+            if domain.DomainName == given_host:
+                if given_path == "/":
+                    proxy_path = "/{proxy+}"
+                else:
+                    proxy_path = f"{given_path}/{{proxy+}}"
+
+                return NewRoute(
+                    ApiId=domain.Mappings[0].ApiId,
+                    RouteKey=f"ANY {proxy_path}",
                 )
-            except clients.api_gw.exceptions.NotFoundException:
-                pass
+        
+        raise MountError(f"no viable domain to mount against for {given_host}")
 
-        try:
-            clients.lmb.remove_permission(
-                FunctionName=function.name,
-                StatementId=self.statement_id,
-            )
-        except clients.lmb.exceptions.ResourceNotFoundException:
-            pass
 
-    def ls(self, function: Function) -> List[ApiGatewayParsedUrl]:
-        results = []
-        for domain in self._domains():
-            found_domain = domain.DomainName
-            for mapping in domain.Mappings:
-                found_mapping = mapping.ApiMappingKey
-                for route in mapping.Routes:
-                    if route.Integration:
-                        if route.Integration.IntegrationUri == function.arn:
-                            found_verb, found_route = route.RouteKey.split(" ")
-                            url = deproxy(
-                                pathify([found_domain, found_mapping, found_route])
-                            )
-                            results.append(url)
-        return results
 
     def _ensure_integration(
-        self, parsed_url: ApiGatewayParsedUrl, function: Function
+        self, parsed_url: Union[NewRoute, ExistingRoute]
     ) -> ApiGatewayIntegration:
 
+        forwarded_prefix = deproxy(parsed_url.RouteKey.split(" ")[-1])
+
         desired_integration = ApiGatewayIntegration(
-            IntegrationUri=function.arn,
+            IntegrationId=None,
+            IntegrationUri=self.function.arn,
             RequestParameters={
                 "overwrite:path": "/$request.path.proxy",
-                "overwrite:header.X-Forwarded-Prefix": parsed_url.Route,
+                "overwrite:header.X-Forwarded-Prefix": forwarded_prefix,
             },
         )
 
@@ -223,49 +218,74 @@ class AwsApiGatewayDriver(MountDriver):
         return ApiGatewayIntegration(**response)
 
     def _ensure_route(
-        self, parsed_url: ApiGatewayParsedUrl, integration: ApiGatewayIntegration
+        self, parsed_url: Union[ExistingRoute, NewRoute], integration: ApiGatewayIntegration
     ) -> ApiGatewayRoute:
+
         target = f"integrations/{integration.IntegrationId}"
 
-        route = parsed_url.Route
-        verb = parsed_url.Verb
-
-        if route.endswith("/"):
-            route += "{proxy+}"
-        elif not route.endswith("/"):
-            route += "/{proxy+}"
-
-        route_key_proxied = f"{verb} {route}"
-
-        try:
+        if isinstance(parsed_url, NewRoute):
             response = clients.api_gw.create_route(
                 ApiId=parsed_url.ApiId,
-                RouteKey=route_key_proxied,
+                RouteKey=parsed_url.RouteKey,
                 Target=target,
             )
-        except clients.api_gw.exceptions.ConflictException:
+
+        elif isinstance(parsed_url, ExistingRoute):
             response = clients.api_gw.update_route(
                 ApiId=parsed_url.ApiId,
                 RouteId=parsed_url.RouteId,
-                RouteKey=route_key_proxied,
+                RouteKey=parsed_url.RouteKey,
                 Target=target,
             )
+        
+        else:
+            raise MountError("route is neither new nor existing type")
+
         return ApiGatewayRoute(**response)
 
-    def _ensure_permission(self, parsed_url: ApiGatewayParsedUrl, function: Function):
+    def _ensure_permission(self, parsed_url: Union[NewRoute, ExistingRoute]) -> LambdaPermissionResponse:
         try:
             clients.lmb.remove_permission(
-                FunctionName=function.name,
+                FunctionName=self.function.name,
                 StatementId=self.statement_id,
             )
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
 
         response = clients.lmb.add_permission(
-            FunctionName=function.arn,
+            FunctionName=self.function.arn,
             StatementId=self.statement_id,
             Action="lambda:InvokeFunction",
             Principal="apigateway.amazonaws.com",
             SourceArn=f"arn:aws:execute-api:{self.region}:{self.account_id}:{parsed_url.ApiId}/*/*/{{proxy+}}",
         )
-        return response
+        return LambdaPermissionResponse(**response)
+
+    def _umount(self, api_id: str, route_id: str, integration_id: str):
+        self._delete_route(api_id, route_id)
+        self._delete_integration(api_id, integration_id)
+        self._delete_permission()
+
+    def _delete_route(self, api_id: str, route_id: str) -> None:
+        try:
+            clients.api_gw.delete_route(ApiId=api_id, RouteId=route_id)
+        except clients.api_gw.exceptions.NotFoundException:
+            pass
+
+    def _delete_integration(self, api_id: str, integration_id: str) -> None:
+        try:
+            clients.api_gw.delete_integration(
+                ApiId=api_id,
+                IntegrationId=integration_id,
+            )
+        except clients.api_gw.exceptions.NotFoundException:
+            pass
+
+    def _delete_permission(self) -> None:
+        try:
+            clients.lmb.remove_permission(
+                FunctionName=self.function.name,
+                StatementId=self.statement_id,
+            )
+        except clients.lmb.exceptions.ResourceNotFoundException:
+            pass
