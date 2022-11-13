@@ -5,6 +5,7 @@ from sentential.lib.ontology import Ontology
 
 trigger = typer.Typer()
 
+
 @trigger.command()
 def mount(
     path: str = typer.Argument(..., autocompletion=AwsApiGatewayDriver.autocomplete)
@@ -14,10 +15,11 @@ def mount(
     deployed = AwsLambdaDriver(ontology).deployed()
     AwsApiGatewayDriver(ontology, deployed).mount(path)
 
+
 @trigger.command()
 def umount(
     all: bool = typer.Option(False),
-    path: str = typer.Argument(None, autocompletion=AwsApiGatewayDriver.autocomplete)
+    path: str = typer.Argument(None, autocompletion=AwsApiGatewayDriver.autocomplete),
 ):
     """unmount a thing"""
     ontology = Ontology()
@@ -27,6 +29,7 @@ def umount(
         gw.umount("ALL")
     else:
         gw.umount(path)
+
 
 @trigger.command()
 def mounts():

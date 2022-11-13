@@ -291,8 +291,10 @@ class LambdaPermission(BaseModel):
     PrincipalOrgID: str
     FunctionUrlAuthType: str = "None"
 
+
 class LambdaPermissionResponse(BaseModel):
     Statement: str
+
 
 #
 # API Gateway
@@ -317,16 +319,19 @@ class ApiGatewayRoute(BaseModel):
     RouteKey: str
     RouteId: Optional[str] = None
     ApiKeyRequired: bool = False
-    AuthorizationType: str = 'NONE'
+    AuthorizationType: str = "NONE"
     Target: Optional[str]
     Integration: Optional[ApiGatewayIntegration]
+
 
 class ExistingRoute(ApiGatewayRoute):
     ApiId: str
 
+
 class NewRoute(BaseModel):
     ApiId: str
     RouteKey: str
+
 
 class ApiGatewayRoutes(BaseModel):
     Items: List[ApiGatewayRoute]

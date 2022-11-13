@@ -19,13 +19,15 @@ from sentential.lib.shapes import (
 from pathlib import Path
 from typing import List, Union
 
+
 def pathify(segments: List[str]) -> str:
     """take in url segments, drop blanks, join them again, and deduplicate slashes, prepend with slash"""
     joined = "/".join(segment for segment in segments if segment)
     pathed = str(Path(joined))
     if pathed == ".":
         return "/"
-    return f"/{pathed}" 
+    return f"/{pathed}"
+
 
 def fqdnify(segments: List[str]) -> str:
     """take in url segments, drop blanks, join them again, and deduplicate slashes"""
@@ -33,10 +35,12 @@ def fqdnify(segments: List[str]) -> str:
     fqdned = str(Path(joined))
     return fqdned
 
+
 def deproxy(url: str) -> str:
     """remove api gateway proxy strings from url"""
     url = url.replace("{proxy+}", "").replace("{proxy}", "")
     return str(Path(url))
+
 
 class AwsApiGatewayDriver(MountDriver):
     def __init__(self, ontology: Ontology, function: Function) -> None:
@@ -83,7 +87,9 @@ class AwsApiGatewayDriver(MountDriver):
         return all_mounts
 
     @classmethod
-    def _to_urls(cls, domains: List[ApiGatewayDomain], include_roots: bool = False) -> List[str]:
+    def _to_urls(
+        cls, domains: List[ApiGatewayDomain], include_roots: bool = False
+    ) -> List[str]:
         # NOTE: include_roots is for convenience when autocompleting, not to be used anywhere else
         urls = []
         for domain in domains:
@@ -110,7 +116,7 @@ class AwsApiGatewayDriver(MountDriver):
                     if route.Integration:
                         if route.Integration.IntegrationUri != self.function.arn:
                             mapping.Routes.remove(route)
-                
+
                 if len(mapping.Routes) == 0:
                     domain.Mappings.remove(mapping)
             if len(domain.Mappings) == 0:
@@ -137,16 +143,23 @@ class AwsApiGatewayDriver(MountDriver):
                     for route in mapping.Routes:
                         if route.Integration:
                             # TODO: figure out how to get this more strictly typed without breaking the other things.
-                            self._umount(mapping.ApiId, route.RouteId, route.Integration.IntegrationId)
+                            self._umount(
+                                mapping.ApiId,
+                                route.RouteId,
+                                route.Integration.IntegrationId,
+                            )
 
         elif url:
             parsed_url = self._parse(url)
             if isinstance(parsed_url, ExistingRoute):
                 # TODO: figure out how to get this more strictly typed without breaking the other things.
-                self._umount(parsed_url.ApiId, parsed_url.RouteId, parsed_url.Integration.IntegrationId )
+                self._umount(
+                    parsed_url.ApiId,
+                    parsed_url.RouteId,
+                    parsed_url.Integration.IntegrationId,
+                )
             elif isinstance(parsed_url, NewRoute):
                 raise MountError(f"no such mount {url}")
-
 
     def _parse(self, url: str) -> Union[ExistingRoute, NewRoute]:
         given_host, *given_path = url.split("/")
@@ -160,13 +173,18 @@ class AwsApiGatewayDriver(MountDriver):
                         found_verb, found_path = route.RouteKey.split(" ")
                         if deproxy(found_path) == given_path:
                             if route.Integration:
-                                if route.Integration.IntegrationUri == self.function.arn:
+                                if (
+                                    route.Integration.IntegrationUri
+                                    == self.function.arn
+                                ):
                                     existing = dict(route)
-                                    existing['ApiId'] = mapping.ApiId
+                                    existing["ApiId"] = mapping.ApiId
                                     return ExistingRoute(**existing)
                                 else:
-                                    raise MountError(f"{route.Integration.IntegrationId} already mounted to {url}")
-        
+                                    raise MountError(
+                                        f"{route.Integration.IntegrationId} already mounted to {url}"
+                                    )
+
         for domain in domains:
             if domain.DomainName == given_host:
                 if given_path == "/":
@@ -178,10 +196,8 @@ class AwsApiGatewayDriver(MountDriver):
                     ApiId=domain.Mappings[0].ApiId,
                     RouteKey=f"ANY {proxy_path}",
                 )
-        
+
         raise MountError(f"no viable domain to mount against for {given_host}")
-
-
 
     def _ensure_integration(
         self, parsed_url: Union[NewRoute, ExistingRoute]
@@ -219,7 +235,9 @@ class AwsApiGatewayDriver(MountDriver):
         return ApiGatewayIntegration(**response)
 
     def _ensure_route(
-        self, parsed_url: Union[ExistingRoute, NewRoute], integration: ApiGatewayIntegration
+        self,
+        parsed_url: Union[ExistingRoute, NewRoute],
+        integration: ApiGatewayIntegration,
     ) -> ApiGatewayRoute:
 
         target = f"integrations/{integration.IntegrationId}"
@@ -238,13 +256,15 @@ class AwsApiGatewayDriver(MountDriver):
                 RouteKey=parsed_url.RouteKey,
                 Target=target,
             )
-        
+
         else:
             raise MountError("route is neither new nor existing type")
 
         return ApiGatewayRoute(**response)
 
-    def _ensure_permission(self, parsed_url: Union[NewRoute, ExistingRoute]) -> LambdaPermissionResponse:
+    def _ensure_permission(
+        self, parsed_url: Union[NewRoute, ExistingRoute]
+    ) -> LambdaPermissionResponse:
         try:
             clients.lmb.remove_permission(
                 FunctionName=self.function.name,
