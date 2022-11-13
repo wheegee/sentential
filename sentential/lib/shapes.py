@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from enum import Enum
 from pathlib import PosixPath
@@ -19,12 +20,13 @@ class Image(BaseModel):
     digest: Union[str, None]
     tags: List[str]
     versions: List[str]
-    arch: str
+    arch: Union[str, None]
 
     @validator("versions")
     def coerce_versions(cls, v):
         if v is not None:
-            uniq = list(set(v))
+            archless = [re.sub(r".*64-", "", version) for version in v]
+            uniq = list(set(archless))
             return uniq
         else:
             return []
@@ -36,6 +38,15 @@ class Image(BaseModel):
             return uniq
         else:
             return []
+
+
+class ImageIndex(BaseModel):
+    digest: str
+    images: List[Image]
+
+
+class ImageIndexes(BaseModel):
+    indexes: List[ImageIndex]
 
 
 class ImageView(Image):
@@ -97,23 +108,23 @@ class Provision(Shaper):
 #
 # ECR
 #
-class AWSImageDescription(BaseModel):
+class AwsImageDescription(BaseModel):
     imageDigest: str
-    imageTags: List[str] = []
+    imageTags: Union[List[str], None]
     imageManifestMediaType: str
 
 
-class AWSImageDescriptions(BaseModel):
-    imageDetails: List[AWSImageDescription]
+class AwsImageDescriptions(BaseModel):
+    imageDetails: List[AwsImageDescription]
 
 
-class AWSImageDetail(BaseModel):
+class AwsImageDetail(BaseModel):
     imageId: Dict[str, str]
     imageManifest: str
 
 
-class AWSImageDetails(BaseModel):
-    images: List[AWSImageDetail]
+class AwsImageDetails(BaseModel):
+    images: List[AwsImageDetail]
 
 
 #

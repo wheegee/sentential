@@ -7,12 +7,12 @@ from sentential.lib.drivers.spec import LambdaDriver
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
-    AWSImageDescription,
-    AWSImageDescriptions,
-    AWSImageDetail,
-    AWSImageDetails,
+    AwsImageDescriptions,
+    AwsImageDetails,
     AwsFunctionPublicUrl,
     Image,
+    ImageIndex,
+    ImageIndexes,
     AwsFunction,
     Function,
     Provision,
@@ -82,35 +82,27 @@ class AwsLambdaDriver(LambdaDriver):
             public_url=public_url,
         )
 
-    def image_index_digests(self) -> List[str]:
-        image_index_digests = [
-            image.imageDigest
-            for image in self._describe_images().imageDetails
-            if image.imageManifestMediaType
-            == "application/vnd.docker.distribution.manifest.list.v2+json"
-        ]
-
-        return image_index_digests
+    def image_indexes(self) -> List[ImageIndex]:
+        return self._ecr_data().indexes
 
     def images(self) -> List[Image]:
         images = []
-        for digest, image in self._ecr_data().items():
-            images.append(
-                Image(
-                    id=image["id"],
-                    digest=digest,
-                    tags=image["tags"],
-                    versions=image["versions"],
-                    arch=image["arch"],
+        for index in self._ecr_data().indexes:
+            for image in index.images:
+                images.append(
+                    Image(
+                        id=image.id,
+                        digest=image.digest,
+                        tags=image.tags,
+                        versions=image.versions,
+                        arch=image.arch,
+                    )
                 )
-            )
-
         return images
 
     def image(self, version: str) -> Image:
         for image in self.images():
-            # TODO: the prepending of arch is a hack until Lambda supports image indexes as valid URIs
-            if f"{image.arch}-{version}" in image.versions:
+            if version in image.versions:
                 return image
         raise AwsDriverError(f"no image found where version is {version}")
 
@@ -240,7 +232,7 @@ class AwsLambdaDriver(LambdaDriver):
         role_name = self.resource_name
         function_name = self.resource_name
         role_arn = clients.iam.get_role(RoleName=role_name)["Role"]["Arn"]
-        image_uri = f"{self.repo_url}:{image.versions[0]}"  # TODO: do we want to deploy latest version on image, or version declared?
+        image_uri = f"{self.repo_url}:{image.arch}-{image.versions[0]}"  # TODO: do we want to deploy latest version on image, or version declared?
         image_arch = "x86_64" if image.arch == "amd64" else image.arch
         envs_path = self.envs.path
         sleep(10)
@@ -338,68 +330,67 @@ class AwsLambdaDriver(LambdaDriver):
 
         return clients.lmb.get_function_url_config(FunctionName=function_name)
 
-    def _ecr_data(self) -> Dict:
-        ecr_data = {}
-        image_platforms = {}
-
+    def _ecr_data(self) -> ImageIndexes:
+        image_indexes = []
         image_descriptions = self._describe_images().imageDetails
 
-        if len(image_descriptions) == 0:
-            return {}
-
-        image_index_digests: List[Dict[str, str]] = [
-            {"imageDigest": image.imageDigest}
+        indexes = [
+            image
             for image in image_descriptions
             if image.imageManifestMediaType
             == "application/vnd.docker.distribution.manifest.list.v2+json"
         ]
-
-        image_digests: List[Dict[str, str]] = [
-            {"imageDigest": image.imageDigest}
+        images = [
+            image
             for image in image_descriptions
             if image.imageManifestMediaType
             == "application/vnd.docker.distribution.manifest.v2+json"
         ]
 
-        detail_image_indexes = self._detail_images(image_index_digests).images
-        detail_images = self._detail_images(image_digests).images
+        if len(indexes) == 0 or len(images) == 0:
+            return ImageIndexes(indexes=image_indexes)
 
-        for index in detail_image_indexes:
-            index_manifest = json.loads(index.imageManifest)
-            for manifest in index_manifest["manifests"]:
-                image_platforms[manifest["digest"]] = manifest["platform"]
+        indexes_detail = self._detail_images(
+            [{"imageDigest": index.imageDigest} for index in indexes]
+        ).images
+        images_detail = self._detail_images(
+            [{"imageDigest": image.imageDigest} for image in images]
+        ).images
 
-        for image in image_descriptions:
-            if (
-                image.imageManifestMediaType
-                == "application/vnd.docker.distribution.manifest.v2+json"
-            ):
-                if image.imageTags:
-                    versions = image.imageTags
-                    tags = [f"{self.repo_url}:{tag}" for tag in image.imageTags]
-                else:
-                    versions = []
-                    tags = []
+        for image_index in indexes_detail:
+            manifests = []
+            for image_manifest in json.loads(image_index.imageManifest)["manifests"]:
+                manifest = {}
+                id = None
+                tags = []
 
-                ecr_data[image.imageDigest] = {"versions": versions, "tags": tags}
+                for image in images_detail:
+                    if image.imageId["imageDigest"] == image_manifest["digest"]:
+                        id = json.loads(image.imageManifest)["config"]["digest"]
 
-        for image in detail_images:
-            image_digest = image.imageId["imageDigest"]
-            image_manifest = json.loads(image.imageManifest)
-            image_id = image_manifest["config"]["digest"]
-            image_arch = image_platforms[image_digest]["architecture"]
+                for image in images:
+                    if (
+                        image.imageDigest == image_manifest["digest"]
+                        and image.imageTags
+                    ):
+                        tags = image.imageTags
 
-            # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plz
-            if "id" in ecr_data[image_digest]:
-                if ecr_data[image_digest]["id"] != image_id:
-                    raise AwsDriverError(
-                        "image id and image digest not tightly coupled"
-                    )
+                if len(tags) == 0:
+                    continue
 
-            ecr_data[image_digest]["id"] = image_id
-            ecr_data[image_digest]["arch"] = image_arch
+                manifest["id"] = id
+                manifest["digest"] = image_manifest["digest"]
+                manifest["tags"] = [f"{self.repo_url}:{tag}" for tag in tags]
+                manifest["versions"] = tags
+                manifest["arch"] = image_manifest["platform"]["architecture"]
 
-        return ecr_data
+                manifests.append(manifest)
+
+            image_indexes.append(
+                ImageIndex(digest=image_index.imageId["imageDigest"], images=manifests)
+            )
+
+        return ImageIndexes(indexes=image_indexes)
 
     def _image_where_digest(self, digest: str) -> Image:
         for image in self.images():
@@ -407,13 +398,15 @@ class AwsLambdaDriver(LambdaDriver):
                 return image
         raise AwsDriverError(f"no image found where digest is {digest}")
 
-    def _describe_images(self) -> AWSImageDescriptions:
+    def _describe_images(self) -> AwsImageDescriptions:
         response = clients.ecr.describe_images(repositoryName=self.repo_name)
-        return AWSImageDescriptions(**response)
 
-    def _detail_images(self, image_digests: List[Dict[str, str]]) -> AWSImageDetails:
+        return AwsImageDescriptions(**response)
+
+    def _detail_images(self, image_digests) -> AwsImageDetails:
         response = clients.ecr.batch_get_image(
             repositoryName=self.repo_name,
             imageIds=image_digests,
         )
-        return AWSImageDetails(**response)
+
+        return AwsImageDetails(**response)

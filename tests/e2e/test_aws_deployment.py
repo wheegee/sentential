@@ -52,9 +52,7 @@ def test_aws_publish(invoke):
 
 
 def test_aws_deploy(invoke):
-    result = invoke(
-        ["deploy", "aws", "--public-url", "0.0.1"]
-    )  # semantic versioner tries to deploy `0.0.0`, which does not exist
+    result = invoke(["deploy", "aws", "--public-url"])
     pytest.deployment_url = result.output  # type: ignore
     assert result.exit_code == 0
 

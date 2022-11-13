@@ -51,6 +51,7 @@ def test_local_build(invoke):
     assert result.exit_code == 0
 
 
+@flaky(max_runs=3, rerun_filter=delay_rerun)
 def test_local_deploy(invoke):
     result = invoke(["deploy", "local", "--public-url"])
     pytest.deployment_url = result.output
@@ -83,4 +84,9 @@ def test_envs_delete(invoke):
 
 def test_configs_delete(invoke):
     result = invoke(["configs", "clear"])
+    assert result.exit_code == 0
+
+
+def test_clean_images(invoke):
+    result = invoke(["clean", "--remote"])
     assert result.exit_code == 0

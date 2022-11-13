@@ -35,7 +35,7 @@ def publish(major: bool = typer.Option(False), minor: bool = typer.Option(False)
     aws = AwsLambdaDriver(ontology)
     local = LocalLambdaDriver(ontology)
     version = SemVer(aws.images()).next(major, minor)
-    print(local.publish(CURRENT_WORKING_IMAGE_TAG, version))
+    print(local.publish(CURRENT_WORKING_IMAGE_TAG, version, aws.images()))
 
 
 @root.command()
@@ -62,14 +62,13 @@ def clean(remote: bool = typer.Option(False)):
         clients.docker.image.remove(image.id, force=True)
 
     if remote:
-        image_indexes = [
-            {"imageDigest": digest} for digest in aws.image_index_digests()
-        ]
-        images = []
-        for image in aws.images():
-            images.append({"imageDigest": image.digest})
+        image_indexes = aws.image_indexes()
+
+        indexes = [{"imageDigest": index.digest} for index in image_indexes]
+        images = [{"imageDigest": image.digest} for image in aws.images()]
+
         if image_indexes or images:
             clients.ecr.batch_delete_image(
                 repositoryName=ontology.context.repository_name,
-                imageIds=image_indexes + images,
+                imageIds=indexes + images,
             )

@@ -1,4 +1,3 @@
-import re
 from operator import concat
 from typing import Dict, List
 from rich.table import Table, box
@@ -51,10 +50,7 @@ class Joinery:
                     tags = concat(tags, image.tags)
 
                 if image.versions:
-                    versions = concat(
-                        versions,
-                        [re.sub(r".*64-", "", version) for version in image.versions],
-                    )
+                    versions = concat(versions, image.versions)
 
                 if image.arch:
                     arch = image.arch
