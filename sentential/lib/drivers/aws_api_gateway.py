@@ -195,6 +195,7 @@ class AwsApiGatewayDriver(MountDriver):
             RequestParameters={
                 "overwrite:path": "/$request.path.proxy",
                 "overwrite:header.X-Forwarded-Prefix": forwarded_prefix,
+                "overwrite:header.X-Forwarded-Mapping": "$context.customDomain.basePathMatched",
             },
         )
 
@@ -251,7 +252,7 @@ class AwsApiGatewayDriver(MountDriver):
             )
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
-
+        
         response = clients.lmb.add_permission(
             FunctionName=self.function.arn,
             StatementId=self.statement_id,
@@ -283,9 +284,10 @@ class AwsApiGatewayDriver(MountDriver):
 
     def _delete_permission(self) -> None:
         try:
-            clients.lmb.remove_permission(
-                FunctionName=self.function.name,
-                StatementId=self.statement_id,
-            )
+            if len(self._mounts()) == 0: 
+                clients.lmb.remove_permission(
+                    FunctionName=self.function.name,
+                    StatementId=self.statement_id,
+                )
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass

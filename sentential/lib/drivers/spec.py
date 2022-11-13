@@ -38,11 +38,11 @@ class MountDriver(ABC):
     def autocomplete(cls):
         ...
 
-    def mount(self, function: Function):
+    def mount(self, path):
         ...
 
-    def umount(self, function: Function):
+    def umount(self, path):
         ...
 
-    def ls(self):
+    def mounts(self):
         ...
