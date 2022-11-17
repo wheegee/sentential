@@ -1,10 +1,7 @@
+FROM ghcr.io/wheegee/entry:latest as entry
 FROM {{ runtime }} AS runtime
-ARG TARGETARCH
-ENV AWS_LAMBDA_EXEC_WRAPPER=/opt/wrapper.sh
-ADD https://github.com/wheegee/sentential-entry/releases/latest/download/entry-${TARGETARCH} /bin/entry
-RUN echo '#!/bin/bash' > /opt/wrapper.sh
-RUN echo 'entry $PARTITION -- $@' >> /opt/wrapper.sh
-RUN chmod 755 /bin/entry /opt/wrapper.sh
+ENV AWS_LAMBDA_EXEC_WRAPPER=/bin/wrapper.sh
+COPY --chmod=755 --from=entry / /bin/
 
 FROM runtime AS {{ repository_name }}
 COPY ./src/ ${LAMBDA_TASK_ROOT}
