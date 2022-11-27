@@ -65,7 +65,6 @@ class Function(BaseModel):
     region: str
     arn: str
     web_console_url: Union[str, None]
-    public_url: Union[str, None]
 
 
 class Provision(Shaper):
@@ -152,6 +151,8 @@ class AWSCallerIdentity(BaseModel):
             return "assumed-role"
         elif ":user/" in values["Arn"]:
             return "user"
+        elif ":root" in values["Arn"]:
+            return "user"
         else:
             raise ShapeError(
                 f"could not determine credential type of...\n{values['Arn']}"
@@ -217,7 +218,7 @@ LAMBDA_ROLE_POLICY_JSON = (
 class AwsFunctionVpcConfig(BaseModel):
     SubnetIds: List[str]
     SecurityGroupIds: List[str]
-    VpcId: str
+    VpcId: Optional[str]
 
 
 class AwsFunctionEnvironment(BaseModel):
@@ -239,16 +240,16 @@ class AwsFunctionConfiguration(BaseModel):
     LastModified: datetime
     CodeSha256: str
     Version: str
-    VpcConfig: AwsFunctionVpcConfig
+    VpcConfig: Optional[AwsFunctionVpcConfig]
     Environment: AwsFunctionEnvironment
     TracingConfig: Dict[str, str]
-    RevisionId: str
+    RevisionId: Optional[str]
     State: str
     StateReason: Optional[str]
     StateReasonCode: Optional[str]
     PackageType: str
-    Architectures: List[str]
-    EphemeralStorage: AwsFunctionEphemeralStorage
+    Architectures: Optional[List[str]]
+    EphemeralStorage: Optional[AwsFunctionEphemeralStorage]
 
 
 class AwsFunctionCode(BaseModel):
@@ -350,7 +351,7 @@ class ApiGatewayMappings(BaseModel):
 
 
 class ApiGatewayDomain(BaseModel):
-    ApiMappingSelectionExpression: str
+    ApiMappingSelectionExpression: str = "$request.basepath"
     DomainName: str
     DomainNameConfigurations: List[Dict] = [{}]
     Tags: Dict[str, str] = {}
@@ -358,7 +359,7 @@ class ApiGatewayDomain(BaseModel):
 
 
 class ApiGatewayDomains(BaseModel):
-    Items: List[ApiGatewayDomain]
+    Items: List[ApiGatewayDomain] = []
 
 
 class ApiGatewayParsedUrl(BaseModel):

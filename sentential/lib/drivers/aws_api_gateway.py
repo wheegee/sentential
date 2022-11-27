@@ -58,8 +58,7 @@ class AwsApiGatewayDriver(MountDriver):
         response = clients.api_gw.get_domain_names()
         domains = ApiGatewayDomains(**response).Items
         # filter domains to those with sentential tagging
-        domains = [domain for domain in domains if "sentential" in domain.Tags.keys()]
-        return domains
+        return [domain for domain in domains if "sentential" in domain.Tags.keys()]
 
     @classmethod
     def _all_mounts(cls) -> List[ApiGatewayDomain]:

@@ -79,16 +79,11 @@ class LocalLambdaDriver(LambdaDriver):
     def deployed(self) -> Function:
         # TODO: "sentential" container name is not a good enough matching mechanism
         running = [c for c in clients.docker.ps() if c.name == "sentential"]
-        public_url = [c for c in clients.docker.ps() if c.name == "sentential-gw"]
+
         if running:
             container = running[0]
             running_image = clients.docker.image.inspect(container.image)
             image = self._image_where_id(running_image.id)
-
-            if public_url:
-                public_url = "http://localhost:8081"
-            else:
-                public_url = None
 
             return Function(
                 image=image,
@@ -97,12 +92,11 @@ class LocalLambdaDriver(LambdaDriver):
                 arn="local",
                 role_name="local",
                 role_arn="local",
-                public_url=public_url,
                 web_console_url=None,
             )
         raise LocalDriverError(f"no image found with container name sentential")
 
-    def deploy(self, image: Image, public_url: bool) -> Function:
+    def deploy(self, image: Image) -> Function:
         self.ontology.envs.export_defaults()
         self.destroy()
         clients.docker.network.create("sentential-bridge")
@@ -131,18 +125,6 @@ class LocalLambdaDriver(LambdaDriver):
             envs={**default_env, **credentials_env},
         )
 
-        if public_url:
-            clients.docker.run(
-                "ghcr.io/wheegee/sentential-gw:latest",
-                name="sentential-gw",
-                hostname="sentential-gw",
-                networks=["sentential-bridge"],
-                detach=True,
-                remove=False,
-                publish=[("8081", "8081")],
-                envs={"LAMBDA_ENDPOINT": "http://sentential:8080"},
-            )
-
         return Function(
             name=self.ontology.context.repository_name,
             image=image,
@@ -151,16 +133,10 @@ class LocalLambdaDriver(LambdaDriver):
             role_arn="local",
             role_name="local",
             web_console_url=None,
-            public_url=("http://localhost:8081" if public_url else None),
         )
 
     def destroy(self):
         clients.docker.remove(["sentential"], force=True, volumes=True)
-        clients.docker.remove(["sentential-gw"], force=True, volumes=True)
-        try:
-            clients.docker.network.remove(["sentential-bridge"])
-        except:
-            pass
 
     def logs(self, follow: bool = False):
         cmd = ["docker", "logs", "sentential"]

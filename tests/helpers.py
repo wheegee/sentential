@@ -1,6 +1,7 @@
 from functools import wraps
 from time import sleep
-
+from typing import Any, List, Tuple, Union
+from rich.table import Table
 
 class RetryWrapperError(BaseException):
     pass
@@ -25,3 +26,12 @@ def retry(
         return f_retry  # true decorator
 
     return deco_retry
+
+
+def table_headers(table: Table) -> List[str]:
+    return [ str(column.header) for column in table.columns ]
+
+def table_body(table: Table) -> List[List[Any]]:
+    cells = [ column._cells for column in table.columns ]
+    body = [list(row) for row in zip(*cells)]
+    return body

@@ -51,20 +51,11 @@ class Joinery:
                 if image.versions:
                     versions = concat(versions, image.versions)
 
-                if self.local_deployment:
-                    if self.local_deployment.image.id == image.id:
-                        public_url = self.local_deployment.public_url
-                        if public_url:
-                            href.append(f"[link={public_url}]local_url[/link]")
-
                 if self.aws_deployment:
                     if self.aws_deployment.image.id == image.id:
                         web_console_url = self.aws_deployment.web_console_url
-                        public_url = self.aws_deployment.public_url
                         if web_console_url:
                             href.append(f"[link={web_console_url}]aws_console[/link]")
-                        if public_url:
-                            href.append(f"[link={public_url}]public_url[/link]")
 
             merged.append(
                 ImageView(

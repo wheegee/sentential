@@ -3,7 +3,6 @@ from os import getenv, environ
 from sentential.lib.exceptions import ContextError
 from sentential.lib.clients import clients
 from sentential.lib.shapes import derive_paths, Paths, AWSCallerIdentity
-from sentential.lib.exceptions import SntlException
 
 
 class Context:
@@ -64,9 +63,9 @@ class Context:
                 if self.kms_key_alias in ssm_key["AliasName"]
             ][0]
         except IndexError:
-            raise SntlException("Key specified by AWS_KMS_KEY_ALIAS does not exist")
+            raise ContextError("Key specified by AWS_KMS_KEY_ALIAS does not exist")
         except KeyError:
-            raise SntlException(
+            raise ContextError(
                 "If region has not yet written an ssm parameter with the default key, the default kms key will not yet exist \o/."
             )
 

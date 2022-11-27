@@ -51,19 +51,6 @@ class AwsLambdaDriver(LambdaDriver):
                 f"could not find aws deployed function for {self.resource_name}"
             )
 
-        try:
-            response = clients.lmb.get_function_url_config(
-                FunctionName=function.Configuration.FunctionName
-            )
-            function_public_url = AwsFunctionPublicUrl(**response)
-        except clients.lmb.exceptions.ResourceNotFoundException:
-            function_public_url = None
-
-        if function_public_url:
-            public_url = function_public_url.FunctionUrl
-        else:
-            public_url = None
-
         digest = function.Code.ResolvedImageUri.split("@")[-1]
         image = self._image_where_digest(digest)
 
@@ -75,7 +62,6 @@ class AwsLambdaDriver(LambdaDriver):
             role_name=function.Configuration.Role.split("/")[-1],
             region=self.context.region,
             web_console_url=self.web_console_url,
-            public_url=public_url,
         )
 
     def images(self) -> List[Image]:
@@ -98,7 +84,7 @@ class AwsLambdaDriver(LambdaDriver):
                 return image
         raise AwsDriverError(f"no image found where version is {version}")
 
-    def deploy(self, image: Image, public_url: bool) -> Function:
+    def deploy(self, image: Image) -> Function:
         self.ontology.envs.export_defaults()
         self._put_role()
         clients.iam.attach_role_policy(
@@ -108,17 +94,9 @@ class AwsLambdaDriver(LambdaDriver):
 
         self._put_lambda(image)
 
-        if public_url:
-            self._put_url()
-
         return self.deployed()
 
     def destroy(self, function: Function) -> None:
-        try:
-            clients.lmb.delete_function_url_config(FunctionName=function.name)
-        except clients.lmb.exceptions.ResourceNotFoundException:
-            pass
-
         try:
             clients.lmb.delete_function(FunctionName=function.name)
         except clients.lmb.exceptions.ResourceNotFoundException:
@@ -300,25 +278,6 @@ class AwsLambdaDriver(LambdaDriver):
 
             return function
 
-    def _put_url(self) -> Dict:
-        function_name = self.resource_name
-        config = {
-            "FunctionName": function_name,
-            "AuthType": self.provision.auth_type,
-            "Cors": {
-                "AllowHeaders": self.provision.allow_headers,
-                "AllowMethods": self.provision.allow_methods,
-                "AllowOrigins": self.provision.allow_origins,
-                "ExposeHeaders": self.provision.expose_headers,
-            },
-        }
-
-        try:
-            clients.lmb.create_function_url_config(**config)
-        except clients.lmb.exceptions.ResourceConflictException:
-            clients.lmb.update_function_url_config(**config)
-
-        return clients.lmb.get_function_url_config(FunctionName=function_name)
 
     def _ecr_data(self) -> Dict:
         ecr_data = {}
