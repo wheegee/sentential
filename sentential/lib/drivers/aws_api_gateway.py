@@ -271,7 +271,7 @@ class AwsApiGatewayDriver(MountDriver):
             )
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
-        
+
         response = clients.lmb.add_permission(
             FunctionName=self.function.arn,
             StatementId=self.statement_id,
@@ -303,7 +303,7 @@ class AwsApiGatewayDriver(MountDriver):
 
     def _delete_permission(self) -> None:
         try:
-            if len(self._mounts()) == 0: 
+            if len(self._mounts()) == 0:
                 clients.lmb.remove_permission(
                     FunctionName=self.function.name,
                     StatementId=self.statement_id,
