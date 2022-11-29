@@ -7,7 +7,7 @@ from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
 
 @pytest.fixture(scope="class")
-def ecr(ontology: Ontology):
+def ecr_images(ontology: Ontology):
     IMAGES=["0.0.1","0.0.2","0.1.0","0.1.1","1.0.0"]
 
     try:

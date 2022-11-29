@@ -5,7 +5,7 @@ from sentential.lib.exceptions import AwsDriverError
 
 import pytest
 
-@pytest.mark.usefixtures("moto", "init", "ecr", "ontology")
+@pytest.mark.usefixtures("moto", "init", "ecr_images", "ontology")
 class TestLambdaDriver:
     
     @pytest.fixture

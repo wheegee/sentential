@@ -17,7 +17,7 @@ class TestContext(object):
         invoke(["init", "testing", "python"])
 
     def test_repository_name_malformed_dockerfile(self, ontology: Ontology, repo, project, invoke):
-        copyfile(f"{project}/tests/fixtures/Dockerfile.malformed", f"{repo.name}/Dockerfile")
+        copyfile(f"{project}/tests/fixtures/files/Dockerfile.malformed", f"{repo.name}/Dockerfile")
         with pytest.raises(ContextError):
             ontology.context.repository_name
         remove("./Dockerfile")

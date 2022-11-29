@@ -37,7 +37,7 @@ def init(invoke, project, repo):
 
 @pytest.fixture(scope="class")
 def shapes(ontology: Ontology, project, repo, invoke):
-    copyfile(f"{project}/tests/fixtures/shapes.py", f"{repo.name}/shapes.py")
+    copyfile(f"{project}/tests/fixtures/files/shapes.py", f"{repo.name}/shapes.py")
     yield
     remove("shapes.py")
     invoke(["init", "testing", "python"])

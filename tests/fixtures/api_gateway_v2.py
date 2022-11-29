@@ -2,7 +2,7 @@ import pytest
 from sentential.lib.clients import clients
 
 @pytest.fixture(scope="class")
-def apigateway():
+def gw_domains():
     api = clients.api_gw.create_api(
         Name='testing',
         ProtocolType='HTTP',
@@ -27,5 +27,6 @@ def apigateway():
         )
 
     yield
-    
+
+    clients.api_gw.delete_domain_name(DomainName="dev.testing.io")
     clients.api_gw.delete_api(ApiId=api['ApiId'])
