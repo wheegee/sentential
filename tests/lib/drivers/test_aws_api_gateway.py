@@ -8,13 +8,17 @@ from sentential.lib.clients import clients
 import sure  # type: ignore
 import pytest
 
+
 @pytest.fixture(scope="class")
 def deployed(ontology: Ontology) -> Function:
     aws_lambda = AwsLambdaDriver(ontology)
     image = aws_lambda.image("0.0.1")
     return aws_lambda.deploy(image)
 
-@pytest.mark.usefixtures("moto", "init", "ecr_images", "gw_domains", "deployed", "ontology")
+
+@pytest.mark.usefixtures(
+    "moto", "init", "ecr_images", "gw_domains", "deployed", "ontology"
+)
 class TestApiGatewayDriverPositive:
     def test_autocomplete(self):
         assert "dev.testing.io" in AwsApiGatewayDriver.autocomplete()
@@ -62,11 +66,12 @@ class TestApiGatewayDriverPositive:
         autocompletions.should.contain("dev.testing.io")
         autocompletions.should_not.contain("dev.testing.io/api")
 
+
 @pytest.mark.usefixtures("moto", "init", "ecr_images", "deployed", "ontology")
 class TestApiGatewayDriverNegative:
     def test_autocomplete(self):
         assert len(AwsApiGatewayDriver.autocomplete()) == 0
-    
+
     def test_create_mount_path_dne(self, ontology: Ontology):
         aws_lambda = AwsLambdaDriver(ontology)
         image = aws_lambda.image("0.0.1")

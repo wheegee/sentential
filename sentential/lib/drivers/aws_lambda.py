@@ -278,7 +278,6 @@ class AwsLambdaDriver(LambdaDriver):
 
             return function
 
-
     def _ecr_data(self) -> Dict:
         ecr_data = {}
         describe_images = clients.ecr.describe_images(repositoryName=self.repo_name)[

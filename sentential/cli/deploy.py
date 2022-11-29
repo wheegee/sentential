@@ -8,6 +8,7 @@ from rich import print
 
 deploy = typer.Typer()
 
+
 @deploy.command()
 def local(
     version: str = typer.Argument(CURRENT_WORKING_IMAGE_TAG, envvar="VERSION"),

@@ -6,6 +6,7 @@ from typer.testing import CliRunner
 from sentential.sntl import root as sntl
 from sentential.lib.ontology import Ontology
 
+
 @pytest.fixture(scope="class")
 def invoke():
     runner = CliRunner()
@@ -15,17 +16,21 @@ def invoke():
 
     return invoker
 
+
 @pytest.fixture(scope="class")
 def ontology() -> Ontology:
     return Ontology()
+
 
 @pytest.fixture(scope="class")
 def project() -> str:
     return getcwd()
 
+
 @pytest.fixture(scope="class")
 def repo() -> TemporaryDirectory:
     return TemporaryDirectory()
+
 
 @pytest.fixture(scope="class")
 def init(invoke, project, repo):
@@ -34,6 +39,7 @@ def init(invoke, project, repo):
     yield
     chdir(project)
     repo.cleanup()
+
 
 @pytest.fixture(scope="class")
 def shapes(ontology: Ontology, project, repo, invoke):

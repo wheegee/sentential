@@ -5,11 +5,13 @@ from sentential.lib.ontology import Ontology
 
 destroy = typer.Typer()
 
+
 @destroy.command()
 def local():
     """destroy lambda deployment in aws"""
     local = LocalLambdaDriver(Ontology())
     local.destroy()
+
 
 @destroy.command()
 def aws():

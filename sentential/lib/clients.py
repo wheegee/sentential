@@ -3,10 +3,8 @@ from python_on_whales import docker
 from sentential.lib.exceptions import AWS_EXCEPTIONS
 from os import getenv
 
-boto3_config = {
-    "none": {},
-    "test": { "endpoint_url": "http://localhost:5000" }
-}
+boto3_config = {"none": {}, "test": {"endpoint_url": "http://localhost:5000"}}
+
 
 class Clients:
     def __init__(self, env: str = getenv("SENTENTIAL_ENV", "none")) -> None:
@@ -18,8 +16,9 @@ class Clients:
         self.ssm = boto3.client("ssm", **boto3_config[env])
         self.api_gw = boto3.client("apigatewayv2", **boto3_config[env])
         self.cloudwatch = boto3.client("logs", **boto3_config[env])
-        
+
         self.docker = docker
+
 
 try:
     clients = Clients()

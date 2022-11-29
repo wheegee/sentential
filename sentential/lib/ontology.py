@@ -10,9 +10,9 @@ from sentential.lib.shapes import Provision as Model
 def reload_shapes():
     if os.getcwd() not in sys.path:
         sys.path.append(os.getcwd())
-    
-    if 'shapes' in sys.modules:
-        del sys.modules['shapes']
+
+    if "shapes" in sys.modules:
+        del sys.modules["shapes"]
 
     import shapes
 
