@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from pathlib import PosixPath
 from typing import List, Union, Optional, Dict
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, Json
 from sentential.support.shaper import Shaper
 from sentential.lib.exceptions import ShapeError
 
@@ -19,14 +19,13 @@ class Image(BaseModel):
     id: str
     digest: Union[str, None]
     tags: List[str]
+    arch: str
     versions: List[str]
-    arch: Union[str, None]
 
     @validator("versions")
     def coerce_versions(cls, v):
         if v is not None:
-            archless = [re.sub(r".*64-", "", version) for version in v]
-            uniq = list(set(archless))
+            uniq = list(set(v))
             return uniq
         else:
             return []
@@ -38,7 +37,6 @@ class Image(BaseModel):
             return uniq
         else:
             return []
-
 
 class ImageIndex(BaseModel):
     digest: str
@@ -108,23 +106,67 @@ class Provision(Shaper):
 #
 # ECR
 #
+
+# describe_image()
 class AwsImageDescription(BaseModel):
     imageDigest: str
     imageTags: Union[List[str], None]
     imageManifestMediaType: str
 
-
 class AwsImageDescriptions(BaseModel):
     imageDetails: List[AwsImageDescription]
 
+# Manifest List
+# https://docs.docker.com/registry/spec/manifest-v2-2/
+class AwsManifestListManifestPlatform(BaseModel):
+    architecture: str
+    os: str
+
+class AwsManifestListManifest(BaseModel):
+    mediaType: str
+    size: int
+    digest: str
+    platform: AwsManifestListManifestPlatform
+
+class AwsManifestList(BaseModel):
+    schemaVersion: int
+    mediaType: str
+    manifests: List[AwsManifestListManifest]
+
+# Image Manifest
+# https://docs.docker.com/registry/spec/manifest-v2-2/
+class AwsImageManifestLayer(BaseModel):
+    mediaType: str
+    size: int
+    digest: str
+
+class AwsImageManifest(BaseModel):
+    schemaVersion: int
+    mediaType: str
+    config: AwsImageManifestLayer
+    layers: List[AwsImageManifestLayer]
+
+# batch_get_image()
+class AwsImageDetailImageId(BaseModel):
+    imageDigest: str
+    imageTag: Optional[str]
 
 class AwsImageDetail(BaseModel):
-    imageId: Dict[str, str]
-    imageManifest: str
-
+    registryId: str
+    repositoryName: str
+    imageId: AwsImageDetailImageId
+    imageManifest: Union[Json[AwsImageManifest], Json[AwsManifestList]]
 
 class AwsImageDetails(BaseModel):
     images: List[AwsImageDetail]
+
+class AwsEcrAuthorizationData(BaseModel):
+    authorizationToken: str
+    expiresAt: datetime
+    proxyEndpoint: str
+
+class AwsEcrAuthorizationToken(BaseModel):
+    authorizationData: List[AwsEcrAuthorizationData]
 
 
 #

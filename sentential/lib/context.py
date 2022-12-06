@@ -67,12 +67,16 @@ class Context:
             raise SntlException("Key specified by AWS_KMS_KEY_ALIAS does not exist")
         except KeyError:
             raise SntlException(
-                "If region has not yet written an ssm parameter with the default key, the default kms key will not yet exist \o/."
+                "If region has not yet written an ssm parameter with the default key, the default kms key will not yet exist \\o/."
             )
 
     @property
     def repository_url(self) -> str:
         return f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/{self.repository_name}"
+    
+    @property
+    def ecr_rest_url(self) -> str:
+        return f"https://{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/v2/{self.repository_name}"
 
     @property
     def registry_url(self) -> str:

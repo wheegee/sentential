@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, cast
 from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.drivers.spec import LambdaDriver
 from sentential.lib.ontology import Ontology
+from sentential.lib.drivers.aws_ecr_driver import AwsECRDriver
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
     AwsImageDescriptions,
@@ -82,23 +83,8 @@ class AwsLambdaDriver(LambdaDriver):
             public_url=public_url,
         )
 
-    def image_indexes(self) -> List[ImageIndex]:
-        return self._ecr_data().indexes
-
     def images(self) -> List[Image]:
-        images = []
-        for index in self._ecr_data().indexes:
-            for image in index.images:
-                images.append(
-                    Image(
-                        id=image.id,
-                        digest=image.digest,
-                        tags=image.tags,
-                        versions=image.versions,
-                        arch=image.arch,
-                    )
-                )
-        return images
+        return AwsECRDriver(self.ontology).images()
 
     def image(self, version: str) -> Image:
         for image in self.images():
@@ -329,68 +315,6 @@ class AwsLambdaDriver(LambdaDriver):
             clients.lmb.update_function_url_config(**config)
 
         return clients.lmb.get_function_url_config(FunctionName=function_name)
-
-    def _ecr_data(self) -> ImageIndexes:
-        image_indexes = []
-        image_descriptions = self._describe_images().imageDetails
-
-        indexes = [
-            image
-            for image in image_descriptions
-            if image.imageManifestMediaType
-            == "application/vnd.docker.distribution.manifest.list.v2+json"
-        ]
-        images = [
-            image
-            for image in image_descriptions
-            if image.imageManifestMediaType
-            == "application/vnd.docker.distribution.manifest.v2+json"
-        ]
-
-        if len(indexes) == 0 or len(images) == 0:
-            return ImageIndexes(indexes=image_indexes)
-
-        indexes_detail = self._detail_images(
-            [{"imageDigest": index.imageDigest} for index in indexes]
-        ).images
-        images_detail = self._detail_images(
-            [{"imageDigest": image.imageDigest} for image in images]
-        ).images
-
-        for image_index in indexes_detail:
-            manifests = []
-            for image_manifest in json.loads(image_index.imageManifest)["manifests"]:
-                manifest = {}
-                id = None
-                tags = []
-
-                for image in images_detail:
-                    if image.imageId["imageDigest"] == image_manifest["digest"]:
-                        id = json.loads(image.imageManifest)["config"]["digest"]
-
-                for image in images:
-                    if (
-                        image.imageDigest == image_manifest["digest"]
-                        and image.imageTags
-                    ):
-                        tags = image.imageTags
-
-                if len(tags) == 0:
-                    continue
-
-                manifest["id"] = id
-                manifest["digest"] = image_manifest["digest"]
-                manifest["tags"] = [f"{self.repo_url}:{tag}" for tag in tags]
-                manifest["versions"] = tags
-                manifest["arch"] = image_manifest["platform"]["architecture"]
-
-                manifests.append(manifest)
-
-            image_indexes.append(
-                ImageIndex(digest=image_index.imageId["imageDigest"], images=manifests)
-            )
-
-        return ImageIndexes(indexes=image_indexes)
 
     def _image_where_digest(self, digest: str) -> Image:
         for image in self.images():
