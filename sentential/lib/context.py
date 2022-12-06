@@ -73,7 +73,7 @@ class Context:
     @property
     def repository_url(self) -> str:
         return f"{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/{self.repository_name}"
-    
+
     @property
     def ecr_rest_url(self) -> str:
         return f"https://{self.account_id}.dkr.ecr.{self.region}.amazonaws.com/v2/{self.repository_name}"

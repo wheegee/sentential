@@ -38,6 +38,7 @@ class Image(BaseModel):
         else:
             return []
 
+
 class ImageIndex(BaseModel):
     digest: str
     images: List[Image]
@@ -113,8 +114,10 @@ class AwsImageDescription(BaseModel):
     imageTags: Union[List[str], None]
     imageManifestMediaType: str
 
+
 class AwsImageDescriptions(BaseModel):
     imageDetails: List[AwsImageDescription]
+
 
 # Manifest List
 # https://docs.docker.com/registry/spec/manifest-v2-2/
@@ -122,16 +125,19 @@ class AwsManifestListManifestPlatform(BaseModel):
     architecture: str
     os: str
 
+
 class AwsManifestListManifest(BaseModel):
     mediaType: str
     size: int
     digest: str
     platform: AwsManifestListManifestPlatform
 
+
 class AwsManifestList(BaseModel):
     schemaVersion: int
     mediaType: str
     manifests: List[AwsManifestListManifest]
+
 
 # Image Manifest
 # https://docs.docker.com/registry/spec/manifest-v2-2/
@@ -140,16 +146,19 @@ class AwsImageManifestLayer(BaseModel):
     size: int
     digest: str
 
+
 class AwsImageManifest(BaseModel):
     schemaVersion: int
     mediaType: str
     config: AwsImageManifestLayer
     layers: List[AwsImageManifestLayer]
 
+
 # batch_get_image()
 class AwsImageDetailImageId(BaseModel):
     imageDigest: str
     imageTag: Optional[str]
+
 
 class AwsImageDetail(BaseModel):
     registryId: str
@@ -157,13 +166,16 @@ class AwsImageDetail(BaseModel):
     imageId: AwsImageDetailImageId
     imageManifest: Union[Json[AwsImageManifest], Json[AwsManifestList]]
 
+
 class AwsImageDetails(BaseModel):
     images: List[AwsImageDetail]
+
 
 class AwsEcrAuthorizationData(BaseModel):
     authorizationToken: str
     expiresAt: datetime
     proxyEndpoint: str
+
 
 class AwsEcrAuthorizationToken(BaseModel):
     authorizationData: List[AwsEcrAuthorizationData]
