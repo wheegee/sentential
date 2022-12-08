@@ -1,8 +1,9 @@
 from operator import concat
 from typing import Dict, List
 from rich.table import Table, box
-from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
-from sentential.lib.drivers.local_lambda import LocalLambdaDriver
+from sentential.lib.drivers.aws_ecr import AwsEcrDriver
+from sentential.lib.drivers.local_images import LocalImagesDriver
+from sentential.lib.exceptions import JoineryError
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Image, ImageView
 
@@ -10,21 +11,12 @@ from sentential.lib.shapes import Image, ImageView
 class Joinery:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
-        self.local = LocalLambdaDriver(self.ontology)
-        self.aws = AwsLambdaDriver(self.ontology)
-        try:
-            self.local_deployment = self.local.deployed()
-        except:
-            self.local_deployment = None
-
-        try:
-            self.aws_deployment = self.aws.deployed()
-        except:
-            self.aws_deployment = None
+        self.docker = LocalImagesDriver(self.ontology)
+        self.ecr = AwsEcrDriver(self.ontology)
 
     def group_by_id(self) -> Dict[str, List[Image]]:
-        local_images = [image for image in self.local.images()]
-        aws_images = [image for image in self.aws.images()]
+        local_images = [image for image in self.docker.images()]
+        aws_images = [image for image in self.ecr.images()]
         by_id = {}
         for image in local_images + aws_images:
             if image.id in by_id:
@@ -40,8 +32,8 @@ class Joinery:
             digest = None
             tags = []
             versions = []
+            uri = None
             arch = None
-            href = []
             for image in images:
                 if image.digest is not None:
                     digest = image.digest
@@ -52,32 +44,23 @@ class Joinery:
                 if image.versions:
                     versions = concat(versions, image.versions)
 
-                if image.arch:
+                if image.uri:
+                    uri = image.uri
+
+                if arch is None:
                     arch = image.arch
-
-                if self.local_deployment:
-                    if self.local_deployment.image.id == image.id:
-                        public_url = self.local_deployment.public_url
-                        if public_url:
-                            href.append(f"[link={public_url}]local_url[/link]")
-
-                if self.aws_deployment:
-                    if self.aws_deployment.image.id == image.id:
-                        web_console_url = self.aws_deployment.web_console_url
-                        public_url = self.aws_deployment.public_url
-                        if web_console_url:
-                            href.append(f"[link={web_console_url}]aws_console[/link]")
-                        if public_url:
-                            href.append(f"[link={public_url}]public_url[/link]")
+                else:
+                    if arch != image.arch:
+                        raise JoineryError(f"found two differing architectures for the same image id {image.id}")
 
             merged.append(
                 ImageView(
                     id=id,
                     digest=digest,
+                    uri=uri,
                     tags=list(tags),
                     versions=list(versions),
-                    arch=arch,
-                    href=href,
+                    arch=arch,  # type: ignore
                 )
             )
 

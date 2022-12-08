@@ -18,6 +18,7 @@ CURRENT_WORKING_IMAGE_TAG = "cwi"
 class Image(BaseModel):
     id: str
     digest: Union[str, None]
+    uri: Union[str, None]
     tags: List[str]
     arch: str
     versions: List[str]
@@ -25,36 +26,19 @@ class Image(BaseModel):
     @validator("versions")
     def coerce_versions(cls, v):
         if v is not None:
-            uniq = list(set(v))
-            return uniq
+            return list(set(v))
         else:
             return []
 
     @validator("tags")
     def coerce_tags(cls, v):
         if v is not None:
-            uniq = list(set(v))
-            return uniq
+            return list(set(v))
         else:
             return []
 
 
-class ImageIndex(BaseModel):
-    digest: str
-    images: List[Image]
-
-
-class ImageIndexes(BaseModel):
-    indexes: List[ImageIndex]
-
-
 class ImageView(Image):
-    href: List[str] = []
-
-    @validator("href")
-    def uniq(cls, v):
-        return list(set(v))
-
     @validator("id")
     def humanize_id(cls, v):
         return v.replace("sha256:", "")[0:12]
@@ -64,7 +48,6 @@ class ImageView(Image):
         if v:
             return v.replace("sha256:", "")[0:12]
 
-
 class Function(BaseModel):
     image: Image
     name: str
@@ -73,7 +56,6 @@ class Function(BaseModel):
     region: str
     arn: str
     web_console_url: Union[str, None]
-    public_url: Union[str, None]
 
 
 class Provision(Shaper):
@@ -82,18 +64,18 @@ class Provision(Shaper):
     timeout: int = Field(default=3, description="timeout (s)")
     subnet_ids: List[str] = Field(default=[], description="subnet ids")
     security_group_ids: List[str] = Field(default=[], description="security group ids")
-    auth_type: str = Field(default="NONE", description="auth type (--public-url)")
+    auth_type: str = Field(default="NONE", description="auth type")
     allow_headers: List[str] = Field(
-        default=["*"], description="CORS AllowHeaders (--public-url)"
+        default=["*"], description="CORS AllowHeaders"
     )
     allow_methods: List[str] = Field(
-        default=["*"], description="CORS AllowMethods (--public-url)"
+        default=["*"], description="CORS AllowMethods"
     )
     allow_origins: List[str] = Field(
-        default=["*"], description="CORS AllowOrigins (--public-url)"
+        default=["*"], description="CORS AllowOrigins"
     )
     expose_headers: List[str] = Field(
-        default=["*"], description="CORS ExposeHeaders (--public-url)"
+        default=["*"], description="CORS ExposeHeaders"
     )
 
     @validator("auth_type")
@@ -348,6 +330,8 @@ class Paths(BaseModel):
     root: PosixPath
     sntl: PosixPath
     src: PosixPath
+    bake: PosixPath
+    runtime: PosixPath
     dockerfile: PosixPath
     wrapper: PosixPath
     policy: PosixPath
@@ -359,6 +343,8 @@ def derive_paths(root: PosixPath = PosixPath(".")):
         root=root,
         sntl=PosixPath(f"{root}/.sntl"),
         src=PosixPath(f"{root}/src"),
+        bake=PosixPath(f"{root}/.sntl/docker-bake.hcl"),
+        runtime=PosixPath(f"{root}/.sntl/Dockerfile"),
         dockerfile=PosixPath(f"{root}/Dockerfile"),
         wrapper=PosixPath(f"{root}/.sntl/wrapper.sh"),
         policy=PosixPath(f"{root}/policy.json"),

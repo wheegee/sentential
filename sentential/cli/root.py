@@ -1,8 +1,9 @@
 import typer
 from sentential.lib.clients import clients
+from sentential.lib.drivers.local_images import LocalImagesDriver
+from sentential.lib.drivers.aws_ecr import AwsEcrDriver
 from sentential.lib.template import Init
 from sentential.lib.shapes import Runtimes
-from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.semver import SemVer
 from sentential.lib.ontology import Ontology
@@ -24,18 +25,18 @@ def init(repository_name: str, runtime: Runtimes):
 @root.command()
 def build():
     """build lambda image"""
-    local = LocalLambdaDriver(Ontology())
-    print(local.build(CURRENT_WORKING_IMAGE_TAG))
+    docker = LocalImagesDriver(Ontology())
+    print(docker.build(CURRENT_WORKING_IMAGE_TAG))
 
 
 @root.command()
 def publish(major: bool = typer.Option(False), minor: bool = typer.Option(False)):
     """publish lambda image"""
     ontology = Ontology()
-    aws = AwsLambdaDriver(ontology)
-    local = LocalLambdaDriver(ontology)
-    version = SemVer(aws.images()).next(major, minor)
-    print(local.publish(CURRENT_WORKING_IMAGE_TAG, version, aws.images()))
+    ecr = AwsEcrDriver(ontology)
+    docker = LocalImagesDriver(ontology)
+    tag = SemVer(ecr.images()).next(major, minor)
+    print(docker.push(tag))
 
 
 @root.command()
@@ -47,28 +48,29 @@ def login():
 @root.command()
 def ls():
     """list image information"""
-    print(Joinery(Ontology()).list(["tags"]))
+    print(Joinery(Ontology()).list(["tags", "uri"]))
 
 
 @root.command()
 def clean(remote: bool = typer.Option(False)):
     """clean images"""
     ontology = Ontology()
-    aws = AwsLambdaDriver(ontology)
-    local = LocalLambdaDriver(ontology)
+    ecr = AwsEcrDriver(ontology)
+    docker = LocalImagesDriver(ontology)
 
-    for image in local.images():
+    for image in docker.images():
         clients.docker.container.remove("sentential", force=True)
         clients.docker.image.remove(image.id, force=True)
 
+    for builder in clients.docker.buildx.list():
+        if builder.name == "sentential-builder":
+            clients.docker.buildx.use(builder)
+            clients.docker.buildx.prune(all=True)
+
     if remote:
-        image_indexes = aws.image_indexes()
-
-        indexes = [{"imageDigest": index.digest} for index in image_indexes]
-        images = [{"imageDigest": image.digest} for image in aws.images()]
-
-        if image_indexes or images:
-            clients.ecr.batch_delete_image(
-                repositoryName=ontology.context.repository_name,
-                imageIds=indexes + images,
-            )
+        image_details = ecr._image_details()
+        manifest_digests = [ { "imageDigest": detail.imageId.imageDigest } for detail in image_details ]
+        clients.ecr.batch_delete_image(
+            repositoryName=ontology.context.repository_name,
+            imageIds=manifest_digests
+        )

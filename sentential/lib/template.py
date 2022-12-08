@@ -19,7 +19,13 @@ class Init:
     def scaffold(self) -> None:
         if not exists(self.path.src):
             makedirs(self.path.src)
+        if not exists(self.path.sntl):
+            makedirs(self.path.sntl)
+
         self._write(self.jinja.get_template("Dockerfile"), self.path.dockerfile)
+        self._write(self.jinja.get_template("Dockerfile.runtime"), self.path.runtime)
+        self._write(self.jinja.get_template("docker-bake.hcl"), self.path.bake)
+
         copy(f"{PACKAGE_PATH}/templates/policy.json", self.path.policy)
         copy(f"{PACKAGE_PATH}/templates/shapes.py", self.path.shapes)
 

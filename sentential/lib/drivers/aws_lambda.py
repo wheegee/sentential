@@ -5,122 +5,53 @@ from typing import Dict, List, Optional, cast
 from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.drivers.spec import LambdaDriver
 from sentential.lib.ontology import Ontology
-from sentential.lib.drivers.aws_ecr_driver import AwsECRDriver
+from sentential.lib.drivers.aws_ecr import AwsEcrDriver
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
-    AwsImageDescriptions,
-    AwsImageDetails,
-    AwsFunctionPublicUrl,
     Image,
-    ImageIndex,
-    ImageIndexes,
-    AwsFunction,
-    Function,
     Provision,
 )
 from sentential.lib.clients import clients
 from sentential.lib.template import Policy
 
-# TODO: figure out how to get boto3 typeshed to work, so functions can return types instead of Dict
-
 #
 # NOTE: Docker images in ECR are primary key'd (conceptually) off of their digest, this is normalized by the Image type
 #
 
-
 class AwsLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
-        self.context = self.ontology.context
-        self.partition = self.context.partition
-        self.region = self.context.region
-        self.account_id = self.context.account_id
-        self.repo_name = self.context.repository_name
-        self.repo_url = self.context.repository_url
-        self.envs = self.ontology.envs
-        self.resource_name = f"{self.partition}-{self.region}-{self.repo_name}"
-        self.policy_arn = f"arn:aws:iam::{self.account_id}:policy/{self.resource_name}"
-        self.web_console_url = f"https://{self.region}.console.aws.amazon.com/lambda/home#/functions/{self.resource_name}"
+        self.function_name = ontology.context.resource_name
+        self.policy_arn = f"arn:aws:iam::{self.ontology.context.account_id}:policy/{self.ontology.context.resource_name}"
 
     @property
     def provision(self) -> Provision:
         # there must be a better way to do polymorphic type stuff...
         return cast(Provision, self.ontology.configs.parameters)
 
-    def deployed(self) -> Function:
-        try:
-            response = clients.lmb.get_function(FunctionName=self.resource_name)
-            function = AwsFunction(**response)
-        except clients.lmb.exceptions.ResourceNotFoundException:
-            raise AwsDriverError(
-                f"could not find aws deployed function for {self.resource_name}"
-            )
-
-        try:
-            response = clients.lmb.get_function_url_config(
-                FunctionName=function.Configuration.FunctionName
-            )
-            function_public_url = AwsFunctionPublicUrl(**response)
-        except clients.lmb.exceptions.ResourceNotFoundException:
-            function_public_url = None
-
-        if function_public_url:
-            public_url = function_public_url.FunctionUrl
-        else:
-            public_url = None
-
-        digest = function.Code.ResolvedImageUri.split("@")[-1]
-        image = self._image_where_digest(digest)
-
-        return Function(
-            image=image,
-            name=function.Configuration.FunctionName,
-            arn=function.Configuration.FunctionArn,
-            role_arn=function.Configuration.Role,
-            role_name=function.Configuration.Role.split("/")[-1],
-            region=self.context.region,
-            web_console_url=self.web_console_url,
-            public_url=public_url,
-        )
-
-    def images(self) -> List[Image]:
-        return AwsECRDriver(self.ontology).images()
-
-    def image(self, version: str) -> Image:
-        for image in self.images():
-            if version in image.versions:
-                return image
-        raise AwsDriverError(f"no image found where version is {version}")
-
-    def deploy(self, image: Image, public_url: bool) -> Function:
+    def deploy(self, image: Image) -> Image:
         self.ontology.envs.export_defaults()
-        self._put_role()
         clients.iam.attach_role_policy(
             RoleName=self._put_role()["Role"]["RoleName"],
             PolicyArn=self._put_policy()["Policy"]["Arn"],
         )
-
         self._put_lambda(image)
+        return image
 
-        if public_url:
-            self._put_url()
-
-        return self.deployed()
-
-    def destroy(self, function: Function) -> None:
+    def destroy(self) -> None:
         try:
-            clients.lmb.delete_function_url_config(FunctionName=function.name)
+            clients.lmb.delete_function_url_config(FunctionName=self.function_name)
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
 
         try:
-            clients.lmb.delete_function(FunctionName=function.name)
+            clients.lmb.delete_function(FunctionName=self.function_name)
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
 
         try:
             clients.iam.detach_role_policy(
-                PolicyArn=self.policy_arn, RoleName=function.role_name
+                PolicyArn=self.policy_arn, RoleName=self.function_name
             )
 
             policy_versions = clients.iam.list_policy_versions(
@@ -137,12 +68,12 @@ class AwsLambdaDriver(LambdaDriver):
             pass
 
         try:
-            clients.iam.delete_role(RoleName=function.role_name)
+            clients.iam.delete_role(RoleName=self.function_name)
         except clients.iam.exceptions.NoSuchEntityException:
             pass
 
     def logs(self, follow: bool = False) -> None:
-        cmd = ["aws", "logs", "tail", f"/aws/lambda/{self.resource_name}"]
+        cmd = ["aws", "logs", "tail", f"/aws/lambda/{self.function_name}"]
         if follow:
             cmd.append("--follow")
         os.system(" ".join(cmd))
@@ -151,7 +82,7 @@ class AwsLambdaDriver(LambdaDriver):
         raise AwsDriverError("invoke is not yet implemented")
 
     def _put_role(self, tags: Optional[Dict[str, str]] = None) -> Dict:
-        role_name = self.resource_name
+        role_name = self.function_name
         try:
             clients.iam.create_role(
                 RoleName=role_name,
@@ -178,7 +109,7 @@ class AwsLambdaDriver(LambdaDriver):
 
     def _put_policy(self, tags: Optional[Dict[str, str]] = None) -> Dict:
         policy_json = Policy(self.ontology).render()
-        policy_name = self.resource_name
+        policy_name = self.function_name
         policy_arn = self.policy_arn
 
         try:
@@ -215,20 +146,19 @@ class AwsLambdaDriver(LambdaDriver):
         return policy
 
     def _put_lambda(self, image: Image, tags: Optional[Dict[str, str]] = None) -> Dict:
-        role_name = self.resource_name
-        function_name = self.resource_name
+        role_name = self.function_name
+        function_name = self.function_name
         role_arn = clients.iam.get_role(RoleName=role_name)["Role"]["Arn"]
-        image_uri = f"{self.repo_url}:{image.arch}-{image.versions[0]}"  # TODO: do we want to deploy latest version on image, or version declared?
         image_arch = "x86_64" if image.arch == "amd64" else image.arch
-        envs_path = self.envs.path
+        envs_path = self.ontology.envs.path
         sleep(10)
         try:
             function = clients.lmb.create_function(
                 FunctionName=function_name,
                 Role=role_arn,
                 PackageType="Image",
-                Code={"ImageUri": image_uri},
-                Description=f"sententially deployed {image_uri}",
+                Code={"ImageUri": image.uri},
+                Description=f"sententially deployed {image.uri}",
                 Environment={"Variables": {"PARTITION": envs_path}},
                 Architectures=[image_arch],
                 EphemeralStorage={"Size": self.provision.storage},
@@ -240,20 +170,12 @@ class AwsLambdaDriver(LambdaDriver):
                 },
             )
 
-            clients.lmb.add_permission(
-                FunctionName=function_name,
-                StatementId="FunctionURLAllowPublicAccess",
-                Action="lambda:InvokeFunctionUrl",
-                Principal="*",
-                FunctionUrlAuthType=self.provision.auth_type,
-            )
-
             return function
         except clients.lmb.exceptions.ResourceConflictException:
             function = clients.lmb.update_function_configuration(
                 FunctionName=function_name,
                 Role=role_arn,
-                Description=f"sententially deployed {image_uri}",
+                Description=f"sententially deployed {image.uri}",
                 Environment={"Variables": {"PARTITION": envs_path}},
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
@@ -270,67 +192,12 @@ class AwsLambdaDriver(LambdaDriver):
 
             clients.lmb.update_function_code(
                 FunctionName=function_name,
-                ImageUri=image_uri,
+                ImageUri=image.uri,
                 Architectures=[image_arch],
                 Publish=True,
-            )
-
-            try:
-                clients.lmb.remove_permission(
-                    FunctionName=function_name,
-                    StatementId="FunctionURLAllowPublicAccess",
-                )
-            except clients.lmb.exceptions.ResourceNotFoundException:
-                pass
-
-            clients.lmb.add_permission(
-                FunctionName=function_name,
-                StatementId="FunctionURLAllowPublicAccess",
-                Action="lambda:InvokeFunctionUrl",
-                Principal="*",
-                FunctionUrlAuthType=self.provision.auth_type,
             )
 
             if tags:
                 clients.lmb.tag_resource(Resource=function.arn, Tags=tags)
 
             return function
-
-    def _put_url(self) -> Dict:
-        function_name = self.resource_name
-        config = {
-            "FunctionName": function_name,
-            "AuthType": self.provision.auth_type,
-            "Cors": {
-                "AllowHeaders": self.provision.allow_headers,
-                "AllowMethods": self.provision.allow_methods,
-                "AllowOrigins": self.provision.allow_origins,
-                "ExposeHeaders": self.provision.expose_headers,
-            },
-        }
-
-        try:
-            clients.lmb.create_function_url_config(**config)
-        except clients.lmb.exceptions.ResourceConflictException:
-            clients.lmb.update_function_url_config(**config)
-
-        return clients.lmb.get_function_url_config(FunctionName=function_name)
-
-    def _image_where_digest(self, digest: str) -> Image:
-        for image in self.images():
-            if digest == image.digest:
-                return image
-        raise AwsDriverError(f"no image found where digest is {digest}")
-
-    def _describe_images(self) -> AwsImageDescriptions:
-        response = clients.ecr.describe_images(repositoryName=self.repo_name)
-
-        return AwsImageDescriptions(**response)
-
-    def _detail_images(self, image_digests) -> AwsImageDetails:
-        response = clients.ecr.batch_get_image(
-            repositoryName=self.repo_name,
-            imageIds=image_digests,
-        )
-
-        return AwsImageDetails(**response)

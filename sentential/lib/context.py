@@ -23,6 +23,10 @@ class Context:
             raise ContextError("no Dockerfile present, run `sntl init` first")
 
     @property
+    def resource_name(self) -> str:
+        return f"{self.partition}-{self.region}-{self.repository_name}"
+
+    @property
     def kms_key_alias(self) -> str:
         return getenv("AWS_KMS_KEY_ALIAS", default="aws/ssm")
 

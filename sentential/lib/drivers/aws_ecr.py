@@ -1,8 +1,8 @@
 from sentential.lib.ontology import Ontology
+from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.shapes import (
     AwsImageDescriptions,
     AwsImageDetail,
-    AwsImageDetailImageId,
     AwsImageDetails,
     AwsImageManifest,
     AwsManifestList,
@@ -41,7 +41,7 @@ class ECRApi:
         return response
 
 
-class AwsECRDriver:
+class AwsEcrDriver:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.repo_name = self.ontology.context.repository_name
@@ -49,12 +49,12 @@ class AwsECRDriver:
 
     def images(self) -> List[Image]:
         images = []
-
         for image_id, image_digest in self._image_identifiers():
             images.append(
                 Image(
                     id=image_id,
-                    digest=image_digest,
+                    digest=self._get_pulled_digest(image_digest),
+                    uri=self._get_image_uri(image_digest),
                     tags=self._get_tags(image_digest),
                     versions=self._get_tags(image_digest),
                     arch=self._get_arch(image_digest),
@@ -62,16 +62,39 @@ class AwsECRDriver:
             )
         return images
 
-    @lru_cache
-    def _image_details(self) -> List[AwsImageDetail]:
-        response = clients.ecr.describe_images(repositoryName=self.repo_name)
-        image_desc = AwsImageDescriptions(**response).imageDetails
-        filter = [{"imageDigest": image.imageDigest} for image in image_desc]
-        response = clients.ecr.batch_get_image(
-            repositoryName=self.repo_name, imageIds=filter
-        )
-        image_details = AwsImageDetails(**response)
-        return image_details.images
+    def image_by_tag(self, tag: str) -> Image:
+        for image in self.images():
+            if tag in image.tags:
+                return image
+        raise AwsDriverError(f"no image with tag {tag} found")
+
+    def image_by_digest(self, digest: str) -> Image:
+        results = []
+        for image in self.images():
+            if image.digest:
+                if image.digest.replace("sha256:","").startswith(digest):
+                    results.append(image)
+        
+        if len(results) > 1:
+            raise AwsDriverError(f"abiguous match with {digest[0:12]}")
+        elif len(results) == 0:
+            raise AwsDriverError(f"no image with digest {digest[0:12]} found")
+        else:
+            return results[0]
+
+    def image_by_id(self, id: str) -> Image:
+        results = []
+        for image in self.images():
+            if image.id:
+                if image.id.replace("sha256:","").startswith(id):
+                    results.append(image)
+        
+        if len(results) > 1:
+            raise AwsDriverError(f"abiguous match with {id[0:12]}")
+        elif len(results) == 0:
+            raise AwsDriverError(f"no image with digest {id[0:12]} found")
+        else:
+            return results[0]
 
     def _image_identifiers(self) -> List[Tuple[str, str]]:
         pairs = []
@@ -82,6 +105,9 @@ class AwsECRDriver:
                 pairs.append((image_id, image_digest))
         return list(set(pairs))
 
+    def _get_image_uri(self, image_digest: str) -> str:
+        return self._uri_list()[image_digest]
+
     def _get_tags(self, image_digest: str) -> List[str]:
         tags = self._tag_list()[image_digest]
         return [tag for tag in tags if tag is not None]
@@ -89,6 +115,35 @@ class AwsECRDriver:
     def _get_arch(self, image_digest: str) -> str:
         return self._arch_list()[image_digest]
 
+    def _get_pulled_digest(self, image_digest: str) -> str:
+        return self._digest_list()[image_digest]
+
+    def _uri_list(self) -> Dict[str, str]:
+        uri_list = {}
+        for detail in self._image_details():
+            if isinstance(detail.imageManifest, AwsImageManifest):
+                image_uri = f"{self.ontology.context.repository_url}@{detail.imageId.imageDigest}"
+                uri_list[detail.imageId.imageDigest] = image_uri
+        return uri_list
+
+    @lru_cache
+    def _digest_list(self) -> Dict[str, str]:
+        digest_list = {}
+        for detail in self._image_details():
+            if isinstance(detail.imageManifest, AwsManifestList):
+                for manifest in detail.imageManifest.manifests:
+                    image_digest = manifest.digest
+                    digest_list[image_digest] = detail.imageId.imageDigest
+
+        for detail in self._image_details():
+            if isinstance(detail.imageManifest, AwsImageManifest):
+                image_digest = detail.imageId.imageDigest
+                if image_digest not in digest_list.keys():
+                    digest_list[image_digest] = image_digest
+
+        return digest_list
+
+    @lru_cache
     def _tag_list(self) -> Dict[str, List[Union[str, None]]]:
         tag_list = {}
         for detail in self._image_details():
@@ -127,3 +182,16 @@ class AwsECRDriver:
                     arch_list[image_digest] = inspect.architecture
 
         return arch_list
+
+    @lru_cache
+    def _image_details(self) -> List[AwsImageDetail]:
+        response = clients.ecr.describe_images(repositoryName=self.repo_name)
+        image_desc = AwsImageDescriptions(**response).imageDetails
+        if len(image_desc) == 0:
+            return []
+        filter = [{"imageDigest": image.imageDigest} for image in image_desc]
+        response = clients.ecr.batch_get_image(
+            repositoryName=self.repo_name, imageIds=filter
+        )
+        image_details = AwsImageDetails(**response)
+        return image_details.images
