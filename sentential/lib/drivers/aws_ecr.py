@@ -72,9 +72,9 @@ class AwsEcrDriver:
         results = []
         for image in self.images():
             if image.digest:
-                if image.digest.replace("sha256:","").startswith(digest):
+                if image.digest.replace("sha256:", "").startswith(digest):
                     results.append(image)
-        
+
         if len(results) > 1:
             raise AwsDriverError(f"abiguous match with {digest[0:12]}")
         elif len(results) == 0:
@@ -86,9 +86,9 @@ class AwsEcrDriver:
         results = []
         for image in self.images():
             if image.id:
-                if image.id.replace("sha256:","").startswith(id):
+                if image.id.replace("sha256:", "").startswith(id):
                     results.append(image)
-        
+
         if len(results) > 1:
             raise AwsDriverError(f"abiguous match with {id[0:12]}")
         elif len(results) == 0:

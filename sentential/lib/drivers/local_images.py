@@ -9,6 +9,7 @@ from python_on_whales.components.image.cli_wrapper import Image as PythonOnWhale
 import python_on_whales
 from typing import List, Dict, Tuple
 
+
 class LocalImagesDriver:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -27,7 +28,7 @@ class LocalImagesDriver:
             if builder.name == "sentential-builder":
                 clients.docker.buildx.use(builder)
                 return
-        
+
         builder = clients.docker.buildx.create(name="sentential-builder")
         clients.docker.buildx.use(builder)
 
@@ -35,12 +36,12 @@ class LocalImagesDriver:
         self._setup_buildx()
         self.ontology.args.export_defaults()
         build_args = self.ontology.args.as_dict().items()
-        bake_sets = { f"build.args.{key}": value for key, value in build_args }
+        bake_sets = {f"build.args.{key}": value for key, value in build_args}
         bake_vars = {
-                "tag": tag,
-                "repo_name": self.repo_name,
-                "repo_url": self.repo_url,
-            }
+            "tag": tag,
+            "repo_name": self.repo_name,
+            "repo_url": self.repo_url,
+        }
 
         if "PLATFORMS" in environ:
             bake_sets["publish.platform"] = environ["PLATFORMS"]
@@ -49,7 +50,7 @@ class LocalImagesDriver:
             targets=["build"],
             files=[".sntl/docker-bake.hcl"],
             set=bake_sets,
-            variables=bake_vars
+            variables=bake_vars,
         )
 
         if push:
@@ -57,9 +58,9 @@ class LocalImagesDriver:
                 targets=["publish"],
                 files=[".sntl/docker-bake.hcl"],
                 set=bake_sets,
-                variables=bake_vars
+                variables=bake_vars,
             )
-            
+
         return self.image_by_tag(tag)
 
     def pull(self, image: Image) -> List[str]:
@@ -97,7 +98,7 @@ class LocalImagesDriver:
             if image.digest:
                 if image.digest == digest:
                     results.append(image)
-        
+
         if len(results) > 1:
             raise LocalDriverError(f"abiguous match with {digest[0:12]}")
         elif len(results) == 0:
@@ -111,7 +112,7 @@ class LocalImagesDriver:
             if image.id:
                 if image.id == id:
                     results.append(image)
-        
+
         if len(results) > 1:
             raise LocalDriverError(f"abiguous match with {id[0:12]}")
         elif len(results) == 0:
@@ -126,7 +127,9 @@ class LocalImagesDriver:
         return self._arch_map()[image_id]
 
     @lru_cache
-    def _repo_images(self) -> List[python_on_whales.Image]:   # pyright: ignore[reportPrivateImportUsage]
+    def _repo_images(
+        self,
+    ) -> List[python_on_whales.Image]:  # pyright: ignore[reportPrivateImportUsage]
         images = []
         for image in clients.docker.images():
             # strip tags
@@ -158,7 +161,7 @@ class LocalImagesDriver:
     def _tag_map(self) -> Dict[str, List[str]]:
         tags = {}
         for image in self._repo_images():
-            image_tags = list(set([ tag.split(":")[-1] for tag in image.repo_tags]))
+            image_tags = list(set([tag.split(":")[-1] for tag in image.repo_tags]))
             if image.id in tags.keys():
                 tags[image.id] = tags[image.id] + image_tags
             else:
@@ -167,8 +170,7 @@ class LocalImagesDriver:
 
     @lru_cache
     def _arch_map(self) -> Dict[str, str]:
-        return { image.id: image.architecture for image in self._repo_images() }
-
+        return {image.id: image.architecture for image in self._repo_images()}
 
     # def push(
     #     self, source_tag: str, destination_tag: str, aws_images: List[Image]
