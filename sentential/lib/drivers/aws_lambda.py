@@ -18,6 +18,7 @@ from sentential.lib.template import Policy
 # NOTE: Docker images in ECR are primary key'd (conceptually) off of their digest, this is normalized by the Image type
 #
 
+
 class AwsLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology

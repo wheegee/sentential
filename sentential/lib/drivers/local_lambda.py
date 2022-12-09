@@ -17,6 +17,7 @@ from sentential.lib.shapes import (
 # NOTE: Docker images locally are primary key'd (conceptually) off of their id, this is normalized by the Image type
 #
 
+
 class LocalLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -125,8 +126,5 @@ class LocalLambdaDriver(LambdaDriver):
                 raise LocalDriverError("neither federation nor self assume worked")
 
         except:
-            print(
-                "WARNING: using unscoped credentials for local deployment"
-            )
+            print("WARNING: using unscoped credentials for local deployment")
             return fallback
-

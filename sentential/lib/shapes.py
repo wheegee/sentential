@@ -48,6 +48,7 @@ class ImageView(Image):
         if v:
             return v.replace("sha256:", "")[0:12]
 
+
 class Function(BaseModel):
     image: Image
     name: str
@@ -65,18 +66,10 @@ class Provision(Shaper):
     subnet_ids: List[str] = Field(default=[], description="subnet ids")
     security_group_ids: List[str] = Field(default=[], description="security group ids")
     auth_type: str = Field(default="NONE", description="auth type")
-    allow_headers: List[str] = Field(
-        default=["*"], description="CORS AllowHeaders"
-    )
-    allow_methods: List[str] = Field(
-        default=["*"], description="CORS AllowMethods"
-    )
-    allow_origins: List[str] = Field(
-        default=["*"], description="CORS AllowOrigins"
-    )
-    expose_headers: List[str] = Field(
-        default=["*"], description="CORS ExposeHeaders"
-    )
+    allow_headers: List[str] = Field(default=["*"], description="CORS AllowHeaders")
+    allow_methods: List[str] = Field(default=["*"], description="CORS AllowMethods")
+    allow_origins: List[str] = Field(default=["*"], description="CORS AllowOrigins")
+    expose_headers: List[str] = Field(default=["*"], description="CORS ExposeHeaders")
 
     @validator("auth_type")
     def is_valid_auth_type(cls, v):

@@ -68,8 +68,9 @@ def clean(remote: bool = typer.Option(False)):
 
     if remote:
         image_details = ecr._image_details()
-        manifest_digests = [ { "imageDigest": detail.imageId.imageDigest } for detail in image_details ]
+        manifest_digests = [
+            {"imageDigest": detail.imageId.imageDigest} for detail in image_details
+        ]
         clients.ecr.batch_delete_image(
-            repositoryName=ontology.context.repository_name,
-            imageIds=manifest_digests
+            repositoryName=ontology.context.repository_name, imageIds=manifest_digests
         )

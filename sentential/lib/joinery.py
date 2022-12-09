@@ -51,7 +51,9 @@ class Joinery:
                     arch = image.arch
                 else:
                     if arch != image.arch:
-                        raise JoineryError(f"found two differing architectures for the same image id {image.id}")
+                        raise JoineryError(
+                            f"found two differing architectures for the same image id {image.id}"
+                        )
 
             merged.append(
                 ImageView(
