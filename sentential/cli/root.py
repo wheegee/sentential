@@ -9,7 +9,6 @@ from sentential.lib.semver import SemVer
 from sentential.lib.ontology import Ontology
 from sentential.lib.joinery import Joinery
 from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG
-
 from rich import print
 
 root = typer.Typer()

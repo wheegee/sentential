@@ -15,7 +15,6 @@ target "build" {
     contexts = {
         runtime = "target:runtime"
     }
-    inherits = ["runtime"]
     dockerfile = "{{ paths.dockerfile }}"
     platforms = ["${BAKE_LOCAL_PLATFORM}"]
     tags = ["${repo_name}:${tag}"]
