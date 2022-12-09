@@ -86,6 +86,17 @@ class LocalImagesDriver:
             )
         return images
 
+    def clean(self) -> None:
+        for image in self.images():
+            clients.docker.container.remove("sentential", force=True)
+            clients.docker.image.remove(image.id, force=True)
+
+        for builder in clients.docker.buildx.list():
+            if builder.name == "sentential-builder":
+                clients.docker.buildx.use(builder)
+                clients.docker.buildx.prune(all=True)
+        self._repo_images.cache_clear()
+        
     def image_by_tag(self, tag: str) -> Image:
         for image in self.images():
             if tag in image.tags:
@@ -144,7 +155,6 @@ class LocalImagesDriver:
 
         return images
 
-    @lru_cache
     def _image_identifiers(self) -> List[Tuple[str, str]]:
         pairs = []
         for image in self._repo_images():
@@ -157,7 +167,6 @@ class LocalImagesDriver:
             pairs.append((image_id, image_digest))
         return list(set(pairs))
 
-    @lru_cache
     def _tag_map(self) -> Dict[str, List[str]]:
         tags = {}
         for image in self._repo_images():
@@ -168,36 +177,5 @@ class LocalImagesDriver:
                 tags[image.id] = image_tags
         return tags
 
-    @lru_cache
     def _arch_map(self) -> Dict[str, str]:
         return {image.id: image.architecture for image in self._repo_images()}
-
-    # def push(
-    #     self, source_tag: str, destination_tag: str, aws_images: List[Image]
-    # ) -> Image:
-    #     image = self.image(source_tag)
-    #     repo_url = self.ontology.context.repository_url
-    #     shipping_tag = f"{repo_url}:{destination_tag}"
-    #     arch = clients.docker.image.inspect(image.id).architecture
-    #     arch_tag = f"{repo_url}:{arch}-{destination_tag}"
-    #     arch_tags = [arch_tag]
-
-    #     # If the remote manifest list already exists and references a different
-    #     # architecture, then recreate the manifest list with both architectures.
-    #     for aws_image in aws_images:
-    #         for version in aws_image.versions:
-    #             if destination_tag in version and aws_image.arch != arch:
-    #                 arch_tags.append(
-    #                     f"{repo_url}:{aws_image.arch}-{destination_tag}"
-    #                 )
-
-    #     clients.docker.tag(image.id, arch_tag)
-    #     clients.docker.tag(image.id, shipping_tag)
-    #     clients.docker.push(arch_tag)
-    #     clients.docker.manifest.create(shipping_tag, arch_tags)
-    #     clients.docker.manifest.annotate(shipping_tag, arch_tag, arch=arch)
-    #     clients.docker.manifest.push(shipping_tag, True)
-
-    #     print(f"published {image.id} as {shipping_tag}")
-
-    #     return self.image_by_tag(destination_tag)

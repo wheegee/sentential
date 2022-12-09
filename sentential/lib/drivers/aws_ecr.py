@@ -62,6 +62,16 @@ class AwsEcrDriver:
             )
         return images
 
+    def clean(self) -> None:
+        image_details = self._image_details()
+        manifest_digests = [
+            {"imageDigest": detail.imageId.imageDigest} for detail in image_details
+        ]
+        clients.ecr.batch_delete_image(
+            repositoryName=self.ontology.context.repository_name, imageIds=manifest_digests
+        )
+        self._image_details.cache_clear()
+
     def image_by_tag(self, tag: str) -> Image:
         for image in self.images():
             if tag in image.tags:
@@ -126,7 +136,6 @@ class AwsEcrDriver:
                 uri_list[detail.imageId.imageDigest] = image_uri
         return uri_list
 
-    @lru_cache
     def _digest_list(self) -> Dict[str, str]:
         digest_list = {}
         for detail in self._image_details():
@@ -143,7 +152,6 @@ class AwsEcrDriver:
 
         return digest_list
 
-    @lru_cache
     def _tag_list(self) -> Dict[str, List[Union[str, None]]]:
         tag_list = {}
         for detail in self._image_details():
@@ -166,7 +174,6 @@ class AwsEcrDriver:
 
         return tag_list
 
-    @lru_cache
     def _arch_list(self) -> Dict[str, str]:
         arch_list = {}
         for detail in self._image_details():

@@ -54,23 +54,6 @@ def ls():
 def clean(remote: bool = typer.Option(False)):
     """clean images"""
     ontology = Ontology()
-    ecr = AwsEcrDriver(ontology)
-    docker = LocalImagesDriver(ontology)
-
-    for image in docker.images():
-        clients.docker.container.remove("sentential", force=True)
-        clients.docker.image.remove(image.id, force=True)
-
-    for builder in clients.docker.buildx.list():
-        if builder.name == "sentential-builder":
-            clients.docker.buildx.use(builder)
-            clients.docker.buildx.prune(all=True)
-
+    LocalImagesDriver(ontology).clean()
     if remote:
-        image_details = ecr._image_details()
-        manifest_digests = [
-            {"imageDigest": detail.imageId.imageDigest} for detail in image_details
-        ]
-        clients.ecr.batch_delete_image(
-            repositoryName=ontology.context.repository_name, imageIds=manifest_digests
-        )
+        AwsEcrDriver(ontology).clean()

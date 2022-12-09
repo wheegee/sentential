@@ -1,3 +1,4 @@
+from ctypes import Union
 import os
 from tempfile import TemporaryDirectory
 from sentential.lib.clients import clients
@@ -53,7 +54,7 @@ class LocalLambdaDriver(LambdaDriver):
 
         return image
 
-    def destroy(self):
+    def destroy(self) -> None:
         clients.docker.remove(["sentential"], force=True, volumes=True)
         clients.docker.remove(["sentential-gw"], force=True, volumes=True)
         try:

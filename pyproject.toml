@@ -28,6 +28,10 @@ pytest = "^7.1.2"
 python-semantic-release = "^7.31.2"
 in_place = "^0.5.0"
 
+[tool.poetry.group.dev.dependencies]
+moto = "^4.0.11"
+pytest-env = "^0.8.1"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -47,3 +51,7 @@ build_command = "pip install poetry && poetry build"
 
 [tool.pytest.ini_options]
 addopts = "--no-flaky-report"
+env = [
+    "SENTENTIAL_ENV=test",
+    "MOTO_LAMBDA_STUB_ECR=false"
+]
