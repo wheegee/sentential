@@ -81,6 +81,7 @@ class TestContext(object):
         with pytest.raises(ContextError):
             ontology.context.repository_name
 
+
 @pytest.mark.usefixtures("moto", "init", "ontology")
 class TestGenericStore:
     def test_envs_store_type(self, ontology: Ontology):
@@ -106,7 +107,6 @@ class TestGenericStore:
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
 class TestModeledStore:
-
     def test_envs_store_type(self, ontology: Ontology):
         copyfile("./fixtures/shapes.py", "shapes.py")
         assert isinstance(ontology.envs, ModeledStore)
@@ -164,5 +164,3 @@ class TestInternalStore:
         ontology.configs.clear()
         table = ontology.configs.read()
         assert ["storage", "512", "None", "ephemeral storage (mb)"] in table_body(table)
-
-

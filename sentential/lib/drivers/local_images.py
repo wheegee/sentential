@@ -96,7 +96,7 @@ class LocalImagesDriver:
                 clients.docker.buildx.use(builder)
                 clients.docker.buildx.prune(all=True)
         self._repo_images.cache_clear()
-        
+
     def image_by_tag(self, tag: str) -> Image:
         for image in self.images():
             if tag in image.tags:

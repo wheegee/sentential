@@ -68,7 +68,8 @@ class AwsEcrDriver:
             {"imageDigest": detail.imageId.imageDigest} for detail in image_details
         ]
         clients.ecr.batch_delete_image(
-            repositoryName=self.ontology.context.repository_name, imageIds=manifest_digests
+            repositoryName=self.ontology.context.repository_name,
+            imageIds=manifest_digests,
         )
         self._image_details.cache_clear()
 
@@ -82,7 +83,7 @@ class AwsEcrDriver:
         results = []
         for image in self.images():
             if image.digest == digest:
-                    results.append(image)
+                results.append(image)
 
         if len(results) > 1:
             raise AwsDriverError(f"abiguous match with digest {digest[0:12]}")
