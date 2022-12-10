@@ -781,7 +781,7 @@ xray = ["aws-xray-sdk (>=0.93,!=0.96)", "setuptools"]
 type = "git"
 url = "https://github.com/bkeane/moto"
 reference = "enableECRImageManifestMediaType"
-resolved_reference = "d9c116e6bd2d6a561360f48921a9defee433d0cf"
+resolved_reference = "b8fc8a59e0f9b27bbc2aacce7b648bef822bb960"
 
 [[package]]
 name = "orderedmultidict"
