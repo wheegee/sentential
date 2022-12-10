@@ -2,6 +2,7 @@ import pytest
 from moto.server import ThreadedMotoServer
 import requests
 
+
 @pytest.fixture(scope="class")
 def moto():
     server = ThreadedMotoServer()
