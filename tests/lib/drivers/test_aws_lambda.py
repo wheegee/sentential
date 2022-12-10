@@ -30,7 +30,9 @@ class TestAwsLambdaDriver:
         return clients.lmb.get_function(FunctionName=ontology.context.resource_name)
 
     def get_lambda_config(self, ontology: Ontology):
-        return clients.lmb.get_function_configuration(FunctionName=ontology.context.resource_name)
+        return clients.lmb.get_function_configuration(
+            FunctionName=ontology.context.resource_name
+        )
 
     def test_deploy(self, ecr: AwsEcrDriver, lmb: AwsLambdaDriver, ontology: Ontology):
         image = ecr.image_by_tag("0.0.1")
@@ -40,10 +42,12 @@ class TestAwsLambdaDriver:
 
     def test_destroy(self, lmb: AwsLambdaDriver, ontology: Ontology):
         lmb.destroy()
-        with pytest.raises(AWS_EXCEPTIONS): # this is a tad lame
+        with pytest.raises(AWS_EXCEPTIONS):  # this is a tad lame
             self.get_lambda(ontology)
 
-    def test_deploy_w_provisions(self, ecr: AwsEcrDriver, lmb: AwsLambdaDriver, ontology: Ontology):
+    def test_deploy_w_provisions(
+        self, ecr: AwsEcrDriver, lmb: AwsLambdaDriver, ontology: Ontology
+    ):
         # TODO: StorageSize seems to be missing from moto mock response...
         # ontology.configs.write("storage", [storage])
         ontology.configs.write("memory", ["2048"])
@@ -56,8 +60,11 @@ class TestAwsLambdaDriver:
 
         lambda_config = self.get_lambda_config(ontology)
         ssm_config = cast(Provision, ontology.configs.parameters)
-        
-        assert lambda_config['MemorySize'] == ssm_config.memory
-        assert lambda_config['Timeout'] == ssm_config.timeout
-        assert lambda_config['VpcConfig']['SubnetIds'] == ssm_config.subnet_ids
-        assert lambda_config['VpcConfig']['SecurityGroupIds'] == ssm_config.security_group_ids
+
+        assert lambda_config["MemorySize"] == ssm_config.memory
+        assert lambda_config["Timeout"] == ssm_config.timeout
+        assert lambda_config["VpcConfig"]["SubnetIds"] == ssm_config.subnet_ids
+        assert (
+            lambda_config["VpcConfig"]["SecurityGroupIds"]
+            == ssm_config.security_group_ids
+        )
