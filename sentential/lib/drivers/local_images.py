@@ -111,7 +111,7 @@ class LocalImagesDriver:
                     results.append(image)
 
         if len(results) > 1:
-            raise LocalDriverError(f"abiguous match with {digest[0:12]}")
+            raise LocalDriverError(f"abiguous match with digest {digest[0:12]}")
         elif len(results) == 0:
             raise LocalDriverError(f"no image with digest {digest[0:12]} found")
         else:
@@ -125,9 +125,9 @@ class LocalImagesDriver:
                     results.append(image)
 
         if len(results) > 1:
-            raise LocalDriverError(f"abiguous match with {id[0:12]}")
+            raise LocalDriverError(f"abiguous match with id {id[0:12]}")
         elif len(results) == 0:
-            raise LocalDriverError(f"no image with digest {id[0:12]} found")
+            raise LocalDriverError(f"no image with id {id[0:12]} found")
         else:
             return results[0]
 

@@ -81,12 +81,11 @@ class AwsEcrDriver:
     def image_by_digest(self, digest: str) -> Image:
         results = []
         for image in self.images():
-            if image.digest:
-                if image.digest.replace("sha256:", "").startswith(digest):
+            if image.digest == digest:
                     results.append(image)
 
         if len(results) > 1:
-            raise AwsDriverError(f"abiguous match with {digest[0:12]}")
+            raise AwsDriverError(f"abiguous match with digest {digest[0:12]}")
         elif len(results) == 0:
             raise AwsDriverError(f"no image with digest {digest[0:12]} found")
         else:
@@ -95,14 +94,13 @@ class AwsEcrDriver:
     def image_by_id(self, id: str) -> Image:
         results = []
         for image in self.images():
-            if image.id:
-                if image.id.replace("sha256:", "").startswith(id):
-                    results.append(image)
+            if image.id == id:
+                results.append(image)
 
         if len(results) > 1:
-            raise AwsDriverError(f"abiguous match with {id[0:12]}")
+            raise AwsDriverError(f"abiguous match with id {id[0:12]}")
         elif len(results) == 0:
-            raise AwsDriverError(f"no image with digest {id[0:12]} found")
+            raise AwsDriverError(f"no image with id {id[0:12]} found")
         else:
             return results[0]
 
