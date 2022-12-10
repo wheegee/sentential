@@ -5,6 +5,7 @@ from sentential.lib.exceptions import AWS_EXCEPTIONS
 
 boto3_config = {"none": {}, "test": {"endpoint_url": "http://localhost:5000"}}
 
+
 class Clients:
     def __init__(self, env: str = getenv("SENTENTIAL_ENV", "none")) -> None:
         self.boto3 = boto3
@@ -16,6 +17,7 @@ class Clients:
         self.api_gw = boto3.client("apigatewayv2", **boto3_config[env])
         self.cloudwatch = boto3.client("logs", **boto3_config[env])
         self.docker = docker
+
 
 try:
     clients = Clients()

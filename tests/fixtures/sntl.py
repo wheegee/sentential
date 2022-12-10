@@ -7,16 +7,21 @@ from typer.testing import CliRunner
 from sentential.sntl import root as sntl
 from sentential.lib.ontology import Ontology
 
+
 @pytest.fixture(scope="class")
 def ontology():
     return Ontology()
 
+
 @pytest.fixture(scope="class")
 def invoke():
     runner = CliRunner()
+
     def invoker(cmd: list):
         return runner.invoke(sntl, cmd)
+
     return invoker
+
 
 @pytest.fixture(scope="class")
 def init(invoke):

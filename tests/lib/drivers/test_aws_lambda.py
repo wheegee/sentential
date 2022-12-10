@@ -1,7 +1,14 @@
-from typing import cast
 import pytest
+from typing import cast
 from sentential.lib.shapes import Provision
-from tests.lib.drivers.test_aws_ecr import ecr, mock_repo, mock_image_manifests, mock_manifest_lists, mock_images, mock_image_lists
+from tests.lib.drivers.test_aws_ecr import (
+    ecr,
+    mock_repo,
+    mock_image_manifests,
+    mock_manifest_lists,
+    mock_images,
+    mock_image_lists,
+)
 
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
@@ -9,11 +16,15 @@ from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.aws_ecr import AwsEcrDriver
 from sentential.lib.exceptions import AwsDriverError, AWS_EXCEPTIONS
 
+
 @pytest.fixture(scope="class")
 def lmb(ontology: Ontology):
     return AwsLambdaDriver(ontology)
 
-@pytest.mark.usefixtures("moto", "init", "ontology", "mock_images", "mock_manifest_lists")
+
+@pytest.mark.usefixtures(
+    "moto", "init", "ontology", "mock_images", "mock_manifest_lists"
+)
 class TestAwsLambdaDriver:
     def get_lambda(self, ontology: Ontology):
         return clients.lmb.get_function(FunctionName=ontology.context.resource_name)
