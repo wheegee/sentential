@@ -38,6 +38,6 @@ def aws(
     func = AwsLambdaDriver(ontology)
     if tag is None:
         tag = SemVer(ecr.images()).latest
-        
+
     image = ecr.image_by_tag(tag)
     print(func.deploy(image))
