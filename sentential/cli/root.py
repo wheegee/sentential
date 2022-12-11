@@ -58,6 +58,7 @@ def clean(remote: bool = typer.Option(False)):
     if remote:
         AwsEcrDriver(ontology).clean()
 
+
 # @root.command()
 # def wut(platform: typer.Option(None, )):
 #     platforms = LocalImagesDriver(Ontology())._buildx_platforms()
