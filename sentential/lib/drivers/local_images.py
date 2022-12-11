@@ -15,6 +15,7 @@ class LocalImagesDriver:
         self.ontology = ontology
         self.repo_name = ontology.context.repository_name
         self.repo_url = ontology.context.repository_url
+        self.builder_name = "sentential-builder"
 
     def build(self, tag: str) -> Image:
         return self._bake(tag, False)
@@ -22,18 +23,22 @@ class LocalImagesDriver:
     def push(self, tag: str) -> Image:
         return self._bake(tag, True)
 
-    def _setup_buildx(self) -> None:
+    def _ensure_buildx(self) -> None:
         # `docker run --privileged --rm tonistiigi/binfmt --install all` <= solves most problems
         for builder in clients.docker.buildx.list():
-            if builder.name == "sentential-builder":
+            if builder.name == self.builder_name:
                 clients.docker.buildx.use(builder)
                 return
 
         builder = clients.docker.buildx.create(name="sentential-builder")
         clients.docker.buildx.use(builder)
 
+    def _buildx_platforms(self) -> List[str]:
+        self._ensure_buildx()
+        return clients.docker.buildx.inspect(self.builder_name).platforms
+
     def _bake(self, tag: str, push: bool) -> Image:
-        self._setup_buildx()
+        self._ensure_buildx()
         self.ontology.args.export_defaults()
         build_args = self.ontology.args.as_dict().items()
         bake_sets = {f"build.args.{key}": value for key, value in build_args}
@@ -110,9 +115,7 @@ class LocalImagesDriver:
                 if image.digest == digest:
                     results.append(image)
 
-        if len(results) > 1:
-            raise LocalDriverError(f"abiguous match with digest {digest[0:12]}")
-        elif len(results) == 0:
+        if len(results) == 0:
             raise LocalDriverError(f"no image with digest {digest[0:12]} found")
         else:
             return results[0]
@@ -124,9 +127,7 @@ class LocalImagesDriver:
                 if image.id == id:
                     results.append(image)
 
-        if len(results) > 1:
-            raise LocalDriverError(f"abiguous match with id {id[0:12]}")
-        elif len(results) == 0:
+        if len(results) == 0:
             raise LocalDriverError(f"no image with id {id[0:12]} found")
         else:
             return results[0]

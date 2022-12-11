@@ -23,7 +23,7 @@ def local(ontology: Ontology):
 
 @pytest.mark.usefixtures("moto", "init", "ontology", "image", "local")
 class TestLocalLambdaDriver:
-    def test_image_type(self, image: Image, local: LocalLambdaDriver):
+    def test_image_type(self, image: Image):
         assert isinstance(image, Image)
 
     def test_deploy(self, image: Image, local: LocalLambdaDriver):

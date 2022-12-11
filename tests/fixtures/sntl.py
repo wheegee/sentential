@@ -1,8 +1,7 @@
 import pytest
 from tempfile import TemporaryDirectory
-from os import chdir, getcwd, remove
+from os import chdir, getcwd
 from shutil import copytree
-from shutil import copyfile
 from typer.testing import CliRunner
 from sentential.sntl import root as sntl
 from sentential.lib.ontology import Ontology

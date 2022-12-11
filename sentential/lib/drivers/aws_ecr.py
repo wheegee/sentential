@@ -85,9 +85,7 @@ class AwsEcrDriver:
             if image.digest == digest:
                 results.append(image)
 
-        if len(results) > 1:
-            raise AwsDriverError(f"abiguous match with digest {digest[0:12]}")
-        elif len(results) == 0:
+        if len(results) == 0:
             raise AwsDriverError(f"no image with digest {digest[0:12]} found")
         else:
             return results[0]
@@ -98,9 +96,7 @@ class AwsEcrDriver:
             if image.id == id:
                 results.append(image)
 
-        if len(results) > 1:
-            raise AwsDriverError(f"abiguous match with id {id[0:12]}")
-        elif len(results) == 0:
+        if len(results) == 0:
             raise AwsDriverError(f"no image with id {id[0:12]} found")
         else:
             return results[0]
