@@ -1,4 +1,5 @@
 import pytest
+import re
 from os import environ, remove
 from shutil import copyfile
 
@@ -27,7 +28,7 @@ class TestContext(object):
         del environ["AWS_KMS_KEY_ALIAS"]
 
     def test_kms_key_id(self, ontology: Ontology):
-        assert ontology.context.kms_key_id == "b9b07f4b-97ba-48c8-b74e-54bce06562cf"
+        assert re.match(r"^.{8}-.{4}-.{4}-.{4}-.{12}", ontology.context.kms_key_id)
 
     def test_kms_key_id_via_env(self, ontology: Ontology):
         environ["AWS_KMS_KEY_ALIAS"] = "doesnt_exist"
@@ -39,6 +40,7 @@ class TestContext(object):
         assert isinstance(ontology.context.caller_identity, AWSCallerIdentity)
 
     def test_partition(self, ontology: Ontology):
+        del environ["PARTITION"]
         assert ontology.context.partition == "AKIAIOSFODNN7EXAMPLE"
 
     def test_region(self, ontology: Ontology):
