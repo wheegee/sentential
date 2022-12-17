@@ -26,7 +26,7 @@ class LocalLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
-    def deploy(self, image: Image, inject_env: Dict[str,str] = {}) -> Image:
+    def deploy(self, image: Image, inject_env: Dict[str, str] = {}) -> Image:
         self.destroy()
         self.ontology.envs.export_defaults()
         clients.docker.network.create("sentential-bridge")
@@ -54,7 +54,7 @@ class LocalLambdaDriver(LambdaDriver):
             detach=True,
             remove=False,
             publish=[("9000", "8080")],
-            envs={**default_env, **credentials_env, **inject_env}
+            envs={**default_env, **credentials_env, **inject_env},
         )
 
         return image
@@ -76,11 +76,10 @@ class LocalLambdaDriver(LambdaDriver):
     def invoke(self, payload: str) -> LambdaInvokeResponse:
         local = clients.boto3.client("lambda", endpoint_url="http://localhost:9000")
         response = local.invoke(
-            FunctionName="function",
-            Payload=payload,
-            LogType='Tail')
-        response['Payload'] = response['Payload'].read()
-        response['Payload'] = response['Payload'].decode('utf-8')
+            FunctionName="function", Payload=payload, LogType="Tail"
+        )
+        response["Payload"] = response["Payload"].read()
+        response["Payload"] = response["Payload"].decode("utf-8")
         return LambdaInvokeResponse(**response)
 
     def _get_credentials(self) -> AWSCredentials:

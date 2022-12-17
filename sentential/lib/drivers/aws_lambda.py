@@ -82,11 +82,10 @@ class AwsLambdaDriver(LambdaDriver):
 
     def invoke(self, payload: str) -> LambdaInvokeResponse:
         response = clients.lmb.invoke(
-            FunctionName=self.function_name,
-            Payload=payload,
-            LogType='Tail')
-        response['Payload'] = response['Payload'].read()
-        response['Payload'] = response['Payload'].decode('utf-8')
+            FunctionName=self.function_name, Payload=payload, LogType="Tail"
+        )
+        response["Payload"] = response["Payload"].read()
+        response["Payload"] = response["Payload"].decode("utf-8")
         return LambdaInvokeResponse(**response)
 
     def _put_role(self, tags: Optional[Dict[str, str]] = None) -> Dict:
@@ -181,6 +180,7 @@ class AwsLambdaDriver(LambdaDriver):
             return function
         except clients.lmb.exceptions.ResourceConflictException:
             from IPython import embed
+
             embed()
             function = clients.lmb.update_function_configuration(
                 FunctionName=function_name,

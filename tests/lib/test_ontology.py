@@ -17,6 +17,7 @@ if "PARTITION" in environ:
 if "AWS_KMS_KEY_ALIAS" in environ:
     del environ["AWS_KMS_KEY_ALIAS"]
 
+
 @pytest.mark.usefixtures("moto", "init", "invoke", "ontology")
 class TestContext(object):
     def test_repository_name(self, ontology: Ontology):

@@ -408,6 +408,7 @@ class LambdaPermission(BaseModel):
     PrincipalOrgID: str
     FunctionUrlAuthType: str = "None"
 
+
 class LambdaInvokeResponse(BaseModel):
     ResponseMetadata: Dict
     StatusCode: int

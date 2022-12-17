@@ -31,8 +31,8 @@ class TestLocalLambdaDriver:
         assert local.deploy(image) == image
 
     def test_invoke(self, image: Image, local: LocalLambdaDriver):
-        local.deploy(image, { "AWS_ENDPOINT": "http://host.docker.internal:5000" })
-        response = local.invoke('{}')
+        local.deploy(image, {"AWS_ENDPOINT": "http://host.docker.internal:5000"})
+        response = local.invoke("{}")
         assert response.StatusCode == 200
         assert "AWS_SESSION_TOKEN" in json.loads(response.Payload).keys()
 
