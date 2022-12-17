@@ -14,7 +14,7 @@ from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.aws_ecr import AwsEcrDriver
-from sentential.lib.exceptions import AwsDriverError, AWS_EXCEPTIONS
+from sentential.lib.exceptions import AWS_EXCEPTIONS
 
 
 @pytest.fixture(scope="class")

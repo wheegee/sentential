@@ -407,3 +407,8 @@ class LambdaPermission(BaseModel):
     RevisionId: str
     PrincipalOrgID: str
     FunctionUrlAuthType: str = "None"
+
+class LambdaInvokeResponse(BaseModel):
+    ResponseMetadata: Dict
+    StatusCode: int
+    Payload: str

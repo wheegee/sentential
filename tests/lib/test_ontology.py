@@ -10,6 +10,12 @@ from sentential.lib.shapes import AWSCallerIdentity, Paths
 from sentential.lib.store import ModeledStore, GenericStore
 from sentential.lib.exceptions import StoreError, ContextError
 
+# We should figure out how to clear these for all tests...
+if "PARTITION" in environ:
+    del environ["PARTITION"]
+
+if "AWS_KMS_KEY_ALIAS" in environ:
+    del environ["AWS_KMS_KEY_ALIAS"]
 
 @pytest.mark.usefixtures("moto", "init", "invoke", "ontology")
 class TestContext(object):
@@ -40,7 +46,6 @@ class TestContext(object):
         assert isinstance(ontology.context.caller_identity, AWSCallerIdentity)
 
     def test_partition(self, ontology: Ontology):
-        del environ["PARTITION"]
         assert ontology.context.partition == "AKIAIOSFODNN7EXAMPLE"
 
     def test_region(self, ontology: Ontology):

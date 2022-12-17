@@ -4,6 +4,7 @@ from sentential.cli.envs import envs
 from sentential.cli.configs import configs
 from sentential.cli.deploy import deploy
 from sentential.cli.destroy import destroy
+from sentential.cli.invoke import invoke
 from sentential.cli.logs import logs
 from sentential.lib.exceptions import SntlException, DockerException, AWS_EXCEPTIONS
 
@@ -12,6 +13,7 @@ root.add_typer(envs, name="envs", help="environment variables")
 root.add_typer(configs, name="configs", help="provisioning")
 root.add_typer(deploy, name="deploy", help="create deployment")
 root.add_typer(destroy, name="destroy", help="destroy deployment")
+root.add_typer(invoke, name="invoke", help="invoke function")
 root.add_typer(logs, name="logs", help="logging")
 
 

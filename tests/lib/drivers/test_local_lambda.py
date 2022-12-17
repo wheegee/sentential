@@ -1,3 +1,4 @@
+import json
 import pytest
 from shutil import copyfile
 from sentential.lib.clients import clients
@@ -30,8 +31,10 @@ class TestLocalLambdaDriver:
         assert local.deploy(image) == image
 
     def test_invoke(self, image: Image, local: LocalLambdaDriver):
-        """This almost works, entry needs to be able to change endpoint, and somehow the test server needs to be present to the container"""
-        pass
+        local.deploy(image, { "AWS_ENDPOINT": "http://host.docker.internal:5000" })
+        response = local.invoke('{}')
+        assert response.StatusCode == 200
+        assert "AWS_SESSION_TOKEN" in json.loads(response.Payload).keys()
 
     def test_destroy(self, image: Image, local: LocalLambdaDriver):
         local.destroy()

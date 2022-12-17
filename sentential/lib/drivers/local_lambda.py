@@ -1,6 +1,8 @@
 from ctypes import Union
+import json
 import os
 from tempfile import TemporaryDirectory
+from typing import Dict
 from sentential.lib.clients import clients
 from sentential.lib.template import Policy
 from sentential.lib.ontology import Ontology
@@ -11,6 +13,7 @@ from sentential.lib.shapes import (
     AWSCredentials,
     AWSFederationToken,
     Image,
+    LambdaInvokeResponse,
 )
 
 
@@ -23,12 +26,13 @@ class LocalLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
-    def deploy(self, image: Image) -> Image:
+    def deploy(self, image: Image, inject_env: Dict[str,str] = {}) -> Image:
         self.destroy()
         self.ontology.envs.export_defaults()
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_credentials()
         credentials_env = {
+            "AWS_LAMBDA_FUNCTION_NAME": self.ontology.context.resource_name,
             "AWS_ACCESS_KEY_ID": credentials.AccessKeyId,
             "AWS_SECRET_ACCESS_KEY": credentials.SecretAccessKey,
         }
@@ -43,13 +47,14 @@ class LocalLambdaDriver(LambdaDriver):
 
         clients.docker.run(
             image.id,
+            add_hosts=[("host.docker.internal", "host-gateway")],
             name="sentential",
             hostname="sentential",
             networks=["sentential-bridge"],
             detach=True,
             remove=False,
             publish=[("9000", "8080")],
-            envs={**default_env, **credentials_env},
+            envs={**default_env, **credentials_env, **inject_env}
         )
 
         return image
@@ -68,29 +73,15 @@ class LocalLambdaDriver(LambdaDriver):
             cmd.append("--follow")
         os.system(" ".join(cmd))
 
-    def invoke(self, payload: str):
-        # TODO: move away from shell-out here
-        with TemporaryDirectory() as tmp:
-            cmd = [
-                "aws",
-                "lambda",
-                "invoke",
-                "--function-name",
-                "function",
-                "--endpoint",
-                "http://localhost:9000",
-                "--log-type",
-                "Tail",
-                "--invocation-type",
-                "RequestResponse",
-                "--cli-binary-format",
-                "raw-in-base64-out",
-                "--payload",
-                f"'{payload}'",
-                f"{tmp}/output",
-            ]
-            os.system(" ".join(cmd))
-            os.system(f"cat {tmp}/output")
+    def invoke(self, payload: str) -> LambdaInvokeResponse:
+        local = clients.boto3.client("lambda", endpoint_url="http://localhost:9000")
+        response = local.invoke(
+            FunctionName="function",
+            Payload=payload,
+            LogType='Tail')
+        response['Payload'] = response['Payload'].read()
+        response['Payload'] = response['Payload'].decode('utf-8')
+        return LambdaInvokeResponse(**response)
 
     def _get_credentials(self) -> AWSCredentials:
         policy_json = Policy(self.ontology).render()

@@ -9,6 +9,7 @@ from sentential.lib.drivers.aws_ecr import AwsEcrDriver
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
     Image,
+    LambdaInvokeResponse,
     Provision,
 )
 from sentential.lib.clients import clients
@@ -79,8 +80,14 @@ class AwsLambdaDriver(LambdaDriver):
             cmd.append("--follow")
         os.system(" ".join(cmd))
 
-    def invoke(self, payload: str) -> None:
-        raise AwsDriverError("invoke is not yet implemented")
+    def invoke(self, payload: str) -> LambdaInvokeResponse:
+        response = clients.lmb.invoke(
+            FunctionName=self.function_name,
+            Payload=payload,
+            LogType='Tail')
+        response['Payload'] = response['Payload'].read()
+        response['Payload'] = response['Payload'].decode('utf-8')
+        return LambdaInvokeResponse(**response)
 
     def _put_role(self, tags: Optional[Dict[str, str]] = None) -> Dict:
         role_name = self.function_name
@@ -173,6 +180,8 @@ class AwsLambdaDriver(LambdaDriver):
 
             return function
         except clients.lmb.exceptions.ResourceConflictException:
+            from IPython import embed
+            embed()
             function = clients.lmb.update_function_configuration(
                 FunctionName=function_name,
                 Role=role_arn,
