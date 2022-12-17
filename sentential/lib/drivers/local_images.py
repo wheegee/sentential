@@ -1,5 +1,6 @@
 from functools import lru_cache
 from os import environ
+from time import sleep
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
 from sentential.lib.shapes import Image
@@ -15,58 +16,62 @@ class LocalImagesDriver:
         self.ontology = ontology
         self.repo_name = ontology.context.repository_name
         self.repo_url = ontology.context.repository_url
-        self.builder_name = "sentential-builder"
 
-    def build(self, tag: str) -> Image:
-        return self._bake(tag, False)
-
-    def push(self, tag: str) -> Image:
-        return self._bake(tag, True)
-
-    def _ensure_buildx(self) -> None:
-        # `docker run --privileged --rm tonistiigi/binfmt --install all` <= solves most problems
-        for builder in clients.docker.buildx.list():
-            if builder.name == self.builder_name:
-                clients.docker.buildx.use(builder)
-                return
-
-        builder = clients.docker.buildx.create(name="sentential-builder")
-        clients.docker.buildx.use(builder)
-
-    def _buildx_platforms(self) -> List[str]:
-        self._ensure_buildx()
-        return clients.docker.buildx.inspect(self.builder_name).platforms
-
-    def _bake(self, tag: str, push: bool) -> Image:
-        self._ensure_buildx()
-        self.ontology.args.export_defaults()
-        build_args = self.ontology.args.as_dict().items()
-        bake_sets = {f"build.args.{key}": value for key, value in build_args}
-        bake_vars = {
-            "tag": tag,
-            "repo_name": self.repo_name,
-            "repo_url": self.repo_url,
-        }
-
+    def build(self, tag: str, push: bool) -> List[Image]:
         if "PLATFORMS" in environ:
-            bake_sets["publish.platform"] = environ["PLATFORMS"]
+            return self._build_platforms(tag, environ["PLATFORMS"].split(","), push)
+        else:
+            return self._build(tag, push)
 
-        clients.docker.buildx.bake(
-            targets=["build"],
-            files=[".sntl/docker-bake.hcl"],
-            set=bake_sets,
-            variables=bake_vars,
+    def _build(self, tag: str, push: bool) -> List[Image]:
+        self.ontology.args.export_defaults()
+
+        clients.docker.build(
+            self.ontology.context.path.root,
+            load=True,
+            tags=[f"{self.repo_url}:{tag}"] if push else [f"{self.repo_name}:{tag}"],
+            build_args=self.ontology.args.as_dict(),
         )
-
         if push:
-            clients.docker.buildx.bake(
-                targets=["publish"],
-                files=[".sntl/docker-bake.hcl"],
-                set=bake_sets,
-                variables=bake_vars,
-            )
+            clients.docker.push(f"{self.repo_url}:{tag}")
 
-        return self.image_by_tag(tag)
+        return [self.image_by_tag(tag)]
+
+    def _build_platforms(
+        self, tag: str, platforms: List[str], push: bool
+    ) -> List[Image]:
+        self.ontology.args.export_defaults()
+
+        images = []
+        for platform in platforms:
+            arch = platform.split("/")[1]
+            tags = (
+                [f"{self.repo_url}:{tag}-{arch}"]
+                if push
+                else [f"{self.repo_name}:{tag}-{arch}"]
+            )
+            clients.docker.build(
+                self.ontology.context.path.root,
+                platforms=[platform],
+                load=True,
+                tags=tags,
+                build_args=self.ontology.args.as_dict(),
+            )
+            if push:
+                clients.docker.push(f"{self.repo_url}:{tag}-{arch}")
+                clients.docker.manifest.create(
+                    f"{self.repo_url}:{tag}", [f"{self.repo_url}:{tag}-{arch}"], True
+                )
+                clients.docker.manifest.annotate(
+                    f"{self.repo_url}:{tag}", f"{self.repo_url}:{tag}-{arch}", arch
+                )
+
+            sleep(2)  # TODO: fix this hack that waits for the image to become available
+            images.append(self.image_by_tag(f"{tag}-{arch}"))
+        if push:
+            clients.docker.manifest.push(f"{self.repo_url}:{tag}", True)
+
+        return images
 
     def pull(self, image: Image) -> List[str]:
         tags_pulled = []
@@ -96,10 +101,6 @@ class LocalImagesDriver:
             clients.docker.container.remove("sentential", force=True)
             clients.docker.image.remove(image.id, force=True)
 
-        for builder in clients.docker.buildx.list():
-            if builder.name == "sentential-builder":
-                clients.docker.buildx.use(builder)
-                clients.docker.buildx.prune(all=True)
         self._repo_images.cache_clear()
 
     def image_by_tag(self, tag: str) -> Image:

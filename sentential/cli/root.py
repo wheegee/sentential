@@ -25,7 +25,7 @@ def init(repository_name: str, runtime: Runtimes):
 def build():
     """build lambda image"""
     docker = LocalImagesDriver(Ontology())
-    print(docker.build(CURRENT_WORKING_IMAGE_TAG))
+    print(docker.build(CURRENT_WORKING_IMAGE_TAG, False))
 
 
 @root.command()
@@ -35,7 +35,7 @@ def publish(major: bool = typer.Option(False), minor: bool = typer.Option(False)
     ecr = AwsEcrDriver(ontology)
     docker = LocalImagesDriver(ontology)
     tag = SemVer(ecr.images()).next(major, minor)
-    print(docker.push(tag))
+    print(docker.build(tag, True))
 
 
 @root.command()

@@ -26,7 +26,7 @@ class Image(BaseModel):
     @validator("versions")
     def coerce_versions(cls, v):
         if v is not None:
-            return list(set(v))
+            return list(set([re.sub(r"-.*64$", "", version) for version in v]))
         else:
             return []
 

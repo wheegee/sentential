@@ -733,7 +733,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "moto"
-version = "4.0.12.dev0"
+version = "4.0.10.dev0"
 description = "A library that allows your python tests to easily mock out the boto library"
 category = "dev"
 optional = false
@@ -781,7 +781,7 @@ xray = ["aws-xray-sdk (>=0.93,!=0.96)", "setuptools"]
 type = "git"
 url = "https://github.com/bkeane/moto"
 reference = "enableECRImageManifestMediaType"
-resolved_reference = "b8fc8a59e0f9b27bbc2aacce7b648bef822bb960"
+resolved_reference = "dc9eb3584c84384204195db0ce59e2747bcf811c"
 
 [[package]]
 name = "orderedmultidict"

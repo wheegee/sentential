@@ -1,5 +1,6 @@
 import json
 import pytest
+from os import environ
 from shutil import copyfile
 from sentential.lib.clients import clients
 from sentential.lib.shapes import Image

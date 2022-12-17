@@ -14,7 +14,7 @@ def local(ontology: Ontology):
 
 @pytest.fixture(scope="class")
 def image(local):
-    yield local.build("0.0.1")
+    yield local.build("0.0.1", False)
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology", "local", "image")
