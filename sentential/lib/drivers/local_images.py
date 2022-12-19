@@ -9,6 +9,7 @@ from python_on_whales.components.image.cli_wrapper import Image as PythonOnWhale
 import python_on_whales
 from typing import List, Dict, Optional, Tuple, cast
 
+
 class LocalImagesDriver:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -26,17 +27,19 @@ class LocalImagesDriver:
         manifest_list_uri = f"{self.repo_url}:{tag}"
         image_manifest_uris = []
         cwi = self.image_by_tag("cwi")
-        
+
         if multiarch:
             platforms = self.platforms
         else:
-            platforms = [ p for p in self.platforms if cwi.arch in p ]
-        
+            platforms = [p for p in self.platforms if cwi.arch in p]
+
         for platform in platforms:
             built.append(self._build(platform))
-        
+
         if cwi.id not in [build.id for build in built]:
-            raise LocalDriverError("current working image id does not match that of any final build")
+            raise LocalDriverError(
+                "current working image id does not match that of any final build"
+            )
 
         for build in built:
             image_manifest_uri = f"{self.repo_url}:{tag}-{build.arch}"
@@ -49,9 +52,8 @@ class LocalImagesDriver:
         sleep(2)
         return manifest_list_uri
 
-
     def _build(self, platform: Optional[str] = None) -> Image:
-        self.ontology.args.export_defaults() # maybe hoist to initializer?
+        self.ontology.args.export_defaults()  # maybe hoist to initializer?
 
         cmd = {
             "load": True,
@@ -60,20 +62,17 @@ class LocalImagesDriver:
 
         if platform:
             cmd["platforms"] = [platform]
-        
-        image = clients.docker.build(
-            self.ontology.context.path.root,
-            **cmd
-        )
-        
+
+        image = clients.docker.build(self.ontology.context.path.root, **cmd)
+
         if isinstance(image, PythonOnWhalesImage):
             return Image(
-                id = image.id,
-                digest = None,
-                uri = None,
+                id=image.id,
+                digest=None,
+                uri=None,
                 tags=image.repo_tags,
                 versions=image.repo_tags,
-                arch=image.architecture
+                arch=image.architecture,
             )
         else:
             raise LocalDriverError("docker build driver returned unexpected type")

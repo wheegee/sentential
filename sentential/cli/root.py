@@ -14,6 +14,7 @@ from rich import print
 
 root = typer.Typer()
 
+
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
     """initialize sentential project"""
@@ -31,16 +32,17 @@ def build():
 
 @root.command()
 def publish(
-    major: bool = typer.Option(False), 
+    major: bool = typer.Option(False),
     minor: bool = typer.Option(False),
-    multiarch: bool = typer.Option(False)
-    ):
+    multiarch: bool = typer.Option(False),
+):
     """publish lambda image"""
     ontology = Ontology()
     ecr = AwsEcrDriver(ontology)
     docker = LocalImagesDriver(ontology)
     tag = SemVer(ecr.images()).next(major, minor)
     docker.publish(tag, multiarch)
+
 
 @root.command()
 def login():

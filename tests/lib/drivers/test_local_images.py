@@ -8,10 +8,12 @@ from sentential.lib.shapes import Image
 def local_images(ontology: Ontology):
     yield LocalImagesDriver(ontology)
 
+
 @pytest.fixture(scope="class")
 def cwi(local_images):
     yield local_images.build()
     local_images.clean()
+
 
 @pytest.mark.usefixtures("moto", "init", "ontology", "local_images", "cwi")
 class TestLocalImagesDriver:
