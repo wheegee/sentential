@@ -1,10 +1,11 @@
+from typing import List
+from enum import Enum
 import typer
 from sentential.lib.clients import clients
 from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.drivers.aws_ecr import AwsEcrDriver
 from sentential.lib.template import Init
 from sentential.lib.shapes import Runtimes
-from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.semver import SemVer
 from sentential.lib.ontology import Ontology
 from sentential.lib.joinery import Joinery
@@ -12,7 +13,6 @@ from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG
 from rich import print
 
 root = typer.Typer()
-
 
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
@@ -24,19 +24,23 @@ def init(repository_name: str, runtime: Runtimes):
 @root.command()
 def build():
     """build lambda image"""
-    docker = LocalImagesDriver(Ontology())
-    print(docker.build(CURRENT_WORKING_IMAGE_TAG, False))
+    ontology = Ontology()
+    docker = LocalImagesDriver(ontology)
+    docker.build()
 
 
 @root.command()
-def publish(major: bool = typer.Option(False), minor: bool = typer.Option(False)):
+def publish(
+    major: bool = typer.Option(False), 
+    minor: bool = typer.Option(False),
+    multiarch: bool = typer.Option(False)
+    ):
     """publish lambda image"""
     ontology = Ontology()
     ecr = AwsEcrDriver(ontology)
     docker = LocalImagesDriver(ontology)
     tag = SemVer(ecr.images()).next(major, minor)
-    print(docker.build(tag, True))
-
+    docker.publish(tag, multiarch)
 
 @root.command()
 def login():
@@ -57,8 +61,3 @@ def clean(remote: bool = typer.Option(False)):
     LocalImagesDriver(ontology).clean()
     if remote:
         AwsEcrDriver(ontology).clean()
-
-
-# @root.command()
-# def wut(platform: typer.Option(None, )):
-#     platforms = LocalImagesDriver(Ontology())._buildx_platforms()

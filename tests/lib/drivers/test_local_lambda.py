@@ -1,6 +1,5 @@
 import json
 import pytest
-from os import environ
 from shutil import copyfile
 from sentential.lib.clients import clients
 from sentential.lib.shapes import Image
@@ -11,33 +10,30 @@ from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 
 
 @pytest.fixture(scope="class")
-def image(init, ontology: Ontology):
+def cwi(init, ontology: Ontology):
     copyfile("./fixtures/app.py", f"{init}/src/app.py")
     local = LocalImagesDriver(ontology)
-    local.clean()
-    return local.build("0.0.1")
-
+    return local.build()
 
 @pytest.fixture(scope="class")
 def local(ontology: Ontology):
     return LocalLambdaDriver(ontology)
 
-
-@pytest.mark.usefixtures("moto", "init", "ontology", "image", "local")
+@pytest.mark.usefixtures("moto", "init", "ontology", "cwi", "local")
 class TestLocalLambdaDriver:
-    def test_image_type(self, image: Image):
-        assert isinstance(image, Image)
+    def test_image_type(self, cwi: Image):
+        assert isinstance(cwi, Image)
 
-    def test_deploy(self, image: Image, local: LocalLambdaDriver):
-        assert local.deploy(image) == image
+    def test_deploy(self, cwi: Image, local: LocalLambdaDriver):
+        assert local.deploy(cwi) == cwi
 
-    def test_invoke(self, image: Image, local: LocalLambdaDriver):
-        local.deploy(image, {"AWS_ENDPOINT": "http://host.docker.internal:5000"})
+    def test_invoke(self, cwi: Image, local: LocalLambdaDriver):
+        local.deploy(cwi, {"AWS_ENDPOINT": "http://host.docker.internal:5000"})
         response = local.invoke("{}")
         assert response.StatusCode == 200
         assert "AWS_SESSION_TOKEN" in json.loads(response.Payload).keys()
 
-    def test_destroy(self, image: Image, local: LocalLambdaDriver):
+    def test_destroy(self, cwi: Image, local: LocalLambdaDriver):
         local.destroy()
         locally_deployed_lambdas = [
             container.name == "sentential" for container in clients.docker.ps()

@@ -1,77 +1,96 @@
 from functools import lru_cache
-from os import environ
-from time import sleep
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
-from sentential.lib.shapes import Image
+from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG, Image
 from sentential.lib.exceptions import LocalDriverError
 from python_on_whales.components.image.cli_wrapper import Image as PythonOnWhalesImage
 
 import python_on_whales
-from typing import List, Dict, Tuple
-
+from typing import List, Dict, Optional, Tuple, cast
 
 class LocalImagesDriver:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.repo_name = ontology.context.repository_name
         self.repo_url = ontology.context.repository_url
+        self.platforms = ["linux/amd64", "linux/arm64"]
 
-    def build(self, tag: str, push: bool) -> List[Image]:
-        if "PLATFORMS" in environ:
-            return self._build_platforms(tag, environ["PLATFORMS"].split(","), push)
+    def build(self) -> Image:
+        cwi = self._build()
+        self._tag(cwi, f"{self.repo_name}:{CURRENT_WORKING_IMAGE_TAG}")
+        return self.image_by_id(cwi.id)
+
+    def publish(self, tag: str, multiarch: bool) -> str:
+        built: List[Image] = []
+        cwi = self.image_by_tag("cwi")
+        
+        if multiarch:
+            platforms = self.platforms
         else:
-            return self._build(tag, push)
-
-    def _build(self, tag: str, push: bool) -> List[Image]:
-        self.ontology.args.export_defaults()
-
-        clients.docker.build(
-            self.ontology.context.path.root,
-            load=True,
-            tags=[f"{self.repo_url}:{tag}"] if push else [f"{self.repo_name}:{tag}"],
-            build_args=self.ontology.args.as_dict(),
-        )
-        if push:
-            clients.docker.push(f"{self.repo_url}:{tag}")
-
-        return [self.image_by_tag(tag)]
-
-    def _build_platforms(
-        self, tag: str, platforms: List[str], push: bool
-    ) -> List[Image]:
-        self.ontology.args.export_defaults()
-
-        images = []
+            platforms = [ p for p in self.platforms if cwi.arch in p ]
+        
         for platform in platforms:
-            arch = platform.split("/")[1]
-            tags = (
-                [f"{self.repo_url}:{tag}-{arch}"]
-                if push
-                else [f"{self.repo_name}:{tag}-{arch}"]
-            )
-            clients.docker.build(
-                self.ontology.context.path.root,
-                platforms=[platform],
-                load=True,
-                tags=tags,
-                build_args=self.ontology.args.as_dict(),
-            )
-            if push:
-                clients.docker.push(f"{self.repo_url}:{tag}-{arch}")
-                clients.docker.manifest.create(
-                    f"{self.repo_url}:{tag}", [f"{self.repo_url}:{tag}-{arch}"], True
-                )
-                clients.docker.manifest.annotate(
-                    f"{self.repo_url}:{tag}", f"{self.repo_url}:{tag}-{arch}", arch
-                )
+            built.append(self._build(platform))
+        
+        if cwi.id not in [build.id for build in built]:
+            raise LocalDriverError("current working image id does not match that of any final build")
 
-            sleep(2)  # TODO: fix this hack that waits for the image to become available
-            images.append(self.image_by_tag(f"{tag}-{arch}"))
-        if push:
-            clients.docker.manifest.push(f"{self.repo_url}:{tag}", True)
+        if len(built) == 1:
+            # push image manifest directly
+            build = built[0]
+            image_manifest_uri =f"{self.repo_url}:{tag}" 
+            self._tag(build, image_manifest_uri)
+            clients.docker.push(image_manifest_uri)
+            return image_manifest_uri
 
-        return images
+        if len(built) > 1:
+            # push image manifests, then create / push manifest list
+            manifest_list_uri = f"{self.repo_url}:{tag}"
+            image_manifests = []
+
+            for build in built:
+                arch_tag = f"{self.repo_url}:{tag}-{build.arch}"
+                self._tag(build, arch_tag)
+                image_manifests.append(arch_tag)
+                clients.docker.push(arch_tag)
+
+            clients.docker.manifest.create(manifest_list_uri, image_manifests, True)
+            clients.docker.manifest.push(manifest_list_uri, True)
+            return manifest_list_uri
+        
+        raise LocalDriverError("no images built to publish")
+
+    def _build(self, platform: Optional[str] = None) -> Image:
+        self.ontology.args.export_defaults() # maybe hoist to initializer?
+
+        cmd = {
+            "load": True,
+            "build_args": self.ontology.args.as_dict(),
+        }
+
+        if platform:
+            cmd["platforms"] = [platform]
+        
+        image = clients.docker.build(
+            self.ontology.context.path.root,
+            **cmd
+        )
+        
+        if isinstance(image, PythonOnWhalesImage):
+            return Image(
+                id = image.id,
+                digest = None,
+                uri = None,
+                tags=image.repo_tags,
+                versions=image.repo_tags,
+                arch=image.architecture
+            )
+        else:
+            raise LocalDriverError("docker build driver returned unexpected type")
+
+    def _tag(self, image: Image, tag: str) -> None:
+        clients.docker.tag(image.id, tag)
+        image.tags.append(tag)
 
     def pull(self, image: Image) -> List[str]:
         tags_pulled = []
