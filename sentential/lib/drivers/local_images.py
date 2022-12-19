@@ -109,8 +109,6 @@ class LocalImagesDriver:
             clients.docker.container.remove("sentential", force=True)
             clients.docker.image.remove(image.id, force=True)
 
-        self._repo_images.cache_clear()
-
     def image_by_tag(self, tag: str) -> Image:
         for image in self.images():
             if tag in image.tags:
@@ -147,7 +145,6 @@ class LocalImagesDriver:
     def _get_arch(self, image_id: str) -> str:
         return self._arch_map()[image_id]
 
-    @lru_cache
     def _repo_images(
         self,
     ) -> List[python_on_whales.Image]:  # pyright: ignore[reportPrivateImportUsage]

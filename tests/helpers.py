@@ -1,9 +1,8 @@
-import in_place
 from rich.table import Table
 from typing import Any, List
 import hashlib
 import random
-
+import fileinput
 
 def table_headers(table: Table) -> List[str]:
     return [str(column.header) for column in table.columns]
@@ -16,11 +15,12 @@ def table_body(table: Table) -> List[List[Any]]:
 
 
 def rewrite(file: str, target: str, replace: str) -> None:
-    with in_place.InPlace(file) as fp:
-        for line in fp:
+    with fileinput.FileInput(file, inplace = True) as f:
+        for line in f:
             if target in line:
-                fp.write(replace)
-
+                print(replace, end ='\n')
+            else:
+                print(line, end="")
 
 # ECR Mock Data
 def generate_random_sha():

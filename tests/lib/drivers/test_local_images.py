@@ -1,8 +1,9 @@
 import pytest
 from sentential.lib.ontology import Ontology
 from sentential.lib.drivers.local_images import LocalImagesDriver
+from sentential.lib.exceptions import LocalDriverError
 from sentential.lib.shapes import Image
-
+from tests.helpers import rewrite
 
 @pytest.fixture(scope="class")
 def local_images(ontology: Ontology):
@@ -42,3 +43,14 @@ class TestLocalImagesDriver:
     def test_clean(self, local_images: LocalImagesDriver):
         local_images.clean()
         assert len(local_images.images()) == 0
+
+    def test_block_publish_when_no_cwi(self, cwi: Image, local_images: LocalImagesDriver):
+        local_images.clean()
+        with pytest.raises(LocalDriverError):
+            local_images.publish("latest", True)
+
+    def test_block_publish_when_cwi_differs(self, cwi: Image, local_images: LocalImagesDriver):
+        local_images.build()
+        rewrite("Dockerfile", "# insert application specific build steps here", "RUN echo 123")
+        with pytest.raises(LocalDriverError):
+            local_images.publish("latest", False)
