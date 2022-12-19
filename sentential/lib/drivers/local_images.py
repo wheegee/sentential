@@ -1,4 +1,5 @@
 from functools import lru_cache
+from time import sleep
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
 from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG, Image
@@ -22,6 +23,8 @@ class LocalImagesDriver:
 
     def publish(self, tag: str, multiarch: bool) -> str:
         built: List[Image] = []
+        manifest_list_uri = f"{self.repo_url}:{tag}"
+        image_manifest_uris = []
         cwi = self.image_by_tag("cwi")
         
         if multiarch:
@@ -35,30 +38,17 @@ class LocalImagesDriver:
         if cwi.id not in [build.id for build in built]:
             raise LocalDriverError("current working image id does not match that of any final build")
 
-        if len(built) == 1:
-            # push image manifest directly
-            build = built[0]
-            image_manifest_uri =f"{self.repo_url}:{tag}" 
+        for build in built:
+            image_manifest_uri = f"{self.repo_url}:{tag}-{build.arch}"
             self._tag(build, image_manifest_uri)
+            image_manifest_uris.append(image_manifest_uri)
             clients.docker.push(image_manifest_uri)
-            return image_manifest_uri
 
-        if len(built) > 1:
-            # push image manifests, then create / push manifest list
-            manifest_list_uri = f"{self.repo_url}:{tag}"
-            image_manifests = []
+        clients.docker.manifest.create(manifest_list_uri, image_manifest_uris, True)
+        clients.docker.manifest.push(manifest_list_uri, True)
+        sleep(2)
+        return manifest_list_uri
 
-            for build in built:
-                arch_tag = f"{self.repo_url}:{tag}-{build.arch}"
-                self._tag(build, arch_tag)
-                image_manifests.append(arch_tag)
-                clients.docker.push(arch_tag)
-
-            clients.docker.manifest.create(manifest_list_uri, image_manifests, True)
-            clients.docker.manifest.push(manifest_list_uri, True)
-            return manifest_list_uri
-        
-        raise LocalDriverError("no images built to publish")
 
     def _build(self, platform: Optional[str] = None) -> Image:
         self.ontology.args.export_defaults() # maybe hoist to initializer?
