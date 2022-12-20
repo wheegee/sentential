@@ -73,32 +73,40 @@ class AwsEcrDriver:
         )
         self._image_details.cache_clear()
 
-    def image_by_tag(self, tag: str) -> Image:
-        for image in self.images():
-            if tag in image.tags:
-                return image
-        raise AwsDriverError(f"no image with tag {tag} found")
 
-    def image_by_digest(self, digest: str) -> Image:
+    def image_by_tag(self, tag: str, arch: str = "any") -> Image:
+        return self._image_by("tags", tag, arch)
+
+    def image_by_digest(self, digest: str, arch: str = "any") -> Image:
+        return self._image_by("digest", digest, arch)
+
+    def image_by_id(self, id: str, arch: str = "any") -> Image:
+        return self._image_by("id", id, arch)
+
+    def _image_by(self, attribute: str, value: str, arch: str = "any") -> Image:
         results = []
+        images = self.images()
+
+        if arch != "any":
+            images = [ image for image in images if image.arch == arch ]
+
         for image in self.images():
-            if image.digest == digest:
-                results.append(image)
-
+            attr = getattr(image, attribute)
+            if isinstance(attr, list):
+                if value in attr:
+                    results.append(image)
+            elif isinstance(attr, str):
+                if value == attr:
+                    results.append(image)
+            else:
+                raise AwsDriverError("unhandled type in image query")
+        
+        humanized_value = value.replace("sha256:","")[0:12]
         if len(results) == 0:
-            raise AwsDriverError(f"no image with digest {digest[0:12]} found")
-        else:
-            return results[0]
-
-    def image_by_id(self, id: str) -> Image:
-        results = []
-        for image in self.images():
-            if image.id == id:
-                results.append(image)
-
-        if len(results) == 0:
-            raise AwsDriverError(f"no image with id {id[0:12]} found")
-        else:
+            raise AwsDriverError(f"no images found where {attribute} is {humanized_value} and arch is {arch}")
+        elif len(results) > 1:
+            raise AwsDriverError(f"ambiguous match where {attribute} is {humanized_value} and arch is {arch}")
+        else: 
             return results[0]
 
     def _image_identifiers(self) -> List[Tuple[str, str]]:

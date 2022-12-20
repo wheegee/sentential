@@ -25,7 +25,7 @@ def hander_returns_environ(init):
 
 @pytest.fixture(scope="class")
 def cwi(local_images: LocalImagesDriver):
-    yield local_images.build()
+    yield local_images.build("amd64")
     local_images.clean()
 
 

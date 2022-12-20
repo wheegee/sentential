@@ -227,6 +227,11 @@ class AWSAssumeRole(BaseModel):
 #
 # Lambda
 #
+
+class Architecture(Enum):
+    amd64 = "amd64"
+    arm64 = "arm64"
+
 class Runtimes(Enum):
     """https://gallery.ecr.aws/lambda?page=1"""
 

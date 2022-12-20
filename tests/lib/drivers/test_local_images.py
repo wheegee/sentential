@@ -13,7 +13,7 @@ def local_images(ontology: Ontology):
 
 @pytest.fixture(scope="class")
 def cwi(local_images):
-    yield local_images.build()
+    yield local_images.build("amd64")
     local_images.clean()
 
 
@@ -46,20 +46,20 @@ class TestLocalImagesDriver:
         assert len(local_images.images()) == 0
 
     def test_block_publish_when_no_cwi(
-        self, cwi: Image, local_images: LocalImagesDriver
+        self, local_images: LocalImagesDriver
     ):
         local_images.clean()
         with pytest.raises(LocalDriverError):
-            local_images.publish("latest", True)
+            local_images.publish("latest", ["amd64"])
 
     def test_block_publish_when_cwi_differs(
-        self, cwi: Image, local_images: LocalImagesDriver
+        self, local_images: LocalImagesDriver
     ):
-        local_images.build()
+        local_images.build("amd64")
         rewrite(
             "Dockerfile",
             "# insert application specific build steps here",
             "RUN echo 123",
         )
         with pytest.raises(LocalDriverError):
-            local_images.publish("latest", False)
+            local_images.publish("latest", ["amd64"])
