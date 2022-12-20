@@ -73,10 +73,3 @@ def clean(remote: bool = typer.Option(False)):
     LocalImagesDriver(ontology).clean()
     if remote:
         AwsEcrDriver(ontology).clean()
-
-
-@root.command()
-def wut():
-    from IPython import embed
-
-    embed()
