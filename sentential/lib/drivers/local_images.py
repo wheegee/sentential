@@ -23,7 +23,7 @@ class LocalImagesDriver:
         return self.image_by_id(cwi.id)
 
     def publish(self, tag: str, arch: List[str]) -> str:
-        platforms = [ f"linux/{a}" for a in arch ]
+        platforms = [f"linux/{a}" for a in arch]
         manifest_list_uri = f"{self.repo_url}:{tag}"
         image_manifest_uris = []
         built: List[Image] = []
@@ -106,11 +106,11 @@ class LocalImagesDriver:
     def _image_by(self, attribute: str, value: str, arch: str = "any") -> Image:
         results = []
         images = self.images()
-        humanized_value = value.replace("sha256:","")[0:12]
+        humanized_value = value.replace("sha256:", "")[0:12]
         clause = None
 
         if arch != "any":
-            images = [ image for image in images if image.arch == arch ]
+            images = [image for image in images if image.arch == arch]
 
         for image in self.images():
             attr = getattr(image, attribute)
@@ -124,15 +124,13 @@ class LocalImagesDriver:
                     results.append(image)
             else:
                 raise LocalDriverError("unhandled type in image query")
-        
+
         if len(results) == 0:
             raise LocalDriverError(f"no images found where {clause} and arch is {arch}")
         elif len(results) > 1:
             raise LocalDriverError(f"ambiguous match where {clause} and arch is {arch}")
-        else: 
+        else:
             return results[0]
-            
-
 
     def _get_tags(self, image_id: str) -> List[str]:
         return self._tag_map()[image_id]

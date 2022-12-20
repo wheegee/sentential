@@ -73,7 +73,6 @@ class AwsEcrDriver:
         )
         self._image_details.cache_clear()
 
-
     def image_by_tag(self, tag: str, arch: str = "any") -> Image:
         return self._image_by("tags", tag, arch)
 
@@ -88,7 +87,7 @@ class AwsEcrDriver:
         images = self.images()
 
         if arch != "any":
-            images = [ image for image in images if image.arch == arch ]
+            images = [image for image in images if image.arch == arch]
 
         for image in self.images():
             attr = getattr(image, attribute)
@@ -100,13 +99,17 @@ class AwsEcrDriver:
                     results.append(image)
             else:
                 raise AwsDriverError("unhandled type in image query")
-        
-        humanized_value = value.replace("sha256:","")[0:12]
+
+        humanized_value = value.replace("sha256:", "")[0:12]
         if len(results) == 0:
-            raise AwsDriverError(f"no images found where {attribute} is {humanized_value} and arch is {arch}")
+            raise AwsDriverError(
+                f"no images found where {attribute} is {humanized_value} and arch is {arch}"
+            )
         elif len(results) > 1:
-            raise AwsDriverError(f"ambiguous match where {attribute} is {humanized_value} and arch is {arch}")
-        else: 
+            raise AwsDriverError(
+                f"ambiguous match where {attribute} is {humanized_value} and arch is {arch}"
+            )
+        else:
             return results[0]
 
     def _image_identifiers(self) -> List[Tuple[str, str]]:

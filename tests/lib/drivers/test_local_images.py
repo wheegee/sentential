@@ -45,16 +45,12 @@ class TestLocalImagesDriver:
         local_images.clean()
         assert len(local_images.images()) == 0
 
-    def test_block_publish_when_no_cwi(
-        self, local_images: LocalImagesDriver
-    ):
+    def test_block_publish_when_no_cwi(self, local_images: LocalImagesDriver):
         local_images.clean()
         with pytest.raises(LocalDriverError):
             local_images.publish("latest", ["amd64"])
 
-    def test_block_publish_when_cwi_differs(
-        self, local_images: LocalImagesDriver
-    ):
+    def test_block_publish_when_cwi_differs(self, local_images: LocalImagesDriver):
         local_images.build("amd64")
         rewrite(
             "Dockerfile",
