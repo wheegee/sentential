@@ -1,15 +1,9 @@
 import pytest
-import time
 import requests
 import in_place
 from flaky import flaky
 from os.path import exists
 from shutil import copyfile
-
-
-def delay_rerun(*args):
-    time.sleep(1)
-    return True
 
 
 def test_init(invoke):
@@ -49,11 +43,10 @@ def test_local_build(invoke):
 def test_local_deploy(invoke):
     result = invoke(["deploy", "local", "--public-url"])
     pytest.deployment_url = result.output
-    print(pytest.deployment_url)
     assert result.exit_code == 0
 
 
-@flaky(max_runs=10, rerun_filter=delay_rerun)
+@flaky(max_runs=10)
 def test_local_lambda():
     results = []
     environment = dict(requests.get(pytest.deployment_url).json())

@@ -15,7 +15,6 @@ def test_write(invoke):
         assert write.exit_code == 0
 
 
-@retry(5)
 def test_read(invoke):
     read = invoke(["envs", "read"])
     assert read.exit_code == 0
