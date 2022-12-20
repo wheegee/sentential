@@ -5,7 +5,8 @@ from pathlib import PosixPath
 from typing import List, Union, Optional, Dict
 from pydantic import BaseModel, Field, validator, Json
 from sentential.support.shaper import Shaper
-from sentential.lib.exceptions import ShapeError
+from sentential.lib.exceptions import ArchitectureDiscoveryError, ShapeError
+from sentential.lib.clients import clients
 
 #
 # Global Constants
@@ -228,10 +229,34 @@ class AWSAssumeRole(BaseModel):
 # Lambda
 #
 
-
 class Architecture(Enum):
     amd64 = "amd64"
     arm64 = "arm64"
+
+    @classmethod
+    def system(cls):
+        sys_arch = clients.docker.system.info().architecture
+        try:
+            normalized = {
+                "aarch64": "arm64",
+                "x86_64": "amd64",
+                "x86-64": "amd64"
+            }[sys_arch]
+            return getattr(cls, normalized)
+        except KeyError:
+            print(f"there was an issue normalizing your host arch {sys_arch} to arm64 or amd64")
+            print("defaulting to amd64")
+            return cls.amd64
+
+# https://github.com/BretFisher/multi-platform-docker-build
+#   Value    Normalized
+#   aarch64  arm64      # the latest v8 arm architecture. Used on Apple M1, AWS Graviton, and Raspberry Pi 3's and 4's
+#   armhf    arm        # 32-bit v7 architecture. Used in Raspberry Pi 3 and  Pi 4 when 32bit Raspbian Linux is used
+#   armel    arm/v6     # 32-bit v6 architecture. Used in Raspberry Pi 1, 2, and Zero
+#   i386     386        # older Intel 32-Bit architecture, originally used in the 386 processor
+#   x86_64   amd64      # all modern Intel-compatible x84 64-Bit architectures
+#   x86-64   amd64      # same
+
 
 
 class Runtimes(Enum):

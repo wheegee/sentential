@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 import typer
 from sentential.lib.clients import clients
 from sentential.lib.drivers.local_images import LocalImagesDriver
@@ -22,25 +22,36 @@ def init(repository_name: str, runtime: Runtimes):
 
 
 @root.command()
-def build(arch: Architecture = typer.Option("amd64")):
+def build(arch: Architecture = typer.Option(None)):
     """build lambda image"""
     ontology = Ontology()
     docker = LocalImagesDriver(ontology)
-    docker.build(arch.value)
+ 
+    if arch:
+        docker.build(arch.value)
+    else:
+        docker.build(Architecture.system().value)
 
 
 @root.command()
 def publish(
     major: bool = typer.Option(False),
     minor: bool = typer.Option(False),
-    arch: List[Architecture] = typer.Option(["amd64"]),
+    arch: List[Architecture] = typer.Option([]),
+    multiarch: bool = typer.Option(False),
 ):
     """publish lambda image"""
     ontology = Ontology()
     ecr = AwsEcrDriver(ontology)
     docker = LocalImagesDriver(ontology)
     tag = SemVer(ecr.images()).next(major, minor)
-    docker.publish(tag, [a.value for a in arch])
+
+    if multiarch:
+        docker.publish(tag, [a.value for a in Architecture])
+    elif arch:
+        docker.publish(tag, [a.value for a in arch])
+    else:
+        docker.publish(tag, [Architecture.system().value])
 
 
 @root.command()
@@ -67,5 +78,4 @@ def clean(remote: bool = typer.Option(False)):
 @root.command()
 def wut():
     from IPython import embed
-
     embed()
