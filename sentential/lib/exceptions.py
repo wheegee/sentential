@@ -43,3 +43,7 @@ class JoineryError(SntlException):
 
 class ApiGatewayResourceNotFound(SntlException):
     pass
+
+
+class ArchitectureDiscoveryError(SntlException):
+    pass

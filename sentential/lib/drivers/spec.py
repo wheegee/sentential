@@ -3,18 +3,6 @@ from abc import ABC, abstractmethod
 
 class LambdaDriver(ABC):
     @abstractmethod
-    def deployed(cls):
-        ...
-
-    @abstractmethod
-    def images(self):
-        ...
-
-    @abstractmethod
-    def image(self, version: str):
-        ...
-
-    @abstractmethod
     def deploy(self):
         ...
 

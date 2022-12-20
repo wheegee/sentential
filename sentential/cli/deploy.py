@@ -1,8 +1,10 @@
 import typer
-from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
+from rich import print
+from sentential.lib.drivers.aws_lambda import AwsEcrDriver, AwsLambdaDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
+from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG
+from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG, Architecture
 from sentential.lib.semver import SemVer
 
 deploy = typer.Typer()
@@ -10,36 +12,36 @@ deploy = typer.Typer()
 
 @deploy.command()
 def local(
-    version: str = typer.Argument(CURRENT_WORKING_IMAGE_TAG, envvar="VERSION"),
-    public_url: bool = typer.Option(False),
+    tag: str = typer.Argument(CURRENT_WORKING_IMAGE_TAG, envvar="TAG"),
+    arch: Architecture = typer.Option("amd64"),
 ):
     """build and deploy local lambda container"""
-    local = LocalLambdaDriver(Ontology())
-    aws = AwsLambdaDriver(Ontology())
-    try:
-        image = local.image(version)
-    except:
-        image = aws.image(version)
-        local.pull(image)
+    ontology = Ontology()
+    docker = LocalImagesDriver(ontology)
+    ecr = AwsEcrDriver(ontology)
+    func = LocalLambdaDriver(ontology)
 
-    print(local.deploy(image, public_url))
+    try:
+        image = docker.image_by_tag(tag, arch.value)
+    except:
+        image = ecr.image_by_tag(tag, arch.value)
+        docker.pull(image)
+
+    print(func.deploy(image))
 
 
 @deploy.command()
 def aws(
-    version: str = typer.Argument(None, envvar="VERSION"),
-    public_url: bool = typer.Option(default=False),
+    tag: str = typer.Argument(None, envvar="TAG"),
+    arch: Architecture = typer.Option("amd64"),
 ):
     """deploy lambda image to aws"""
-
     ontology = Ontology()
-    aws_lambda = AwsLambdaDriver(ontology)
-    if version is None:
-        # TODO: this should be a required parameter, doing this to make tests work for now.
-        version = SemVer(aws_lambda.images()).latest
+    ecr = AwsEcrDriver(ontology)
+    func = AwsLambdaDriver(ontology)
 
-    image = aws_lambda.image(version)
-    function = aws_lambda.deploy(image, public_url)
+    if tag is None:
+        tag = SemVer(ecr.images()).latest
 
-    if function.public_url:
-        print(function.public_url)
+    image = ecr.image_by_tag(tag, arch.value)
+    print(func.deploy(image))

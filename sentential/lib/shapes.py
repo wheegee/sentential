@@ -1,11 +1,12 @@
+import re
 from datetime import datetime
 from enum import Enum
-from lib2to3.pgen2.token import OP
 from pathlib import PosixPath
 from typing import List, Union, Optional, Dict
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, Json
 from sentential.support.shaper import Shaper
-from sentential.lib.exceptions import ShapeError
+from sentential.lib.exceptions import ArchitectureDiscoveryError, ShapeError
+from sentential.lib.clients import clients
 
 #
 # Global Constants
@@ -18,34 +19,27 @@ CURRENT_WORKING_IMAGE_TAG = "cwi"
 class Image(BaseModel):
     id: str
     digest: Union[str, None]
+    uri: Union[str, None]
     tags: List[str]
+    arch: str
     versions: List[str]
-    # arch: str TODO: https://github.com/gabrieldemarmiesse/python-on-whales/pull/378
 
     @validator("versions")
     def coerce_versions(cls, v):
         if v is not None:
-            uniq = list(set(v))
-            return uniq
+            return list(set([re.sub(r"-.*64$", "", version) for version in v]))
         else:
             return []
 
     @validator("tags")
     def coerce_tags(cls, v):
         if v is not None:
-            uniq = list(set(v))
-            return uniq
+            return list(set(v))
         else:
             return []
 
 
 class ImageView(Image):
-    href: List[str] = []
-
-    @validator("href")
-    def uniq(cls, v):
-        return list(set(v))
-
     @validator("id")
     def humanize_id(cls, v):
         return v.replace("sha256:", "")[0:12]
@@ -64,7 +58,6 @@ class Function(BaseModel):
     region: str
     arn: str
     web_console_url: Union[str, None]
-    public_url: Union[str, None]
 
 
 class Provision(Shaper):
@@ -73,19 +66,11 @@ class Provision(Shaper):
     timeout: int = Field(default=3, description="timeout (s)")
     subnet_ids: List[str] = Field(default=[], description="subnet ids")
     security_group_ids: List[str] = Field(default=[], description="security group ids")
-    auth_type: str = Field(default="NONE", description="auth type (--public-url)")
-    allow_headers: List[str] = Field(
-        default=["*"], description="CORS AllowHeaders (--public-url)"
-    )
-    allow_methods: List[str] = Field(
-        default=["*"], description="CORS AllowMethods (--public-url)"
-    )
-    allow_origins: List[str] = Field(
-        default=["*"], description="CORS AllowOrigins (--public-url)"
-    )
-    expose_headers: List[str] = Field(
-        default=["*"], description="CORS ExposeHeaders (--public-url)"
-    )
+    auth_type: str = Field(default="NONE", description="auth type")
+    allow_headers: List[str] = Field(default=["*"], description="CORS AllowHeaders")
+    allow_methods: List[str] = Field(default=["*"], description="CORS AllowMethods")
+    allow_origins: List[str] = Field(default=["*"], description="CORS AllowOrigins")
+    expose_headers: List[str] = Field(default=["*"], description="CORS ExposeHeaders")
 
     @validator("auth_type")
     def is_valid_auth_type(cls, v):
@@ -93,6 +78,83 @@ class Provision(Shaper):
         if v not in valid_auth_types:
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
         return v
+
+
+#
+# ECR
+#
+
+# describe_image()
+class AwsImageDescription(BaseModel):
+    imageDigest: str
+    imageTags: Union[List[str], None]
+    imageManifestMediaType: str
+
+
+class AwsImageDescriptions(BaseModel):
+    imageDetails: List[AwsImageDescription]
+
+
+# Manifest List
+# https://docs.docker.com/registry/spec/manifest-v2-2/
+class AwsManifestListManifestPlatform(BaseModel):
+    architecture: str
+    os: str
+
+
+class AwsManifestListManifest(BaseModel):
+    mediaType: str
+    size: int
+    digest: str
+    platform: AwsManifestListManifestPlatform
+
+
+class AwsManifestList(BaseModel):
+    schemaVersion: int
+    mediaType: str
+    manifests: List[AwsManifestListManifest]
+
+
+# Image Manifest
+# https://docs.docker.com/registry/spec/manifest-v2-2/
+class AwsImageManifestLayer(BaseModel):
+    mediaType: str
+    size: int
+    digest: str
+
+
+class AwsImageManifest(BaseModel):
+    schemaVersion: int
+    mediaType: str
+    config: AwsImageManifestLayer
+    layers: List[AwsImageManifestLayer]
+
+
+# batch_get_image()
+class AwsImageDetailImageId(BaseModel):
+    imageDigest: str
+    imageTag: Optional[str]
+
+
+class AwsImageDetail(BaseModel):
+    registryId: str
+    repositoryName: str
+    imageId: AwsImageDetailImageId
+    imageManifest: Union[Json[AwsImageManifest], Json[AwsManifestList]]
+
+
+class AwsImageDetails(BaseModel):
+    images: List[AwsImageDetail]
+
+
+class AwsEcrAuthorizationData(BaseModel):
+    authorizationToken: str
+    expiresAt: datetime
+    proxyEndpoint: str
+
+
+class AwsEcrAuthorizationToken(BaseModel):
+    authorizationData: List[AwsEcrAuthorizationData]
 
 
 #
@@ -166,6 +228,38 @@ class AWSAssumeRole(BaseModel):
 #
 # Lambda
 #
+
+
+class Architecture(Enum):
+    amd64 = "amd64"
+    arm64 = "arm64"
+
+    @classmethod
+    def system(cls):
+        sys_arch = clients.docker.system.info().architecture
+        try:
+            normalized = {"aarch64": "arm64", "x86_64": "amd64", "x86-64": "amd64"}[
+                sys_arch
+            ]
+            return getattr(cls, normalized)
+        except KeyError:
+            print(
+                f"there was an issue normalizing your host arch {sys_arch} to arm64 or amd64"
+            )
+            print("defaulting to amd64")
+            return cls.amd64
+
+
+# https://github.com/BretFisher/multi-platform-docker-build
+#   Value    Normalized
+#   aarch64  arm64      # the latest v8 arm architecture. Used on Apple M1, AWS Graviton, and Raspberry Pi 3's and 4's
+#   armhf    arm        # 32-bit v7 architecture. Used in Raspberry Pi 3 and  Pi 4 when 32bit Raspbian Linux is used
+#   armel    arm/v6     # 32-bit v6 architecture. Used in Raspberry Pi 1, 2, and Zero
+#   i386     386        # older Intel 32-Bit architecture, originally used in the 386 processor
+#   x86_64   amd64      # all modern Intel-compatible x84 64-Bit architectures
+#   x86-64   amd64      # same
+
+
 class Runtimes(Enum):
     """https://gallery.ecr.aws/lambda?page=1"""
 
@@ -262,6 +356,8 @@ class Paths(BaseModel):
     root: PosixPath
     sntl: PosixPath
     src: PosixPath
+    bake: PosixPath
+    runtime: PosixPath
     dockerfile: PosixPath
     wrapper: PosixPath
     policy: PosixPath
@@ -273,6 +369,8 @@ def derive_paths(root: PosixPath = PosixPath(".")):
         root=root,
         sntl=PosixPath(f"{root}/.sntl"),
         src=PosixPath(f"{root}/src"),
+        bake=PosixPath(f"{root}/.sntl/docker-bake.hcl"),
+        runtime=PosixPath(f"{root}/.sntl/Dockerfile"),
         dockerfile=PosixPath(f"{root}/Dockerfile"),
         wrapper=PosixPath(f"{root}/.sntl/wrapper.sh"),
         policy=PosixPath(f"{root}/policy.json"),
@@ -342,3 +440,9 @@ class LambdaPermission(BaseModel):
     RevisionId: str
     PrincipalOrgID: str
     FunctionUrlAuthType: str = "None"
+
+
+class LambdaInvokeResponse(BaseModel):
+    ResponseMetadata: Dict
+    StatusCode: int
+    Payload: str
