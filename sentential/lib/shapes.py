@@ -229,6 +229,7 @@ class AWSAssumeRole(BaseModel):
 # Lambda
 #
 
+
 class Architecture(Enum):
     amd64 = "amd64"
     arm64 = "arm64"
@@ -237,16 +238,17 @@ class Architecture(Enum):
     def system(cls):
         sys_arch = clients.docker.system.info().architecture
         try:
-            normalized = {
-                "aarch64": "arm64",
-                "x86_64": "amd64",
-                "x86-64": "amd64"
-            }[sys_arch]
+            normalized = {"aarch64": "arm64", "x86_64": "amd64", "x86-64": "amd64"}[
+                sys_arch
+            ]
             return getattr(cls, normalized)
         except KeyError:
-            print(f"there was an issue normalizing your host arch {sys_arch} to arm64 or amd64")
+            print(
+                f"there was an issue normalizing your host arch {sys_arch} to arm64 or amd64"
+            )
             print("defaulting to amd64")
             return cls.amd64
+
 
 # https://github.com/BretFisher/multi-platform-docker-build
 #   Value    Normalized
@@ -256,7 +258,6 @@ class Architecture(Enum):
 #   i386     386        # older Intel 32-Bit architecture, originally used in the 386 processor
 #   x86_64   amd64      # all modern Intel-compatible x84 64-Bit architectures
 #   x86-64   amd64      # same
-
 
 
 class Runtimes(Enum):

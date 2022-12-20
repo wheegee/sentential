@@ -26,7 +26,7 @@ def build(arch: Architecture = typer.Option(None)):
     """build lambda image"""
     ontology = Ontology()
     docker = LocalImagesDriver(ontology)
- 
+
     if arch:
         docker.build(arch.value)
     else:
@@ -78,4 +78,5 @@ def clean(remote: bool = typer.Option(False)):
 @root.command()
 def wut():
     from IPython import embed
+
     embed()
