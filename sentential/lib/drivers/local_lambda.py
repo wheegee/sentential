@@ -49,13 +49,34 @@ class LocalLambdaDriver(LambdaDriver):
                 tags_pulled.append(tag)
         return tags_pulled
 
-    def publish(self, source_version: str, destination_version: str) -> Image:
+    def publish(
+        self, source_version: str, destination_version: str, aws_images: List[Image]
+    ) -> Image:
         image = self.image(source_version)
         repo_url = self.ontology.context.repository_url
         shipping_tag = f"{repo_url}:{destination_version}"
+        arch = clients.docker.image.inspect(image.id).architecture
+        arch_tag = f"{repo_url}:{arch}-{destination_version}"
+        arch_tags = [arch_tag]
+
+        # If the remote manifest list already exists and references a different
+        # architecture, then recreate the manifest list with both architectures.
+        for aws_image in aws_images:
+            for version in aws_image.versions:
+                if destination_version in version and aws_image.arch != arch:
+                    arch_tags.append(
+                        f"{repo_url}:{aws_image.arch}-{destination_version}"
+                    )
+
+        clients.docker.tag(image.id, arch_tag)
         clients.docker.tag(image.id, shipping_tag)
-        clients.docker.push(shipping_tag)
+        clients.docker.push(arch_tag)
+        clients.docker.manifest.create(shipping_tag, arch_tags)
+        clients.docker.manifest.annotate(shipping_tag, arch_tag, arch=arch)
+        clients.docker.manifest.push(shipping_tag, True)
+
         print(f"published {image.id} as {shipping_tag}")
+
         return self.image(destination_version)
 
     def images(self) -> List[Image]:
@@ -67,7 +88,8 @@ class LocalLambdaDriver(LambdaDriver):
                     digest=image["digest"],
                     tags=image["tags"],
                     versions=image["versions"],
-                )  # arch=image.architecture
+                    arch=image["arch"],
+                )
             )
         return images
 
@@ -261,6 +283,7 @@ class LocalLambdaDriver(LambdaDriver):
                     "digest": digest,
                     "tags": image.repo_tags,
                     "versions": versions,
+                    "arch": image.architecture,
                 }
 
         return docker_data

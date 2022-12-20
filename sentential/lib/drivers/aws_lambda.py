@@ -5,10 +5,15 @@ from typing import Dict, List, Optional, cast
 from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.drivers.spec import LambdaDriver
 from sentential.lib.ontology import Ontology
+from sentential.lib.drivers.aws_ecr_driver import AwsECRDriver
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
+    AwsImageDescriptions,
+    AwsImageDetails,
     AwsFunctionPublicUrl,
     Image,
+    ImageIndex,
+    ImageIndexes,
     AwsFunction,
     Function,
     Provision,
@@ -79,18 +84,7 @@ class AwsLambdaDriver(LambdaDriver):
         )
 
     def images(self) -> List[Image]:
-        images = []
-        for digest, image in self._ecr_data().items():
-            images.append(
-                Image(
-                    id=image["id"],
-                    digest=digest,
-                    tags=image["tags"],
-                    versions=image["versions"],
-                )
-            )
-
-        return images
+        return AwsECRDriver(self.ontology).images()
 
     def image(self, version: str) -> Image:
         for image in self.images():
@@ -224,7 +218,8 @@ class AwsLambdaDriver(LambdaDriver):
         role_name = self.resource_name
         function_name = self.resource_name
         role_arn = clients.iam.get_role(RoleName=role_name)["Role"]["Arn"]
-        image_uri = f"{self.repo_url}:{image.versions[0]}"  # TODO: do we want to deploy latest version on image, or version declared?
+        image_uri = f"{self.repo_url}:{image.arch}-{image.versions[0]}"  # TODO: do we want to deploy latest version on image, or version declared?
+        image_arch = "x86_64" if image.arch == "amd64" else image.arch
         envs_path = self.envs.path
         sleep(10)
         try:
@@ -235,7 +230,7 @@ class AwsLambdaDriver(LambdaDriver):
                 Code={"ImageUri": image_uri},
                 Description=f"sententially deployed {image_uri}",
                 Environment={"Variables": {"PARTITION": envs_path}},
-                # Architectures=[self.image.arch], # TODO: figure out wtf is going on with fetching arch.
+                Architectures=[image_arch],
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
                 Timeout=self.provision.timeout,
@@ -276,6 +271,7 @@ class AwsLambdaDriver(LambdaDriver):
             clients.lmb.update_function_code(
                 FunctionName=function_name,
                 ImageUri=image_uri,
+                Architectures=[image_arch],
                 Publish=True,
             )
 
@@ -320,51 +316,21 @@ class AwsLambdaDriver(LambdaDriver):
 
         return clients.lmb.get_function_url_config(FunctionName=function_name)
 
-    def _ecr_data(self) -> Dict:
-        ecr_data = {}
-        describe_images = clients.ecr.describe_images(repositoryName=self.repo_name)[
-            "imageDetails"
-        ]
-
-        if len(describe_images) == 0:
-            return {}
-
-        image_digests = [
-            {"imageDigest": image["imageDigest"]} for image in describe_images
-        ]
-
-        batch_get_images = clients.ecr.batch_get_image(
-            repositoryName=self.repo_name, imageIds=image_digests
-        )["images"]
-
-        for image in describe_images:
-            if "imageTags" in image:
-                versions = image["imageTags"]
-                tags = [f"{self.repo_url}:{tag}" for tag in image["imageTags"]]
-            else:
-                versions = []
-                tags = []
-
-            ecr_data[image["imageDigest"]] = {"versions": versions, "tags": tags}
-
-        for image in batch_get_images:
-            image_digest = image["imageId"]["imageDigest"]
-            image_manifest = json.loads(image["imageManifest"])
-            image_id = image_manifest["config"]["digest"]
-
-            # safety: if assumption that image id and image digest are always tightly coupled is untrue, raise plz
-            if "id" in ecr_data[image_digest]:
-                if ecr_data[image_digest]["id"] != image_id:
-                    raise AwsDriverError(
-                        "image id and image digest not tightly coupled"
-                    )
-
-            ecr_data[image_digest]["id"] = image_id
-
-        return ecr_data
-
     def _image_where_digest(self, digest: str) -> Image:
         for image in self.images():
             if digest == image.digest:
                 return image
         raise AwsDriverError(f"no image found where digest is {digest}")
+
+    def _describe_images(self) -> AwsImageDescriptions:
+        response = clients.ecr.describe_images(repositoryName=self.repo_name)
+
+        return AwsImageDescriptions(**response)
+
+    def _detail_images(self, image_digests) -> AwsImageDetails:
+        response = clients.ecr.batch_get_image(
+            repositoryName=self.repo_name,
+            imageIds=image_digests,
+        )
+
+        return AwsImageDetails(**response)
