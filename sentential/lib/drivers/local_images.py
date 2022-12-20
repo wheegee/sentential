@@ -18,8 +18,9 @@ class LocalImagesDriver:
         self.platforms = ["linux/amd64", "linux/arm64"]
 
     def build(self) -> Image:
-        cwi = self._build()
-        self._tag(cwi, f"{self.repo_name}:{CURRENT_WORKING_IMAGE_TAG}")
+        manifest_uri = f"{self.repo_name}:{CURRENT_WORKING_IMAGE_TAG}"
+        cwi = self._build(manifest_uri)
+        # self._tag(cwi, manifest_uri)
         return self.image_by_id(cwi.id)
 
     def publish(self, tag: str, multiarch: bool) -> str:
@@ -34,7 +35,9 @@ class LocalImagesDriver:
             platforms = [p for p in self.platforms if cwi.arch in p]
 
         for platform in platforms:
-            built.append(self._build(platform))
+            built.append(self._build(f"{manifest_list_uri}-{platform.split('/')[1]}", platform))
+
+        # print(built)
 
         if cwi.id not in [build.id for build in built]:
             raise LocalDriverError(
@@ -42,26 +45,25 @@ class LocalImagesDriver:
             )
 
         for build in built:
-            image_manifest_uri = f"{self.repo_url}:{tag}-{build.arch}"
-            self._tag(build, image_manifest_uri)
-            image_manifest_uris.append(image_manifest_uri)
-            clients.docker.push(image_manifest_uri)
+            # self._tag(build, image_manifest_uri)
+            image_manifest_uris.append(f"{manifest_list_uri}-{build.arch}")
+            clients.docker.push(f"{manifest_list_uri}-{build.arch}")
 
+        sleep(2)
         clients.docker.manifest.create(manifest_list_uri, image_manifest_uris, True)
         clients.docker.manifest.push(manifest_list_uri, True)
         sleep(2)
         return manifest_list_uri
 
-    def _build(self, platform: Optional[str] = None) -> Image:
+    def _build(self, tag: str, platform: Optional[str] = None) -> Image:
         self.ontology.args.export_defaults()  # maybe hoist to initializer?
 
         cmd = {
+            "tags": [tag],
+            "platforms": [platform] if platform else [self.platforms[0]], # default to `linux/amd64`
             "load": True,
             "build_args": self.ontology.args.as_dict(),
         }
-
-        if platform:
-            cmd["platforms"] = [platform]
 
         image = clients.docker.build(self.ontology.context.path.root, **cmd)
 
