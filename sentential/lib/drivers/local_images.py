@@ -46,7 +46,6 @@ class LocalImagesDriver:
         sleep(2)
         clients.docker.manifest.create(manifest_list_uri, image_manifest_uris, True)
         clients.docker.manifest.push(manifest_list_uri, True)
-        sleep(2)
         return manifest_list_uri
 
     def _build(self, tag: str, platform: str) -> Image:
