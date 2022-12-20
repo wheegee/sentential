@@ -1,16 +1,10 @@
 import pytest
-import time
 import requests
 import in_place
 from flaky import flaky
 from os.path import exists
 from shutil import copyfile
 import requests
-
-
-def delay_rerun(*args):
-    time.sleep(1)
-    return True
 
 
 def test_init(invoke):
@@ -51,14 +45,13 @@ def test_local_build(invoke):
     assert result.exit_code == 0
 
 
-@flaky(max_runs=3, rerun_filter=delay_rerun)
 def test_local_deploy(invoke):
     result = invoke(["deploy", "local", "--public-url"])
     pytest.deployment_url = result.output
     assert result.exit_code == 0
 
 
-@flaky(max_runs=10, rerun_filter=delay_rerun)
+@flaky(max_runs=10)
 def test_local_lambda():
     results = []
     environment = dict(requests.get(pytest.deployment_url).json())
@@ -84,9 +77,4 @@ def test_envs_delete(invoke):
 
 def test_configs_delete(invoke):
     result = invoke(["configs", "clear"])
-    assert result.exit_code == 0
-
-
-def test_clean_images(invoke):
-    result = invoke(["clean", "--remote"])
     assert result.exit_code == 0
