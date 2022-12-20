@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.6.0 (2022-12-20)
+### Feature
+* Multi-arch ([#168](https://github.com/wheegee/sentential/issues/168)) ([`cda3096`](https://github.com/wheegee/sentential/commit/cda30966375f81828164167a642776b99575a946))
+
 ## v0.5.0 (2022-11-02)
 ### Feature
 * Make default partition generation safe against AWS API validators ([#115](https://github.com/wheegee/sentential/issues/115)) ([`5b09679`](https://github.com/wheegee/sentential/commit/5b096796f077af7ef677a700f4c298d1fb793796))
