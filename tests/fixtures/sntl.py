@@ -4,12 +4,6 @@ from os import chdir, getcwd
 from shutil import copytree
 from typer.testing import CliRunner
 from sentential.sntl import root as sntl
-from sentential.lib.ontology import Ontology
-
-
-@pytest.fixture(scope="class")
-def ontology():
-    return Ontology()
 
 
 @pytest.fixture(scope="class")

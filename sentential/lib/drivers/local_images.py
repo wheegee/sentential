@@ -39,13 +39,13 @@ class LocalImagesDriver:
             raise LocalDriverError(
                 "current working image id does not match that of any final build"
             )
-
+        
         for image_manifest_uri in image_manifest_uris:
             clients.docker.push(image_manifest_uri)
 
         sleep(2)
         clients.docker.manifest.create(manifest_list_uri, image_manifest_uris, True)
-        clients.docker.manifest.push(manifest_list_uri, True)
+        clients.docker.manifest.push(manifest_list_uri, False)
         return manifest_list_uri
 
     def _build(self, tag: str, platform: str) -> Image:
