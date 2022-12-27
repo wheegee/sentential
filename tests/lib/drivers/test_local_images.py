@@ -5,7 +5,10 @@ from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.exceptions import LocalDriverError
 from sentential.lib.shapes import Image
 
-@pytest.mark.usefixtures("moto", "init", "ontology", "mock_repo", "local_images_driver", "cwi")
+
+@pytest.mark.usefixtures(
+    "moto", "init", "ontology", "mock_repo", "local_images_driver", "cwi"
+)
 class TestLocalImagesDriver:
 
     #
@@ -13,11 +16,11 @@ class TestLocalImagesDriver:
     #
 
     def get_ecr_image_tags(self):
-        images = clients.ecr.describe_images(repositoryName="test")['imageDetails']
+        images = clients.ecr.describe_images(repositoryName="test")["imageDetails"]
         image_tags = []
         for image in images:
-            if 'imageTags' in image:
-                for tag in image['imageTags']:
+            if "imageTags" in image:
+                for tag in image["imageTags"]:
                     image_tags.append(tag)
         return image_tags
 
@@ -45,7 +48,7 @@ class TestLocalImagesDriver:
 
     def test_publish(self, local_images_driver: LocalImagesDriver):
         local_images_driver.publish("cwi", ["amd64", "arm64"])
-        ecr_tags = self.get_ecr_image_tags() 
+        ecr_tags = self.get_ecr_image_tags()
         assert "cwi-amd64" in ecr_tags
         assert "cwi-arm64" in ecr_tags
         assert "cwi" in ecr_tags
@@ -59,7 +62,9 @@ class TestLocalImagesDriver:
         with pytest.raises(LocalDriverError):
             local_images_driver.publish("latest", ["amd64"])
 
-    def test_block_publish_when_cwi_differs(self, local_images_driver: LocalImagesDriver):
+    def test_block_publish_when_cwi_differs(
+        self, local_images_driver: LocalImagesDriver
+    ):
         local_images_driver.build("amd64")
         rewrite(
             "Dockerfile",
@@ -68,5 +73,3 @@ class TestLocalImagesDriver:
         )
         with pytest.raises(LocalDriverError):
             local_images_driver.publish("latest", ["amd64"])
-
-

@@ -80,10 +80,14 @@ def generate_image_manifest_list():
     arm_image_manifest = generate_image_manifest()
     amd_image_manifest = generate_image_manifest()
     arm_distribution = generate_manifest_list_distribution(
-        generate_random_sha(), arm_image_manifest['config']['size'], architecture="arm64"
+        generate_random_sha(),
+        arm_image_manifest["config"]["size"],
+        architecture="arm64",
     )
     amd_distribution = generate_manifest_list_distribution(
-        generate_random_sha(), amd_image_manifest['config']['size'], architecture="amd64"
+        generate_random_sha(),
+        amd_image_manifest["config"]["size"],
+        architecture="amd64",
     )
     manifest_list = {
         "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",

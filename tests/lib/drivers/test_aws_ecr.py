@@ -6,6 +6,7 @@ from sentential.lib.drivers.aws_ecr import AwsEcrDriver
 from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.clients import clients
 
+
 @pytest.mark.usefixtures("moto", "init", "ontology", "mock_repo", "aws_ecr_driver")
 class TestAwsEcrDriver:
     #

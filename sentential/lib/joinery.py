@@ -45,7 +45,7 @@ class Joinery:
 
                 if image.uri:
                     uri = image.uri
-                
+
                 if arch is None:
                     arch = image.arch
                 else:

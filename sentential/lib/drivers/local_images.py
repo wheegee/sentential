@@ -39,7 +39,7 @@ class LocalImagesDriver:
             raise LocalDriverError(
                 "current working image id does not match that of any final build"
             )
-        
+
         for image_manifest_uri in image_manifest_uris:
             clients.docker.push(image_manifest_uri)
 

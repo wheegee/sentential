@@ -9,6 +9,7 @@ from tests.helpers import generate_image_manifest, generate_image_manifest_list
 # Current Working Image
 #
 
+
 @pytest.fixture(scope="class")
 def cwi():
     local_images_driver = LocalImagesDriver(Ontology())
@@ -19,6 +20,7 @@ def cwi():
 # ECR Mock Fixtures
 #
 
+
 def populate_mock_images(repo_name, quantity):
     mock_image_manifests = [generate_image_manifest() for i in range(0, quantity - 1)]
     for idx, image_manifest in enumerate(mock_image_manifests):
@@ -28,11 +30,14 @@ def populate_mock_images(repo_name, quantity):
             imageTag=f"0.0.{idx}",
         )
 
+
 def populate_mock_image_lists(repo_name, quantity):
     # These images are added without tags, then the manifest list is tagged.
     # Sentential tags the images with {repo_name}-{arch}, so this is slightly
     # divergent from a #publish operation, but still valid ecr state.
-    mock_manifest_lists = [generate_image_manifest_list() for i in range(0, quantity - 1)]
+    mock_manifest_lists = [
+        generate_image_manifest_list() for i in range(0, quantity - 1)
+    ]
     for idx, manifests in enumerate(mock_manifest_lists):
         for image_manifest in manifests["image_manifests"]:
             clients.ecr.put_image(
@@ -45,6 +50,7 @@ def populate_mock_image_lists(repo_name, quantity):
             imageManifest=json.dumps(manifests["manifest_list"]),
             imageTag=f"0.1.{idx}",
         )
+
 
 @pytest.fixture(scope="class")
 def mock_repo(ontology: Ontology):

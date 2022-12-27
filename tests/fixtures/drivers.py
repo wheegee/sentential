@@ -11,6 +11,7 @@ from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 
+
 @pytest.fixture(scope="class")
 def aws_ecr_driver():
     ontology = Ontology()
@@ -19,19 +20,21 @@ def aws_ecr_driver():
         mock.get(blob_uri, json={"os": "linux", "architecture": "arm64"})
         yield AwsEcrDriver(ontology)
 
+
 @pytest.fixture(scope="class")
 def aws_lambda_driver():
     return AwsLambdaDriver(Ontology())
 
+
 @pytest.fixture(scope="class")
 def local_images_driver():
-    monkeypatch = MonkeyPatch() 
-    monkeypatch.setattr(clients.docker, 'push', push_mock)
+    monkeypatch = MonkeyPatch()
+    monkeypatch.setattr(clients.docker, "push", push_mock)
     monkeypatch.setattr(clients.docker.manifest, "create", manifest_create_mock)
-    monkeypatch.setattr(clients.docker.manifest, 'push', manifest_push_mock)
+    monkeypatch.setattr(clients.docker.manifest, "push", manifest_push_mock)
     return LocalImagesDriver(Ontology())
+
 
 @pytest.fixture(scope="class")
 def local_lambda_driver():
     return LocalLambdaDriver(Ontology())
-

@@ -8,5 +8,3 @@ from tests.helpers import table_body, table_headers
 #         joinery.local_images.build("amd64")
 #         joinery.local_images.publish("1.5.0", ["amd64"])
 #         joinery.list()
-
-    
