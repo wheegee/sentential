@@ -71,7 +71,7 @@ class AwsEcrDriver:
             repositoryName=self.ontology.context.repository_name,
             imageIds=manifest_digests,
         )
-        self._image_details.cache_clear()
+        # self._image_details.cache_clear()
 
     def image_by_tag(self, tag: str, arch: str = "any") -> Image:
         return self._image_by("tags", tag, arch)
@@ -196,7 +196,7 @@ class AwsEcrDriver:
 
         return arch_list
 
-    @lru_cache
+    # @lru_cache
     def _image_details(self) -> List[AwsImageDetail]:
         response = clients.ecr.describe_images(repositoryName=self.repo_name)
         image_desc = AwsImageDescriptions(**response).imageDetails

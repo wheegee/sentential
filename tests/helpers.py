@@ -66,12 +66,12 @@ def generate_image_manifest(config_digest=None):
 
 
 def generate_manifest_list_distribution(
-    image_manifest: dict, architecture: str = "amd64", os: str = "linux"
+    manifest_digest: str, size: int, architecture: str = "amd64", os: str = "linux"
 ):
     return {
-        "mediaType": image_manifest["config"]["mediaType"],
-        "digest": image_manifest["config"]["digest"],
-        "size": image_manifest["config"]["size"],
+        "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+        "digest": manifest_digest,
+        "size": size,
         "platform": {"architecture": architecture, "os": os},
     }
 
@@ -80,10 +80,10 @@ def generate_image_manifest_list():
     arm_image_manifest = generate_image_manifest()
     amd_image_manifest = generate_image_manifest()
     arm_distribution = generate_manifest_list_distribution(
-        arm_image_manifest, architecture="arm64"
+        generate_random_sha(), arm_image_manifest['config']['size'], architecture="arm64"
     )
     amd_distribution = generate_manifest_list_distribution(
-        amd_image_manifest, architecture="amd64"
+        generate_random_sha(), amd_image_manifest['config']['size'], architecture="amd64"
     )
     manifest_list = {
         "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",

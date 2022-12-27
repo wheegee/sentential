@@ -18,7 +18,7 @@ class TestLocalLambdaDriver:
         assert local_lambda_driver.deploy(cwi) == cwi
 
     def test_invoke(
-        self, cwi: Image, ontology: Ontology, local_lambda_driver: LocalLambdaDriver
+        self, cwi: Image, local_lambda_driver: LocalLambdaDriver
     ):
         envs = local_lambda_driver.ontology.envs
         envs.write("HELLO", ["THIS_IS_ENV"])

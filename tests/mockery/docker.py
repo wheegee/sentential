@@ -5,29 +5,30 @@ from sentential.lib.shapes import AwsImageDetails
 from sentential.lib.clients import clients
 from tests.helpers import generate_image_manifest, generate_manifest_list_distribution
 
-# Stubs to allow docker client to operate against moto without actually executing docker
-
-# example usage for now...
+#
+# Docker Client Mockery
+#
 
 # from pytest import MonkeyPatch
 # from sentential.lib.clients import clients
 # monkeypatch = MonkeyPatch() 
-# monkeypatch.setattr(clients.docker, 'push', push_stub)
-# monkeypatch.setattr(clients.docker.manifest, "create", manifest_create_stub)
-# monkeypatch.setattr(clients.docker.manifest, 'push', manifest_push_stub)
+# monkeypatch.setattr(clients.docker, 'push', push_mock)
+# monkeypatch.setattr(clients.docker.manifest, "create", manifest_create_mock)
+# monkeypatch.setattr(clients.docker.manifest, 'push', manifest_push_mock)
 
-def push_stub(tag: str):
+def push_mock(tag: str):
     image_id = clients.docker.image.inspect(tag).id
     image_tag = tag.split("/")[1].split(":")[-1]
     repo_name = tag.split("/")[1].split(":")[0]
+    image_manifest = generate_image_manifest(image_id)
     clients.ecr.put_image(
         repositoryName=repo_name,
-        imageManifest=json.dumps(generate_image_manifest(image_id)),
+        imageManifest=json.dumps(image_manifest),
         imageTag=image_tag,
     )
 
 
-def manifest_create_stub(manifest_list_uri: str, image_manifest_uris: List[str], *args):
+def manifest_create_mock(manifest_list_uri: str, image_manifest_uris: List[str], *args):
     registry_url = manifest_list_uri.split("/")[0]
     repo_name = manifest_list_uri.split("/")[1].split(":")[0]
     manifest_list_tag = manifest_list_uri.split("/")[1].split(":")[-1]
@@ -53,6 +54,7 @@ def manifest_create_stub(manifest_list_uri: str, image_manifest_uris: List[str],
                 "Ref": image_manifest_uri,
                 "Descriptor": {
                     "mediaType": image.imageManifest.mediaType,
+                    "digest": image.imageId.imageDigest,
                     "size": image.imageManifest.config.size,
                     "platform": {
                         "os": inspect.os,
@@ -62,7 +64,7 @@ def manifest_create_stub(manifest_list_uri: str, image_manifest_uris: List[str],
                 }
             }, fp)
 
-def manifest_push_stub(manifest_list_uri: str, purge: bool):
+def manifest_push_mock(manifest_list_uri: str, purge: bool):
     registry_url = manifest_list_uri.split("/")[0]
     manifest_list_tag = manifest_list_uri.split("/")[1].split(":")[-1]
     repo_name = manifest_list_uri.split("/")[1].split(":")[0]
@@ -70,14 +72,15 @@ def manifest_push_stub(manifest_list_uri: str, purge: bool):
 
     image_distributions = []
     for image_manifest_file in listdir(manifest_list_dir):
-        image_distributions = []
         with open(f"{manifest_list_dir}/{image_manifest_file}") as json_manifest:
             docker_manifest = json.load(json_manifest)
             manifest = docker_manifest['Descriptor']['SchemaV2Manifest']
+            manifest_digest = docker_manifest['Descriptor']['digest']
+            size = docker_manifest['Descriptor']['size']
             os = docker_manifest['Descriptor']['platform']['os']
             arch = docker_manifest['Descriptor']['platform']['architecture']
             image_distributions.append(
-                generate_manifest_list_distribution(manifest, os, arch)
+                generate_manifest_list_distribution(manifest_digest, size, arch, os)
             )
 
     manifest_list = {
