@@ -3,7 +3,14 @@ from typing import Any, List, Union
 import hashlib
 import random
 import fileinput
-from sentential.lib.shapes import AwsImageManifest, AwsImageManifestLayer, AwsManifestList, AwsManifestListManifest, AwsManifestListManifestPlatform
+from sentential.lib.shapes import (
+    AwsImageManifest,
+    AwsImageManifestLayer,
+    AwsManifestList,
+    AwsManifestListManifest,
+    AwsManifestListManifestPlatform,
+)
+
 
 def table_headers(table: Table) -> List[str]:
     return [str(column.header) for column in table.columns]
@@ -33,9 +40,9 @@ def generate_random_sha():
 def generate_image_layers(n) -> List[AwsImageManifestLayer]:
     layers = []
     for _ in range(n):
-        layers.append(AwsImageManifestLayer(
-                size=random.randint(100, 1000),
-                digest=generate_random_sha()
+        layers.append(
+            AwsImageManifestLayer(
+                size=random.randint(100, 1000), digest=generate_random_sha()
             )
         )
     return layers
@@ -53,46 +60,45 @@ def generate_image_manifest(config_digest: Union[str, None] = None) -> AwsImageM
         config_digest = generate_image_digest(layers)
 
     return AwsImageManifest(
-        config = AwsImageManifestLayer(
-            size = sum([layer.size for layer in layers]),
-            digest = config_digest
+        config=AwsImageManifestLayer(
+            size=sum([layer.size for layer in layers]), digest=config_digest
         ),
-        layers = layers
+        layers=layers,
     )
 
 
 def generate_manifest_list_manifest(
-    image_manifest_digest: str, image_size: int, image_architecture: str = "amd64", image_os: str = "linux"
+    image_manifest_digest: str,
+    image_size: int,
+    image_architecture: str = "amd64",
+    image_os: str = "linux",
 ) -> AwsManifestListManifest:
     return AwsManifestListManifest(
-        digest = image_manifest_digest,
-        size = image_size,
-        platform = AwsManifestListManifestPlatform(
-            os=image_os,
-            architecture=image_architecture
-        )
+        digest=image_manifest_digest,
+        size=image_size,
+        platform=AwsManifestListManifestPlatform(
+            os=image_os, architecture=image_architecture
+        ),
     )
 
 
-def generate_image_manifest_list() -> dict: 
+def generate_image_manifest_list() -> dict:
     arm_image_manifest = generate_image_manifest()
     amd_image_manifest = generate_image_manifest()
 
     arm_distribution = generate_manifest_list_manifest(
-        image_manifest_digest = generate_random_sha(),
-        image_size = arm_image_manifest.config.size,
-        image_architecture = "arm64",
+        image_manifest_digest=generate_random_sha(),
+        image_size=arm_image_manifest.config.size,
+        image_architecture="arm64",
     )
 
     amd_distribution = generate_manifest_list_manifest(
-        image_manifest_digest = generate_random_sha(),
-        image_size = arm_image_manifest.config.size,
-        image_architecture = "amd64",
+        image_manifest_digest=generate_random_sha(),
+        image_size=arm_image_manifest.config.size,
+        image_architecture="amd64",
     )
 
-    manifest_list = AwsManifestList(
-        manifests=[arm_distribution, amd_distribution]
-    )
+    manifest_list = AwsManifestList(manifests=[arm_distribution, amd_distribution])
 
     return {
         "image_manifests": [arm_image_manifest, amd_image_manifest],

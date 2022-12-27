@@ -1,7 +1,19 @@
 from typing import List
 import pytest
-from sentential.lib.shapes import AwsImageManifest, AwsImageManifestLayer, AwsManifestList
-from tests.helpers import generate_random_sha, generate_image_layers, generate_image_digest, generate_image_manifest, generate_manifest_list_manifest, generate_image_manifest_list
+from sentential.lib.shapes import (
+    AwsImageManifest,
+    AwsImageManifestLayer,
+    AwsManifestList,
+)
+from tests.helpers import (
+    generate_random_sha,
+    generate_image_layers,
+    generate_image_digest,
+    generate_image_manifest,
+    generate_manifest_list_manifest,
+    generate_image_manifest_list,
+)
+
 
 class TestHelpers:
     def test_generate_random_sha(self):
@@ -20,10 +32,10 @@ class TestHelpers:
 
     def test_generate_manifest_list_manifest(self):
         manifest_list_manifest = generate_manifest_list_manifest(
-            image_manifest_digest = "sha256:1234",
-            image_size = 23,
-            image_architecture = "arm64",
-            image_os = "linux",
+            image_manifest_digest="sha256:1234",
+            image_size=23,
+            image_architecture="arm64",
+            image_os="linux",
         )
         assert manifest_list_manifest.digest == "sha256:1234"
         assert manifest_list_manifest.size == 23
@@ -34,5 +46,8 @@ class TestHelpers:
         image_manifest_list = generate_image_manifest_list()
         assert "image_manifests" in image_manifest_list
         assert "manifest_list" in image_manifest_list
-        assert all(isinstance(image, AwsImageManifest) for image in image_manifest_list["image_manifests"])
+        assert all(
+            isinstance(image, AwsImageManifest)
+            for image in image_manifest_list["image_manifests"]
+        )
         assert isinstance(image_manifest_list["manifest_list"], AwsManifestList)

@@ -3,7 +3,12 @@ from os import makedirs, rmdir, listdir
 from typing import List, cast
 
 from pydantic import BaseModel
-from sentential.lib.shapes import AwsImageDetails, AwsImageManifest, AwsManifestList, AwsManifestListManifestPlatform
+from sentential.lib.shapes import (
+    AwsImageDetails,
+    AwsImageManifest,
+    AwsManifestList,
+    AwsManifestListManifestPlatform,
+)
 from sentential.lib.clients import clients
 from tests.helpers import generate_image_manifest, generate_manifest_list_manifest
 
@@ -18,8 +23,10 @@ from tests.helpers import generate_image_manifest, generate_manifest_list_manife
 # monkeypatch.setattr(clients.docker.manifest, "create", manifest_create_mock)
 # monkeypatch.setattr(clients.docker.manifest, 'push', manifest_push_mock)
 
+
 class MockException(BaseException):
-    pass    
+    pass
+
 
 class DockerManifestDescriptor(BaseModel):
     mediaType: str
@@ -27,6 +34,7 @@ class DockerManifestDescriptor(BaseModel):
     size: int
     platform: AwsManifestListManifestPlatform
     SchemaV2Manifest: AwsImageManifest
+
 
 class DockerManifest(BaseModel):
     Ref: str
@@ -76,18 +84,17 @@ def manifest_create_mock(manifest_list_uri: str, image_manifest_uris: List[str],
 
         with open(f"{manifest_list_dir}/{image_manifest_file}", "w") as fp:
             docker_manifest = DockerManifest(
-                    Ref = image_manifest_uri,
-                    Descriptor = DockerManifestDescriptor(
-                        mediaType = image.imageManifest.mediaType,
-                        digest = image.imageId.imageDigest,
-                        size = image.imageManifest.config.size,
-                        platform = AwsManifestListManifestPlatform(
-                            os = inspect.os,
-                            architecture = inspect.architecture
-                        ),
-                        SchemaV2Manifest = image.imageManifest
-                    )
-                )
+                Ref=image_manifest_uri,
+                Descriptor=DockerManifestDescriptor(
+                    mediaType=image.imageManifest.mediaType,
+                    digest=image.imageId.imageDigest,
+                    size=image.imageManifest.config.size,
+                    platform=AwsManifestListManifestPlatform(
+                        os=inspect.os, architecture=inspect.architecture
+                    ),
+                    SchemaV2Manifest=image.imageManifest,
+                ),
+            )
             json.dump(docker_manifest.dict(), fp)
 
 
@@ -109,10 +116,8 @@ def manifest_push_mock(manifest_list_uri: str, purge: bool):
             image_distributions.append(
                 generate_manifest_list_manifest(manifest_digest, size, arch, os)
             )
-    
-    manifest_list = AwsManifestList(
-        manifests=image_distributions
-    )
+
+    manifest_list = AwsManifestList(manifests=image_distributions)
 
     clients.ecr.put_image(
         repositoryName=repo_name,
