@@ -103,29 +103,29 @@ class AwsManifestListManifestPlatform(BaseModel):
 
 
 class AwsManifestListManifest(BaseModel):
-    mediaType: str
+    mediaType: str = "application/vnd.docker.distribution.manifest.v2+json"
     size: int
     digest: str
     platform: AwsManifestListManifestPlatform
 
 
 class AwsManifestList(BaseModel):
-    schemaVersion: int
-    mediaType: str
+    schemaVersion: int = 2
+    mediaType: str = "application/vnd.docker.distribution.manifest.list.v2+json"
     manifests: List[AwsManifestListManifest]
 
 
 # Image Manifest
 # https://docs.docker.com/registry/spec/manifest-v2-2/
 class AwsImageManifestLayer(BaseModel):
-    mediaType: str
+    mediaType: str = "application/vnd.docker.image.rootfs.diff.tar.gzip"
     size: int
     digest: str
 
 
 class AwsImageManifest(BaseModel):
-    schemaVersion: int
-    mediaType: str
+    schemaVersion: int = 2
+    mediaType: str = "application/vnd.docker.distribution.manifest.v2+json"
     config: AwsImageManifestLayer
     layers: List[AwsImageManifestLayer]
 

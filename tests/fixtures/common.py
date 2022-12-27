@@ -1,8 +1,10 @@
+from typing import cast
 import pytest
 import json
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.drivers.local_images import LocalImagesDriver
+from sentential.lib.shapes import AwsImageManifest, AwsManifestList
 from tests.helpers import generate_image_manifest, generate_image_manifest_list
 
 #
@@ -26,7 +28,7 @@ def populate_mock_images(repo_name, quantity):
     for idx, image_manifest in enumerate(mock_image_manifests):
         clients.ecr.put_image(
             repositoryName=repo_name,
-            imageManifest=json.dumps(image_manifest),
+            imageManifest=json.dumps(image_manifest.dict()),
             imageTag=f"0.0.{idx}",
         )
 
@@ -40,14 +42,16 @@ def populate_mock_image_lists(repo_name, quantity):
     ]
     for idx, manifests in enumerate(mock_manifest_lists):
         for image_manifest in manifests["image_manifests"]:
+            image_manifest = cast(AwsImageManifest, image_manifest)
             clients.ecr.put_image(
                 repositoryName=repo_name,
-                imageManifest=json.dumps(image_manifest),
+                imageManifest=json.dumps(image_manifest.dict()),
             )
 
+        manifest_list = cast(AwsManifestList, manifests["manifest_list"])
         clients.ecr.put_image(
             repositoryName=repo_name,
-            imageManifest=json.dumps(manifests["manifest_list"]),
+            imageManifest=json.dumps(manifest_list.dict()),
             imageTag=f"0.1.{idx}",
         )
 
