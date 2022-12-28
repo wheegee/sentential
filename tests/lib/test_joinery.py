@@ -3,6 +3,7 @@ import pytest
 from sentential.lib.joinery import Joinery
 from tests.helpers import table_body
 
+
 @pytest.mark.usefixtures("moto", "init", "mock_repo", "cwi")
 class TestJoinery:
     id_index = 0

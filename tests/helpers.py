@@ -13,6 +13,7 @@ from sentential.lib.shapes import (
     AwsManifestListManifestPlatform,
 )
 
+
 class MockException(BaseException):
     pass
 
@@ -94,7 +95,9 @@ def generate_manifest_list_manifest(
     )
 
 
-def generate_image_manifest_list(image_details: List[AwsImageDetail]) -> AwsManifestList:
+def generate_image_manifest_list(
+    image_details: List[AwsImageDetail],
+) -> AwsManifestList:
     distributions = []
     for image_detail in image_details:
         tag = image_detail.imageId.imageTag
@@ -107,16 +110,17 @@ def generate_image_manifest_list(image_details: List[AwsImageDetail]) -> AwsMani
 
         if "arm64" in tag:
             arch = "arm64"
-        
+
         if "amd64" in tag:
             arch = "amd64"
 
-        distributions.append(generate_manifest_list_manifest(
-            image_manifest_digest = image_detail.imageId.imageDigest,
-            image_size = image_detail.imageManifest.config.size,
-            image_architecture=arch,
-            image_os="linux",
-        ))
+        distributions.append(
+            generate_manifest_list_manifest(
+                image_manifest_digest=image_detail.imageId.imageDigest,
+                image_size=image_detail.imageManifest.config.size,
+                image_architecture=arch,
+                image_os="linux",
+            )
+        )
 
     return AwsManifestList(manifests=distributions)
-

@@ -50,33 +50,35 @@ class TestHelpers:
         arm_manifest_digest = generate_random_sha()
         image_details = [
             AwsImageDetail(
-                registryId='123456',
-                repositoryName='test',
+                registryId="123456",
+                repositoryName="test",
                 imageId=AwsImageDetailImageId(
-                    imageDigest=amd_manifest_digest,
-                    imageTag="0.0.1-amd64"
+                    imageDigest=amd_manifest_digest, imageTag="0.0.1-amd64"
                 ),
-                imageManifest=json.dumps(amd_image_manifest.dict()) # type: ignore
-             ),
+                imageManifest=json.dumps(amd_image_manifest.dict()),  # type: ignore
+            ),
             AwsImageDetail(
-                registryId='123456',
-                repositoryName='test',
+                registryId="123456",
+                repositoryName="test",
                 imageId=AwsImageDetailImageId(
-                    imageDigest=arm_manifest_digest,
-                    imageTag="0.0.1-arm64"
+                    imageDigest=arm_manifest_digest, imageTag="0.0.1-arm64"
                 ),
-                imageManifest=json.dumps(arm_image_manifest.dict()) # type: ignore
+                imageManifest=json.dumps(arm_image_manifest.dict()),  # type: ignore
             ),
         ]
         image_manifest_list = generate_image_manifest_list(image_details)
         assert len(image_manifest_list.manifests) == 2
-        assert any(dist.platform.architecture == "amd64" for dist in image_manifest_list.manifests)
-        assert any(dist.platform.architecture == "arm64" for dist in image_manifest_list.manifests)
-        
+        assert any(
+            dist.platform.architecture == "amd64"
+            for dist in image_manifest_list.manifests
+        )
+        assert any(
+            dist.platform.architecture == "arm64"
+            for dist in image_manifest_list.manifests
+        )
+
         for manifest in image_manifest_list.manifests:
             if manifest.platform.architecture == "amd64":
                 assert manifest.digest == amd_manifest_digest
             if manifest.platform.architecture == "arm64":
                 assert manifest.digest == arm_manifest_digest
-            
-

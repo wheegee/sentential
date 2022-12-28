@@ -27,7 +27,7 @@ class LocalImagesDriver:
         image_manifest_uris = []
         built: List[Image] = []
         cwi = self.image_by_tag(CURRENT_WORKING_IMAGE_TAG)
-        
+
         for platform in platforms:
             image_manifest_uri = f"{manifest_list_uri}-{platform.split('/')[1]}"
             image = self._build(image_manifest_uri, platform)

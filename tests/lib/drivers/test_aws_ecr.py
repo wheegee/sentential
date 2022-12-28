@@ -43,7 +43,7 @@ class TestAwsEcrDriver:
             aws_ecr_driver.image_by_tag("dne")
 
     def test_image_by_digest(self, aws_ecr_driver: AwsEcrDriver):
-        digest = [ image.digest for image in aws_ecr_driver.images() ][0]
+        digest = [image.digest for image in aws_ecr_driver.images()][0]
         image = aws_ecr_driver.image_by_digest(digest, "amd64")
         assert image.digest == digest
 

@@ -23,9 +23,10 @@ def cwi():
 # ECR Mock Fixtures
 #
 
+
 def popluate_mock_images(repo_name):
     image_pairs = []
-    for build in range(0,4):
+    for build in range(0, 4):
         image_pair = []
         for arch in ["amd64", "arm64"]:
             image_manifest = generate_image_manifest()
@@ -34,8 +35,8 @@ def popluate_mock_images(repo_name):
                 imageManifest=json.dumps(image_manifest.dict()),
                 imageTag=f"0.0.{build}-{arch}",
             )
-            image_pair.append(AwsImageDetail(**resp['image']))
-        
+            image_pair.append(AwsImageDetail(**resp["image"]))
+
         image_pairs.append(image_pair)
 
     for build, image_pair in enumerate(image_pairs):

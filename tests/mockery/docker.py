@@ -10,7 +10,11 @@ from sentential.lib.shapes import (
     AwsManifestListManifestPlatform,
 )
 from sentential.lib.clients import clients
-from tests.helpers import generate_image_manifest, generate_manifest_list_manifest, MockException
+from tests.helpers import (
+    generate_image_manifest,
+    generate_manifest_list_manifest,
+    MockException,
+)
 
 #
 # Docker Client Mockery
