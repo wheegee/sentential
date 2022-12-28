@@ -18,6 +18,7 @@ def cwi():
     local_images_driver = LocalImagesDriver(Ontology())
     return local_images_driver.build("amd64")
 
+
 #
 # KMS
 #
