@@ -20,6 +20,20 @@ def cwi():
 
 
 #
+# KMS
+#
+
+# @pytest.fixture(scope="class")
+# def kms():
+#     from IPython import embed
+#     embed()
+#     response = clients.kms.create_key()
+#     response = clients.kms.create_alias(
+#         AliasName = "alias/aws/ssm",
+#         TargetKeyId = response['KeyMetadata']['KeyId']
+#     )
+
+#
 # ECR Mock Fixtures
 #
 

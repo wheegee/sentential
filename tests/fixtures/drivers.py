@@ -3,7 +3,6 @@ from pytest import MonkeyPatch
 import re
 import requests_mock
 from tests.mockery.docker import push_mock, manifest_create_mock, manifest_push_mock
-from tests.mockery.ecr_api import get_blob
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
 from sentential.lib.drivers.aws_ecr import AwsEcrDriver

@@ -64,7 +64,7 @@ class Context:
         try:
             return [
                 ssm_key["TargetKeyId"]
-                for ssm_key in boto3.client("kms").list_aliases()["Aliases"]
+                for ssm_key in clients.kms.list_aliases()["Aliases"]
                 if self.kms_key_alias in ssm_key["AliasName"]
             ][0]
         except IndexError:

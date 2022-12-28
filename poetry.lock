@@ -41,18 +41,18 @@ dev = ["Sphinx (==4.3.2)", "black (==22.3.0)", "build (==0.8.0)", "flake8 (==4.0
 
 [[package]]
 name = "boto3"
-version = "1.26.37"
+version = "1.26.38"
 description = "The AWS SDK for Python"
 category = "main"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "boto3-1.26.37-py3-none-any.whl", hash = "sha256:7a6766c7177a9c6f85365e02aabd96ca4d72e08bc5cb127cb51b0a97ac9b9d1b"},
-    {file = "boto3-1.26.37.tar.gz", hash = "sha256:82b790b1dabd0746b028d2013b5d4d636a41f3aaf25520081f4c173cb6eb395d"},
+    {file = "boto3-1.26.38-py3-none-any.whl", hash = "sha256:ee787e36f1d02434eb5a757bba640f90663438f420bb06cd9f81ff30188ca65b"},
+    {file = "boto3-1.26.38.tar.gz", hash = "sha256:5764d6401c2bec28d3fa565978d82ff35f4017b99e2d8625c7faac6a86cddd8c"},
 ]
 
 [package.dependencies]
-botocore = ">=1.29.37,<1.30.0"
+botocore = ">=1.29.38,<1.30.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.6.0,<0.7.0"
 
@@ -61,14 +61,14 @@ crt = ["botocore[crt] (>=1.21.0,<2.0a0)"]
 
 [[package]]
 name = "botocore"
-version = "1.29.37"
+version = "1.29.38"
 description = "Low-level, data-driven core of boto 3."
 category = "main"
 optional = false
 python-versions = ">= 3.7"
 files = [
-    {file = "botocore-1.29.37-py3-none-any.whl", hash = "sha256:18ab8e95345a6d0d2653ce65d261a0aef6fef8a57a35a89e3cea6ffe315e92fc"},
-    {file = "botocore-1.29.37.tar.gz", hash = "sha256:3afa4fec9f7713caa05116563b38f81bec7bd20585d517155484d3f25efab5aa"},
+    {file = "botocore-1.29.38-py3-none-any.whl", hash = "sha256:e22615f233a90dfeff4ec5a42df8c641d31125f8c9da26898cccbf869743a6bd"},
+    {file = "botocore-1.29.38.tar.gz", hash = "sha256:2b98c7da8668cdc022b4d8a56b50686454d0a10c11518702fde41881d20618b6"},
 ]
 
 [package.dependencies]
@@ -658,15 +658,13 @@ files = [
 
 [[package]]
 name = "moto"
-version = "4.0.12"
+version = "4.0.13.dev0"
 description = "A library that allows your python tests to easily mock out the boto library"
 category = "dev"
 optional = false
 python-versions = ">=3.6"
-files = [
-    {file = "moto-4.0.12-py3-none-any.whl", hash = "sha256:e6592727d90a2dc82ca7c7fa61b224e2b195cc0dcdac2f46ccbf0cd8efde1459"},
-    {file = "moto-4.0.12.tar.gz", hash = "sha256:30f8f31658f18cdb15eb626c8cb3a07520f0d8c2193226fbcb3326ae12fba246"},
-]
+files = []
+develop = false
 
 [package.dependencies]
 boto3 = ">=1.9.201"
@@ -703,6 +701,12 @@ s3 = ["PyYAML (>=5.1)"]
 server = ["PyYAML (>=5.1)", "aws-xray-sdk (>=0.93,!=0.96)", "cfn-lint (>=0.40.0)", "docker (>=2.5.1)", "ecdsa (!=0.15)", "flask (!=2.2.0,!=2.2.1)", "flask-cors", "graphql-core", "idna (>=2.5,<4)", "jsondiff (>=1.1.2)", "openapi-spec-validator (>=0.2.8)", "pyparsing (>=3.0.7)", "python-jose[cryptography] (>=3.1.0,<4.0.0)", "setuptools", "sshpubkeys (>=3.1.0)"]
 ssm = ["PyYAML (>=5.1)", "dataclasses"]
 xray = ["aws-xray-sdk (>=0.93,!=0.96)", "setuptools"]
+
+[package.source]
+type = "git"
+url = "https://github.com/bkeane/moto.git"
+reference = "defaultKmsKeyIds"
+resolved_reference = "ce1d0dd20d4b71657677111415544407b0f50bc9"
 
 [[package]]
 name = "packaging"
@@ -1542,4 +1546,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "fa1ef7e8431b96bb21bafd17e0b910f4e39b1319b6bcbc6567e334f08534d3e5"
+content-hash = "093c55db9d6c59e37eb6b3f3eaf397db6955dfc5352724d0932fbf020bb3ff9a"
