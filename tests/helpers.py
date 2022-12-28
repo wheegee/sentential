@@ -1,8 +1,21 @@
 from rich.table import Table
-from typing import Any, List
+from typing import Any, List, Union
 import hashlib
 import random
 import fileinput
+from ast import literal_eval
+from sentential.lib.shapes import (
+    AwsImageDetail,
+    AwsImageManifest,
+    AwsImageManifestLayer,
+    AwsManifestList,
+    AwsManifestListManifest,
+    AwsManifestListManifestPlatform,
+)
+
+
+class MockException(BaseException):
+    pass
 
 
 def table_headers(table: Table) -> List[str]:
@@ -12,6 +25,13 @@ def table_headers(table: Table) -> List[str]:
 def table_body(table: Table) -> List[List[Any]]:
     cells = [column._cells for column in table.columns]
     body = [list(row) for row in zip(*cells)]
+    for i, row in enumerate(body):
+        for j, column in enumerate(row):
+            if str(column).startswith("[") and str(column).endswith("]"):
+                body[i][j] = literal_eval(str(column))
+            if str(column) == "None":
+                body[i][j] = literal_eval(str(column))
+
     return body
 
 
@@ -30,68 +50,77 @@ def generate_random_sha():
     return f"sha256:{sha}"
 
 
-def generate_image_layers(n):
+def generate_image_layers(n) -> List[AwsImageManifestLayer]:
     layers = []
     for _ in range(n):
         layers.append(
-            {
-                "mediaType": "application/vnd.docker.image.rootfs.diff.tar.gzip",
-                "size": random.randint(100, 1000),
-                "digest": generate_random_sha(),
-            }
+            AwsImageManifestLayer(
+                size=random.randint(100, 1000), digest=generate_random_sha()
+            )
         )
     return layers
 
 
-def generate_image_digest(layers):
-    layer_digests = "".join([layer["digest"] for layer in layers])
+def generate_image_digest(layers: List[AwsImageManifestLayer]) -> str:
+    layer_digests = "".join([layer.digest for layer in layers])
     sum_digest = hashlib.sha256(f"{layer_digests}".encode("utf-8")).hexdigest()
     return f"sha256:{sum_digest}"
 
 
-def generate_image_manifest(config_digest=None):
+def generate_image_manifest(config_digest: Union[str, None] = None) -> AwsImageManifest:
     layers = generate_image_layers(random.randint(5, 15))
     if config_digest is None:
         config_digest = generate_image_digest(layers)
-    return {
-        "schemaVersion": 2,
-        "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
-        "config": {
-            "mediaType": "application/vnd.docker.container.image.v1+json",
-            "size": sum([layer["size"] for layer in layers]),
-            "digest": config_digest,
-        },
-        "layers": layers,
-    }
 
-
-def generate_manifest_list_distribution(
-    image_manifest: dict, architecture: str = "amd64", os: str = "linux"
-):
-    return {
-        "mediaType": image_manifest["config"]["mediaType"],
-        "digest": image_manifest["config"]["digest"],
-        "size": image_manifest["config"]["size"],
-        "platform": {"architecture": architecture, "os": os},
-    }
-
-
-def generate_image_manifest_list():
-    arm_image_manifest = generate_image_manifest()
-    amd_image_manifest = generate_image_manifest()
-    arm_distribution = generate_manifest_list_distribution(
-        arm_image_manifest, architecture="arm64"
+    return AwsImageManifest(
+        config=AwsImageManifestLayer(
+            size=sum([layer.size for layer in layers]), digest=config_digest
+        ),
+        layers=layers,
     )
-    amd_distribution = generate_manifest_list_distribution(
-        amd_image_manifest, architecture="amd64"
-    )
-    manifest_list = {
-        "mediaType": "application/vnd.docker.distribution.manifest.list.v2+json",
-        "schemaVersion": 2,
-        "manifests": [arm_distribution, amd_distribution],
-    }
 
-    return {
-        "image_manifests": [arm_image_manifest, amd_image_manifest],
-        "manifest_list": manifest_list,
-    }
+
+def generate_manifest_list_manifest(
+    image_manifest_digest: str,
+    image_size: int,
+    image_architecture: str = "amd64",
+    image_os: str = "linux",
+) -> AwsManifestListManifest:
+    return AwsManifestListManifest(
+        digest=image_manifest_digest,
+        size=image_size,
+        platform=AwsManifestListManifestPlatform(
+            os=image_os, architecture=image_architecture
+        ),
+    )
+
+
+def generate_image_manifest_list(
+    image_details: List[AwsImageDetail],
+) -> AwsManifestList:
+    distributions = []
+    for image_detail in image_details:
+        tag = image_detail.imageId.imageTag
+
+        if tag is None:
+            raise MockException("image must have tag for mock generation")
+
+        if "arm64" not in tag and "amd64" not in tag:
+            raise MockException("image tag must include arch for mock generation")
+
+        if "arm64" in tag:
+            arch = "arm64"
+
+        if "amd64" in tag:
+            arch = "amd64"
+
+        distributions.append(
+            generate_manifest_list_manifest(
+                image_manifest_digest=image_detail.imageId.imageDigest,
+                image_size=image_detail.imageManifest.config.size,
+                image_architecture=arch,
+                image_os="linux",
+            )
+        )
+
+    return AwsManifestList(manifests=distributions)

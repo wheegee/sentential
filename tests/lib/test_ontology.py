@@ -127,20 +127,14 @@ class TestModeledStore:
         ontology.envs.write("required_env", ["123"])
         table = ontology.envs.read()
         assert ["field", "value", "validation", "description"] == table_headers(table)
-        assert ["required_env", "123", "None", "required"] in table_body(table)
-        assert ["optional_env", "default_value", "None", "optional"] in table_body(
-            table
-        )
+        assert ["required_env", "123", None, "required"] in table_body(table)
+        assert ["optional_env", "default_value", None, "optional"] in table_body(table)
 
     def test_envs_clear(self, ontology: Ontology):
         ontology.envs.clear()
         table = ontology.envs.read()
-        assert ["required_env", "None", "field required", "required"] in table_body(
-            table
-        )
-        assert ["optional_env", "default_value", "None", "optional"] in table_body(
-            table
-        )
+        assert ["required_env", None, "field required", "required"] in table_body(table)
+        assert ["optional_env", "default_value", None, "optional"] in table_body(table)
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
@@ -151,7 +145,7 @@ class TestInternalStore:
     def test_configs_read(self, ontology: Ontology):
         table = ontology.configs.read()
         assert ["field", "value", "validation", "description"] == table_headers(table)
-        assert ["storage", "512", "None", "ephemeral storage (mb)"] in table_body(table)
+        assert ["storage", "512", None, "ephemeral storage (mb)"] in table_body(table)
 
     def test_configs_write_bad_key(self, ontology: Ontology):
         with pytest.raises(StoreError):
@@ -164,11 +158,9 @@ class TestInternalStore:
     def test_configs_write(self, ontology: Ontology):
         ontology.configs.write("storage", ["1024"])
         table = ontology.configs.read()
-        assert ["storage", "1024", "None", "ephemeral storage (mb)"] in table_body(
-            table
-        )
+        assert ["storage", "1024", None, "ephemeral storage (mb)"] in table_body(table)
 
     def test_configs_clear(self, ontology: Ontology):
         ontology.configs.clear()
         table = ontology.configs.read()
-        assert ["storage", "512", "None", "ephemeral storage (mb)"] in table_body(table)
+        assert ["storage", "512", None, "ephemeral storage (mb)"] in table_body(table)

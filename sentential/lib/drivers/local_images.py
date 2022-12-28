@@ -1,8 +1,7 @@
-from functools import lru_cache
 from time import sleep
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
-from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG, Architecture, Image
+from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG, Image
 from sentential.lib.exceptions import LocalDriverError
 from python_on_whales.components.image.cli_wrapper import Image as PythonOnWhalesImage
 
@@ -45,7 +44,7 @@ class LocalImagesDriver:
 
         sleep(2)
         clients.docker.manifest.create(manifest_list_uri, image_manifest_uris, True)
-        clients.docker.manifest.push(manifest_list_uri, True)
+        clients.docker.manifest.push(manifest_list_uri, False)
         return manifest_list_uri
 
     def _build(self, tag: str, platform: str) -> Image:
@@ -111,7 +110,7 @@ class LocalImagesDriver:
         if arch != "any":
             images = [image for image in images if image.arch == arch]
 
-        for image in self.images():
+        for image in images:
             attr = getattr(image, attribute)
             if isinstance(attr, list):
                 clause = f"{humanized_value} in {attribute}"

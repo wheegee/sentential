@@ -60,6 +60,7 @@ class AwsEcrDriver:
                     arch=self._get_arch(image_digest),
                 )
             )
+        self._image_details.cache_clear()
         return images
 
     def clean(self) -> None:
@@ -89,7 +90,7 @@ class AwsEcrDriver:
         if arch != "any":
             images = [image for image in images if image.arch == arch]
 
-        for image in self.images():
+        for image in images:
             attr = getattr(image, attribute)
             if isinstance(attr, list):
                 if value in attr:

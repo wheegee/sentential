@@ -11,12 +11,12 @@ from sentential.lib.shapes import Image, ImageView
 class Joinery:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
-        self.docker = LocalImagesDriver(self.ontology)
-        self.ecr = AwsEcrDriver(self.ontology)
+        self.local_images = LocalImagesDriver(self.ontology)
+        self.ecr_images = AwsEcrDriver(self.ontology)
 
     def group_by_id(self) -> Dict[str, List[Image]]:
-        local_images = [image for image in self.docker.images()]
-        aws_images = [image for image in self.ecr.images()]
+        local_images = [image for image in self.local_images.images()]
+        aws_images = [image for image in self.ecr_images.images()]
         by_id = {}
         for image in local_images + aws_images:
             if image.id in by_id:
@@ -27,7 +27,6 @@ class Joinery:
 
     def merge_on_id(self) -> List[ImageView]:
         merged = []
-
         for id, images in self.group_by_id().items():
             digest = None
             tags = []
