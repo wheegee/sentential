@@ -33,11 +33,17 @@ class AwsLambdaDriver(LambdaDriver):
 
     def deploy(self, image: Image) -> Image:
         self.ontology.envs.export_defaults()
+        self.ontology.tags.export_defaults()
+        self.ontology.envs.validate()
+        self.ontology.tags.validate()
+
+        tags = self.ontology.tags.as_dict()
+        
         clients.iam.attach_role_policy(
             RoleName=self._put_role()["Role"]["RoleName"],
             PolicyArn=self._put_policy()["Policy"]["Arn"],
         )
-        self._put_lambda(image)
+        self._put_lambda(image, tags)
         return image
 
     def destroy(self) -> None:
@@ -111,7 +117,6 @@ class AwsLambdaDriver(LambdaDriver):
                 RoleName=role_name,
                 Tags=[{"Key": key, "Value": value} for (key, value) in tags.items()],
             )
-
         return clients.iam.get_role(RoleName=role_name)
 
     def _put_policy(self, tags: Optional[Dict[str, str]] = None) -> Dict:
@@ -145,7 +150,7 @@ class AwsLambdaDriver(LambdaDriver):
 
         if tags:
             clients.iam.tag_policy(
-                PolicyName=policy.name,
+                PolicyArn=policy_arn,
                 Tags=[{"Key": key, "Value": value} for (key, value) in tags.items()],
             )
 
@@ -205,6 +210,6 @@ class AwsLambdaDriver(LambdaDriver):
             )
 
             if tags:
-                clients.lmb.tag_resource(Resource=function.arn, Tags=tags)
+                clients.lmb.tag_resource(Resource=function['FunctionArn'], Tags=tags)
 
             return function

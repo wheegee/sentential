@@ -29,6 +29,8 @@ class LocalLambdaDriver(LambdaDriver):
     def deploy(self, image: Image, inject_env: Dict[str, str] = {}) -> Image:
         self.destroy()
         self.ontology.envs.export_defaults()
+        self.ontology.envs.validate()
+        
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_credentials()
         credentials_env = {

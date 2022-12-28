@@ -1,6 +1,7 @@
 import polars as pl
 from typing import List, Type
 from types import SimpleNamespace
+from pydantic import ValidationError
 from rich.table import Table, box
 from builtins import ValueError
 from sentential.lib.exceptions import StoreError
@@ -51,6 +52,9 @@ class GenericStore(Common):
     def parameters(self) -> SimpleNamespace:
         return SimpleNamespace(**self.as_dict())
 
+    def validate(self):
+        return None
+
     def read(self) -> Table:
         data = self.as_dict()
         table = Table("field", "value", box=box.SIMPLE)
@@ -98,6 +102,13 @@ class ModeledStore(Common):
     @property
     def parameters(self) -> Shaper:
         return self.model.constrained_parse_obj(self.as_dict())
+
+    # TODO: as_dict and as_df are unsafe in terms of validation, they should be made private. But as_dict is useful in places, this is a stop-gap.
+    def validate(self):
+        try:
+            self.parameters
+        except ValidationError as e:
+            raise StoreError(e)
 
     def read(self) -> Table:
         data = self.as_df()

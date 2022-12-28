@@ -1,6 +1,7 @@
 from sentential.cli.root import root
 from sentential.cli.args import args
 from sentential.cli.envs import envs
+from sentential.cli.tags import tags
 from sentential.cli.configs import configs
 from sentential.cli.deploy import deploy
 from sentential.cli.destroy import destroy
@@ -10,6 +11,7 @@ from sentential.lib.exceptions import SntlException, DockerException, AWS_EXCEPT
 
 root.add_typer(args, name="args", help="build arguments")
 root.add_typer(envs, name="envs", help="environment variables")
+root.add_typer(tags, name="tags", help="resource tags")
 root.add_typer(configs, name="configs", help="provisioning")
 root.add_typer(deploy, name="deploy", help="create deployment")
 root.add_typer(destroy, name="destroy", help="destroy deployment")
