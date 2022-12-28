@@ -1,8 +1,7 @@
-from functools import lru_cache
 from time import sleep
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
-from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG, Architecture, Image
+from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG, Image
 from sentential.lib.exceptions import LocalDriverError
 from python_on_whales.components.image.cli_wrapper import Image as PythonOnWhalesImage
 
@@ -28,7 +27,7 @@ class LocalImagesDriver:
         image_manifest_uris = []
         built: List[Image] = []
         cwi = self.image_by_tag(CURRENT_WORKING_IMAGE_TAG)
-
+        
         for platform in platforms:
             image_manifest_uri = f"{manifest_list_uri}-{platform.split('/')[1]}"
             image = self._build(image_manifest_uri, platform)
@@ -111,7 +110,7 @@ class LocalImagesDriver:
         if arch != "any":
             images = [image for image in images if image.arch == arch]
 
-        for image in self.images():
+        for image in images:
             attr = getattr(image, attribute)
             if isinstance(attr, list):
                 clause = f"{humanized_value} in {attribute}"

@@ -21,11 +21,11 @@ class TestAwsLambdaDriver:
     def test_deploy(
         self, aws_lambda_driver: AwsLambdaDriver, aws_ecr_driver: AwsEcrDriver
     ):
-        image = aws_ecr_driver.image_by_tag("0.0.1")
+        image = aws_ecr_driver.image_by_tag("0.0.1", "amd64")
         aws_lambda_driver.deploy(image)
         function_name = aws_lambda_driver.ontology.context.resource_name
         deployed_digest = self.get_lambda(function_name)["Configuration"]["CodeSha256"]
-        assert image.digest == f"sha256:{deployed_digest}"
+        assert f"sha256:{deployed_digest}" in image.uri  # type: ignore
 
     def test_destroy(self, aws_lambda_driver: AwsLambdaDriver):
         aws_lambda_driver.destroy()
@@ -45,7 +45,7 @@ class TestAwsLambdaDriver:
         configs.write("subnet_ids", ["sn-123", "sn-456"])
         configs.write("security_group_ids", ["sg-123", "sg-456"])
 
-        image = aws_ecr_driver.image_by_tag("0.0.1")
+        image = aws_ecr_driver.image_by_tag("0.0.1", "amd64")
         aws_lambda_driver.deploy(image)
 
         lambda_config = self.get_lambda_config(function_name)

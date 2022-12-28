@@ -3,13 +3,18 @@ from typing import Any, List, Union
 import hashlib
 import random
 import fileinput
+from ast import literal_eval
 from sentential.lib.shapes import (
+    AwsImageDetail,
     AwsImageManifest,
     AwsImageManifestLayer,
     AwsManifestList,
     AwsManifestListManifest,
     AwsManifestListManifestPlatform,
 )
+
+class MockException(BaseException):
+    pass
 
 
 def table_headers(table: Table) -> List[str]:
@@ -19,6 +24,13 @@ def table_headers(table: Table) -> List[str]:
 def table_body(table: Table) -> List[List[Any]]:
     cells = [column._cells for column in table.columns]
     body = [list(row) for row in zip(*cells)]
+    for i, row in enumerate(body):
+        for j, column in enumerate(row):
+            if str(column).startswith("[") and str(column).endswith("]"):
+                body[i][j] = literal_eval(str(column))
+            if str(column) == "None":
+                body[i][j] = literal_eval(str(column))
+
     return body
 
 
@@ -82,25 +94,29 @@ def generate_manifest_list_manifest(
     )
 
 
-def generate_image_manifest_list() -> dict:
-    arm_image_manifest = generate_image_manifest()
-    amd_image_manifest = generate_image_manifest()
+def generate_image_manifest_list(image_details: List[AwsImageDetail]) -> AwsManifestList:
+    distributions = []
+    for image_detail in image_details:
+        tag = image_detail.imageId.imageTag
 
-    arm_distribution = generate_manifest_list_manifest(
-        image_manifest_digest=generate_random_sha(),
-        image_size=arm_image_manifest.config.size,
-        image_architecture="arm64",
-    )
+        if tag is None:
+            raise MockException("image must have tag for mock generation")
 
-    amd_distribution = generate_manifest_list_manifest(
-        image_manifest_digest=generate_random_sha(),
-        image_size=arm_image_manifest.config.size,
-        image_architecture="amd64",
-    )
+        if "arm64" not in tag and "amd64" not in tag:
+            raise MockException("image tag must include arch for mock generation")
 
-    manifest_list = AwsManifestList(manifests=[arm_distribution, amd_distribution])
+        if "arm64" in tag:
+            arch = "arm64"
+        
+        if "amd64" in tag:
+            arch = "amd64"
 
-    return {
-        "image_manifests": [arm_image_manifest, amd_image_manifest],
-        "manifest_list": manifest_list,
-    }
+        distributions.append(generate_manifest_list_manifest(
+            image_manifest_digest = image_detail.imageId.imageDigest,
+            image_size = image_detail.imageManifest.config.size,
+            image_architecture=arch,
+            image_os="linux",
+        ))
+
+    return AwsManifestList(manifests=distributions)
+

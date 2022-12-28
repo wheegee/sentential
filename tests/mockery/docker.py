@@ -10,7 +10,7 @@ from sentential.lib.shapes import (
     AwsManifestListManifestPlatform,
 )
 from sentential.lib.clients import clients
-from tests.helpers import generate_image_manifest, generate_manifest_list_manifest
+from tests.helpers import generate_image_manifest, generate_manifest_list_manifest, MockException
 
 #
 # Docker Client Mockery
@@ -22,10 +22,6 @@ from tests.helpers import generate_image_manifest, generate_manifest_list_manife
 # monkeypatch.setattr(clients.docker, 'push', push_mock)
 # monkeypatch.setattr(clients.docker.manifest, "create", manifest_create_mock)
 # monkeypatch.setattr(clients.docker.manifest, 'push', manifest_push_mock)
-
-
-class MockException(BaseException):
-    pass
 
 
 class DockerManifestDescriptor(BaseModel):
@@ -108,7 +104,6 @@ def manifest_push_mock(manifest_list_uri: str, purge: bool):
     for image_manifest_file in listdir(manifest_list_dir):
         with open(f"{manifest_list_dir}/{image_manifest_file}") as json_manifest:
             docker_manifest = DockerManifest(**json.load(json_manifest))
-            manifest = docker_manifest.Descriptor.SchemaV2Manifest
             manifest_digest = docker_manifest.Descriptor.digest
             size = docker_manifest.Descriptor.size
             os = docker_manifest.Descriptor.platform.os

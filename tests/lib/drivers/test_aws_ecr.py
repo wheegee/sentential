@@ -13,10 +13,6 @@ class TestAwsEcrDriver:
     # Test Helpers
     #
 
-    def get_digests(self):
-        images = clients.ecr.list_images(repositoryName="test")["imageIds"]
-        return [i["imageDigest"] for i in images]
-
     def get_tags(self):
         images = clients.ecr.list_images(repositoryName="test")["imageIds"]
         return [i["imageTag"] for i in images if "imageTag" in i]
@@ -35,7 +31,7 @@ class TestAwsEcrDriver:
     #
 
     def test_image_count(self, aws_ecr_driver: AwsEcrDriver):
-        assert len(aws_ecr_driver.images()) == 15
+        assert len(aws_ecr_driver.images()) == 8
 
     def test_image_by_tag(self, aws_ecr_driver: AwsEcrDriver):
         tag = self.get_tags()[0]
@@ -47,8 +43,8 @@ class TestAwsEcrDriver:
             aws_ecr_driver.image_by_tag("dne")
 
     def test_image_by_digest(self, aws_ecr_driver: AwsEcrDriver):
-        digest = self.get_digests()[0]
-        image = aws_ecr_driver.image_by_digest(digest)
+        digest = [ image.digest for image in aws_ecr_driver.images() ][0]
+        image = aws_ecr_driver.image_by_digest(digest, "amd64")
         assert image.digest == digest
 
     def test_image_by_digest_missing(self, aws_ecr_driver: AwsEcrDriver):

@@ -60,6 +60,7 @@ class AwsEcrDriver:
                     arch=self._get_arch(image_digest),
                 )
             )
+        self._image_details.cache_clear()
         return images
 
     def clean(self) -> None:
@@ -71,7 +72,7 @@ class AwsEcrDriver:
             repositoryName=self.ontology.context.repository_name,
             imageIds=manifest_digests,
         )
-        # self._image_details.cache_clear()
+        self._image_details.cache_clear()
 
     def image_by_tag(self, tag: str, arch: str = "any") -> Image:
         return self._image_by("tags", tag, arch)
@@ -89,7 +90,7 @@ class AwsEcrDriver:
         if arch != "any":
             images = [image for image in images if image.arch == arch]
 
-        for image in self.images():
+        for image in images:
             attr = getattr(image, attribute)
             if isinstance(attr, list):
                 if value in attr:
@@ -196,7 +197,7 @@ class AwsEcrDriver:
 
         return arch_list
 
-    # @lru_cache
+    @lru_cache
     def _image_details(self) -> List[AwsImageDetail]:
         response = clients.ecr.describe_images(repositoryName=self.repo_name)
         image_desc = AwsImageDescriptions(**response).imageDetails
