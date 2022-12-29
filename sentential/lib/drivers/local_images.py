@@ -49,7 +49,6 @@ class LocalImagesDriver:
 
     def _build(self, tag: str, platform: str) -> Image:
         self.ontology.args.export_defaults()
-        self.ontology.args.validate()
 
         cmd = {
             "tags": [tag],

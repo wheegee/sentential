@@ -34,8 +34,6 @@ class AwsLambdaDriver(LambdaDriver):
     def deploy(self, image: Image) -> Image:
         self.ontology.envs.export_defaults()
         self.ontology.tags.export_defaults()
-        self.ontology.envs.validate()
-        self.ontology.tags.validate()
 
         tags = self.ontology.tags.as_dict()
 

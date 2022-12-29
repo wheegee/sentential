@@ -21,11 +21,11 @@ class Common:
             WithDecryption=True,
         )["Parameters"]
 
-    def as_dict(self):
+    def _unsafe_dict(self):
         return {p["Name"].replace(self.path, ""): p["Value"] for p in self._fetch()}
 
-    def as_df(self):
-        data = self.as_dict()
+    def _unsafe_df(self):
+        data = self._unsafe_dict()
         data = [list(data.keys()), list(data.values())]
         return pl.DataFrame(data, columns=[("field", pl.Utf8), ("value", pl.Utf8)])
 
@@ -36,7 +36,7 @@ class Common:
             raise StoreError(f"no key '{key}' persisted")
 
     def clear(self):
-        for (key, value) in self.as_dict().items():
+        for (key, value) in self._unsafe_dict().items():
             self.delete(key)
 
 
@@ -50,13 +50,13 @@ class GenericStore(Common):
 
     @property
     def parameters(self) -> SimpleNamespace:
-        return SimpleNamespace(**self.as_dict())
+        return SimpleNamespace(**self._unsafe_dict())
 
-    def validate(self):
-        return None
+    def as_dict(self):
+        return vars(self.parameters)
 
     def read(self) -> Table:
-        data = self.as_dict()
+        data = self._unsafe_dict()
         table = Table("field", "value", box=box.SIMPLE)
         for (key, value) in data.items():
             table.add_row(key, value)
@@ -93,7 +93,7 @@ class ModeledStore(Common):
 
     def export_defaults(self) -> None:
         if self.model:
-            current_state = self.as_dict()
+            current_state = self._unsafe_dict()
             for (name, field) in self.model.__fields__.items():
                 if field.name not in current_state.keys():
                     if hasattr(field, "default") and field.default != None:
@@ -101,20 +101,19 @@ class ModeledStore(Common):
 
     @property
     def parameters(self) -> Shaper:
-        return self.model.constrained_parse_obj(self.as_dict())
-
-    # TODO: as_dict and as_df are unsafe in terms of validation, they should be made private. But as_dict is useful in places, this is a stop-gap.
-    def validate(self):
         try:
-            self.parameters
+            return self.model.constrained_parse_obj(self._unsafe_dict())
         except ValidationError as e:
             raise StoreError(e)
 
+    def as_dict(self) -> dict:
+        return self.parameters.dict()
+
     def read(self) -> Table:
-        data = self.as_df()
+        data = self._unsafe_df()
         opts = {"on": "field", "how": "outer"}
         schema = self.model.schema_df()
-        validation = self.model.constrained_validation_df(self.as_dict())
+        validation = self.model.constrained_validation_df(self._unsafe_dict())
         df = schema.join(data, **opts).join(validation, **opts)
         df = df.with_columns([(pl.col("value").fill_null(pl.col("default")))])
         df = df.select(
