@@ -30,7 +30,7 @@ class LocalLambdaDriver(LambdaDriver):
         self.destroy()
         self.ontology.envs.export_defaults()
         self.ontology.envs.validate()
-        
+
         clients.docker.network.create("sentential-bridge")
         credentials = self._get_credentials()
         credentials_env = {

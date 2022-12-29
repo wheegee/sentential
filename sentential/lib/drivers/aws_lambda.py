@@ -38,7 +38,7 @@ class AwsLambdaDriver(LambdaDriver):
         self.ontology.tags.validate()
 
         tags = self.ontology.tags.as_dict()
-        
+
         clients.iam.attach_role_policy(
             RoleName=self._put_role()["Role"]["RoleName"],
             PolicyArn=self._put_policy()["Policy"]["Arn"],
@@ -210,6 +210,6 @@ class AwsLambdaDriver(LambdaDriver):
             )
 
             if tags:
-                clients.lmb.tag_resource(Resource=function['FunctionArn'], Tags=tags)
+                clients.lmb.tag_resource(Resource=function["FunctionArn"], Tags=tags)
 
             return function
