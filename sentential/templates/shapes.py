@@ -1,24 +1,31 @@
 from sentential.support.shaper import Shaper, List, Field
 
 """
-# Define, describe, and validate environment variables and build arguments.
+Uncomment and modify the below classes if needed
+- Env contractualizes `sntl envs`, all made available in lambda environment.
+- Arg contractualizes `sntl args`, all made available during build.
+- Tags applies key/values to all created resources
 
-# See documentation for general usage.
+Examples:
 
-# Example:
-class Env(Shaper):
-    db_url: str
-    db_port: int = 3306
-    db_username: str = "postgres"
-    db_password: str
+    class Env(Shaper):
+        db_host: str
+        db_port: int
+        db_user: str
+        db_pass: str
 
-#
-# Compatible Classes
-#
+    class Arg(Shaper):
+        build_arg: str
 
-class Arg(Shaper):
-    pass
-
-class Env(Shaper):
-    pass
+    class Tags(Shaper):
+        env: str
 """
+
+# class Env(Shaper):
+#   ...
+
+# class Arg(Shaper):
+#   ...
+
+# class Tags(Shaper):
+#   ...
