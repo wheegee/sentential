@@ -12,26 +12,12 @@ from tests.helpers import generate_image_manifest, generate_image_manifest_list
 # Current Working Image
 #
 
-
 @pytest.fixture(scope="class")
 def cwi():
     local_images_driver = LocalImagesDriver(Ontology())
-    return local_images_driver.build("amd64")
+    local_images_driver.clean()
+    yield local_images_driver.build("amd64")
 
-
-#
-# KMS
-#
-
-# @pytest.fixture(scope="class")
-# def kms():
-#     from IPython import embed
-#     embed()
-#     response = clients.kms.create_key()
-#     response = clients.kms.create_alias(
-#         AliasName = "alias/aws/ssm",
-#         TargetKeyId = response['KeyMetadata']['KeyId']
-#     )
 
 #
 # ECR Mock Fixtures
