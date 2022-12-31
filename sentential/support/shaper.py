@@ -1,9 +1,8 @@
+import ast
+import polars as pl
 from builtins import BaseException
 from pydantic import BaseModel, ValidationError, Extra, Field
-from typing import Any, List, Tuple, cast
-from enum import Enum
-import polars as pl
-import ast
+from typing import Any, List, Tuple, Union, cast
 
 #
 # User Driven Shapes

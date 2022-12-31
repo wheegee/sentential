@@ -31,7 +31,7 @@ class Ontology:
             from shapes import Args as Model  # type: ignore
 
             return ModeledStore(cls.context, "arg", Model)
-        except:
+        except ImportError:
             return GenericStore(cls.context, "arg")
 
     @property
@@ -41,8 +41,18 @@ class Ontology:
             from shapes import Envs as Model  # type: ignore
 
             return ModeledStore(cls.context, "env", Model)
-        except:
+        except ImportError:
             return GenericStore(cls.context, "env")
+
+    @property
+    def tags(cls) -> Union[GenericStore, ModeledStore]:
+        try:
+            reload_shapes()
+            from shapes import Tags as Model  # type: ignore
+
+            return ModeledStore(cls.context, "tag", Model)
+        except ImportError:
+            return GenericStore(cls.context, "tag")
 
     @property
     def configs(cls) -> ModeledStore:

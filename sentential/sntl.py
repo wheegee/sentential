@@ -10,6 +10,7 @@ from sentential.lib.exceptions import SntlException, DockerException, AWS_EXCEPT
 root.add_typer(store, name="args", help="build arguments")
 root.add_typer(store, name="envs", help="environment variables")
 root.add_typer(store, name="configs", help="provisioning")
+root.add_typer(store, name="tags", help="tagging")
 root.add_typer(deploy, name="deploy", help="create deployment")
 root.add_typer(destroy, name="destroy", help="destroy deployment")
 root.add_typer(invoke, name="invoke", help="invoke function")

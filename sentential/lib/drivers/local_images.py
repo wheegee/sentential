@@ -48,7 +48,7 @@ class LocalImagesDriver:
         return manifest_list_uri
 
     def _build(self, tag: str, platform: str) -> Image:
-        self.ontology.args.export_defaults()  # maybe hoist to initializer?
+        self.ontology.args.export_defaults()
 
         cmd = {
             "tags": [tag],
