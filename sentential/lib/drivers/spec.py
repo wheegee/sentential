@@ -18,11 +18,12 @@ class LambdaDriver(ABC):
     def invoke(self, payload: str):
         ...
 
+
 class ImagesDriver(ABC):
     @abstractmethod
     def images(self):
         ...
-    
+
     @abstractmethod
     def clean(self):
         ...
@@ -34,7 +35,7 @@ class ImagesDriver(ABC):
     @abstractmethod
     def image_by_digest(self):
         ...
-    
+
     @abstractmethod
     def image_by_id(self):
         ...

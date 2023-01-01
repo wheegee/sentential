@@ -3,6 +3,7 @@ from sentential.lib.clients import clients
 from sentential.lib.drivers.local_bridge import LocalBridge
 from sentential.lib.ontology import Ontology
 
+
 class LocalLambdaPublicUrlMount:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -28,8 +29,12 @@ class LocalLambdaPublicUrlMount:
                 networks=[LocalBridge.config.bridge_name],
                 detach=True,
                 remove=False,
-                publish=[(LocalBridge.config.gw_port, LocalBridge.config.gw_internal_port)],
-                envs={"LAMBDA_ENDPOINT": f"http://{LocalBridge.config.lambda_name}:{LocalBridge.config.lambda_internal_port}"},
+                publish=[
+                    (LocalBridge.config.gw_port, LocalBridge.config.gw_internal_port)
+                ],
+                envs={
+                    "LAMBDA_ENDPOINT": f"http://{LocalBridge.config.lambda_name}:{LocalBridge.config.lambda_internal_port}"
+                },
             )
         return f"http://localhost:{LocalBridge.config.gw_port}"
 
@@ -38,5 +43,8 @@ class LocalLambdaPublicUrlMount:
         return None
 
     def _running(self) -> bool:
-        found = [container.name == LocalBridge.config.gw_name for container in clients.docker.container.list()]
+        found = [
+            container.name == LocalBridge.config.gw_name
+            for container in clients.docker.container.list()
+        ]
         return any(found)

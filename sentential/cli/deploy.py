@@ -11,11 +11,12 @@ from sentential.lib.semver import SemVer
 
 deploy = typer.Typer()
 
+
 @deploy.command()
 def local(
     tag: str = typer.Argument(CURRENT_WORKING_IMAGE_TAG, envvar="TAG"),
     arch: Architecture = typer.Option("amd64"),
-    public_gw: bool = typer.Option(False, help="[experimental]")
+    public_gw: bool = typer.Option(False, help="[experimental]"),
 ):
     """build and deploy local lambda container"""
     ontology = Ontology()
@@ -37,12 +38,11 @@ def local(
         LocalLambdaPublicUrlMount(ontology).umount()
 
 
-
 @deploy.command()
 def aws(
     tag: str = typer.Argument(None, envvar="TAG"),
     arch: Architecture = typer.Option("amd64"),
-    public_gw: bool = typer.Option(False, help="[experimental]")
+    public_gw: bool = typer.Option(False, help="[experimental]"),
 ):
     """deploy lambda image to aws"""
     ontology = Ontology()

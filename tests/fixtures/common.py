@@ -12,6 +12,7 @@ from tests.helpers import generate_image_manifest, generate_image_manifest_list
 # Current Working Image
 #
 
+
 @pytest.fixture(scope="class")
 def cwi():
     local_images_driver = LocalImagesDriver(Ontology())

@@ -18,12 +18,13 @@ from sentential.lib.shapes import (
 # NOTE: Docker images locally are primary key'd (conceptually) off of their id, this is normalized by the Image type
 #
 
+
 class LocalLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
     def deploy(self, image: Image, inject_env: Dict[str, str] = {}) -> Image:
-        LocalBridge.setup() # hoist to cli callback when things are more generalized
+        LocalBridge.setup()  # hoist to cli callback when things are more generalized
         self.destroy()
         self.ontology.envs.export_defaults()
         credentials = self._get_credentials()
@@ -49,14 +50,21 @@ class LocalLambdaDriver(LambdaDriver):
             networks=[LocalBridge.config.bridge_name],
             detach=True,
             remove=False,
-            publish=[(LocalBridge.config.lambda_port, LocalBridge.config.lambda_internal_port)],
+            publish=[
+                (
+                    LocalBridge.config.lambda_port,
+                    LocalBridge.config.lambda_internal_port,
+                )
+            ],
             envs={**default_env, **credentials_env, **inject_env},
         )
 
         return image
 
     def destroy(self) -> None:
-        clients.docker.remove([LocalBridge.config.lambda_name], force=True, volumes=True)
+        clients.docker.remove(
+            [LocalBridge.config.lambda_name], force=True, volumes=True
+        )
 
     def logs(self, follow: bool = False):
         cmd = ["docker", "logs", LocalBridge.config.lambda_name]
@@ -65,7 +73,9 @@ class LocalLambdaDriver(LambdaDriver):
         os.system(" ".join(cmd))
 
     def invoke(self, payload: str) -> LambdaInvokeResponse:
-        local = clients.boto3.client("lambda", endpoint_url=f"http://localhost:{LocalBridge.config.lambda_port}")
+        local = clients.boto3.client(
+            "lambda", endpoint_url=f"http://localhost:{LocalBridge.config.lambda_port}"
+        )
         response = local.invoke(
             FunctionName="function", Payload=payload, LogType="Tail"
         )

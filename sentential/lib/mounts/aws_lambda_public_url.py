@@ -3,11 +3,12 @@ from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Provision
 
+
 class AwsLambdaPublicUrlMount:
     def __init__(self, ontology: Ontology) -> None:
-         self.ontology = ontology
-         self.resource_name = self.ontology.context.resource_name
-         self.provision = cast(Provision, self.ontology.configs.parameters)
+        self.ontology = ontology
+        self.resource_name = self.ontology.context.resource_name
+        self.provision = cast(Provision, self.ontology.configs.parameters)
 
     def autocomplete(self) -> None:
         pass
@@ -15,7 +16,7 @@ class AwsLambdaPublicUrlMount:
     def mount(self) -> str:
         _ = self._put_permission()
         resp = self._put_url()
-        return resp['FunctionUrl']
+        return resp["FunctionUrl"]
 
     def umount(self) -> None:
         _ = self._delete_permission()
@@ -23,8 +24,8 @@ class AwsLambdaPublicUrlMount:
 
     def mounts(self) -> List[str]:
         resp = clients.lmb.get_function_url_config(FunctionName=self.resource_name)
-        if 'FunctionUrl' in resp:
-            return [resp['FunctionUrl']]
+        if "FunctionUrl" in resp:
+            return [resp["FunctionUrl"]]
         else:
             return []
 
@@ -49,28 +50,28 @@ class AwsLambdaPublicUrlMount:
         return clients.lmb.get_function_url_config(FunctionName=function_name)
 
     def _put_permission(self) -> Dict:
-            try:
-                clients.lmb.remove_permission(
-                    FunctionName=self.resource_name,
-                    StatementId="FunctionURLAllowPublicAccess",
-                )
-            except clients.lmb.exceptions.ResourceNotFoundException:
-                pass
-
-            return clients.lmb.add_permission(
+        try:
+            clients.lmb.remove_permission(
                 FunctionName=self.resource_name,
                 StatementId="FunctionURLAllowPublicAccess",
-                Action="lambda:InvokeFunctionUrl",
-                Principal="*",
-                FunctionUrlAuthType=self.provision.auth_type,
             )
+        except clients.lmb.exceptions.ResourceNotFoundException:
+            pass
+
+        return clients.lmb.add_permission(
+            FunctionName=self.resource_name,
+            StatementId="FunctionURLAllowPublicAccess",
+            Action="lambda:InvokeFunctionUrl",
+            Principal="*",
+            FunctionUrlAuthType=self.provision.auth_type,
+        )
 
     def _delete_url(self) -> None:
         try:
             clients.lmb.delete_function_url_config(FunctionName=self.resource_name)
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
-    
+
     def _delete_permission(self) -> None:
         try:
             clients.lmb.remove_permission(

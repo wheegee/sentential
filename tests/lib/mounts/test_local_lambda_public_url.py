@@ -6,11 +6,17 @@ from sentential.lib.mounts.local_lambda_public_url import LocalLambdaPublicUrlMo
 from sentential.lib.shapes import Image
 import requests
 
+
 @pytest.fixture(scope="class")
 def http_handler_returns_environ(init):
     copyfile("./fixtures/app_http.py", f"{init}/src/app.py")
     copyfile("./fixtures/requirements_http.txt", f"{init}/src/requirements.txt")
-    rewrite("./Dockerfile", "# insert application specific build steps here", "RUN pip install -r requirements.txt")
+    rewrite(
+        "./Dockerfile",
+        "# insert application specific build steps here",
+        "RUN pip install -r requirements.txt",
+    )
+
 
 @pytest.mark.usefixtures("moto", "init", "http_handler_returns_environ", "cwi")
 class TestAwsLambdaPublicUrlMount:

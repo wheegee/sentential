@@ -22,5 +22,3 @@ def aws():
     ontology = Ontology()
     aws_function = AwsLambdaDriver(ontology)
     aws_function.destroy()
-
-    
