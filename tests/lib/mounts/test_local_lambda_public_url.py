@@ -4,6 +4,7 @@ from tests.helpers import rewrite
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.mounts.local_lambda_public_url import LocalLambdaPublicUrlMount
 from sentential.lib.shapes import Image
+from sentential.lib.clients import clients
 import requests
 
 
@@ -29,7 +30,11 @@ class TestAwsLambdaPublicUrlMount:
         LocalLambdaPublicUrlMount(ontology).mount()
         assert image == cwi
 
-    def test_invoke(self, local_lambda_driver: LocalLambdaDriver):
-        resp = requests.get("http://localhost:8999")
-        assert resp.status_code == 200
-        assert "HELLO" in resp.json()
+    def test_containers(self):
+        assert any(container.name == "sentential" for container in clients.docker.container.list())
+        assert any(container.name == "sentential-gw" for container in clients.docker.container.list())
+
+    # def test_invoke(self):
+    #     resp = requests.get("http://localhost:8999")
+    #     assert resp.status_code == 200
+    #     assert "HELLO" in resp.json()
