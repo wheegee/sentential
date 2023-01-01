@@ -1,9 +1,7 @@
-from ctypes import Union
-import json
 import os
-from tempfile import TemporaryDirectory
 from typing import Dict
 from sentential.lib.clients import clients
+from sentential.lib.drivers.local_bridge import LocalBridge
 from sentential.lib.template import Policy
 from sentential.lib.ontology import Ontology
 from sentential.lib.exceptions import LocalDriverError
@@ -16,7 +14,6 @@ from sentential.lib.shapes import (
     LambdaInvokeResponse,
 )
 
-
 #
 # NOTE: Docker images locally are primary key'd (conceptually) off of their id, this is normalized by the Image type
 #
@@ -27,10 +24,9 @@ class LocalLambdaDriver(LambdaDriver):
         self.ontology = ontology
 
     def deploy(self, image: Image, inject_env: Dict[str, str] = {}) -> Image:
+        LocalBridge.setup()  # hoist to cli callback when things are more generalized
         self.destroy()
         self.ontology.envs.export_defaults()
-
-        clients.docker.network.create("sentential-bridge")
         credentials = self._get_credentials()
         credentials_env = {
             "AWS_LAMBDA_FUNCTION_NAME": self.ontology.context.resource_name,
@@ -49,33 +45,37 @@ class LocalLambdaDriver(LambdaDriver):
         clients.docker.run(
             image.id,
             add_hosts=[("host.docker.internal", "host-gateway")],
-            name="sentential",
-            hostname="sentential",
-            networks=["sentential-bridge"],
+            name=LocalBridge.config.lambda_name,
+            hostname=LocalBridge.config.lambda_name,
+            networks=[LocalBridge.config.bridge_name],
             detach=True,
             remove=False,
-            publish=[("9000", "8080")],
+            publish=[
+                (
+                    LocalBridge.config.lambda_port,
+                    LocalBridge.config.lambda_internal_port,
+                )
+            ],
             envs={**default_env, **credentials_env, **inject_env},
         )
 
         return image
 
     def destroy(self) -> None:
-        clients.docker.remove(["sentential"], force=True, volumes=True)
-        clients.docker.remove(["sentential-gw"], force=True, volumes=True)
-        try:
-            clients.docker.network.remove(["sentential-bridge"])
-        except:
-            pass
+        clients.docker.remove(
+            [LocalBridge.config.lambda_name], force=True, volumes=True
+        )
 
     def logs(self, follow: bool = False):
-        cmd = ["docker", "logs", "sentential"]
+        cmd = ["docker", "logs", LocalBridge.config.lambda_name]
         if follow:
             cmd.append("--follow")
         os.system(" ".join(cmd))
 
     def invoke(self, payload: str) -> LambdaInvokeResponse:
-        local = clients.boto3.client("lambda", endpoint_url="http://localhost:9000")
+        local = clients.boto3.client(
+            "lambda", endpoint_url=f"http://localhost:{LocalBridge.config.lambda_port}"
+        )
         response = local.invoke(
             FunctionName="function", Payload=payload, LogType="Tail"
         )
