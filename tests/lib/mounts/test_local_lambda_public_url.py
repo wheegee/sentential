@@ -9,6 +9,7 @@ from sentential.lib.clients import clients
 import requests
 import backoff
 
+
 @pytest.fixture(scope="class")
 def http_handler_returns_environ(init):
     copyfile("./fixtures/app_http.py", f"{init}/src/app.py")
@@ -41,9 +42,7 @@ class TestAwsLambdaPublicUrlMount:
             for container in clients.docker.container.list()
         )
 
-    @backoff.on_exception(backoff.expo, 
-                       requests.exceptions.ConnectionError,
-                       max_time=5)
+    @backoff.on_exception(backoff.expo, requests.exceptions.ConnectionError, max_time=5)
     def test_invoke(self):
         resp = requests.get("http://localhost:8999")
         assert resp.status_code == 200
