@@ -1,4 +1,5 @@
 from shutil import copyfile
+from time import sleep
 import pytest
 from tests.helpers import rewrite
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
@@ -34,7 +35,8 @@ class TestAwsLambdaPublicUrlMount:
         assert any(container.name == "sentential" for container in clients.docker.container.list())
         assert any(container.name == "sentential-gw" for container in clients.docker.container.list())
 
-    # def test_invoke(self):
-    #     resp = requests.get("http://localhost:8999")
-    #     assert resp.status_code == 200
-    #     assert "HELLO" in resp.json()
+    def test_invoke(self):
+        sleep(5)
+        resp = requests.get("http://localhost:8999")
+        assert resp.status_code == 200
+        assert "HELLO" in resp.json()
