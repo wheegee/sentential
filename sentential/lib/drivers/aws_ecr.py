@@ -1,3 +1,4 @@
+from sentential.lib.drivers.spec import ImagesDriver
 from sentential.lib.ontology import Ontology
 from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.shapes import (
@@ -41,7 +42,7 @@ class ECRApi:
         return response
 
 
-class AwsEcrDriver:
+class AwsEcrDriver(ImagesDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.repo_name = self.ontology.context.repository_name

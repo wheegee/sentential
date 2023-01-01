@@ -22,14 +22,14 @@ def hander_returns_environ(init):
 )
 class TestLocalLambdaDriver:
     def test_deploy(self, cwi: Image, local_lambda_driver: LocalLambdaDriver):
-        assert local_lambda_driver.deploy(cwi) == cwi
-
-    def test_invoke(self, cwi: Image, local_lambda_driver: LocalLambdaDriver):
         envs = local_lambda_driver.ontology.envs
         envs.write("HELLO", ["THIS_IS_ENV"])
-        local_lambda_driver.deploy(
+        image = local_lambda_driver.deploy(
             cwi, {"AWS_ENDPOINT": "http://host.docker.internal:5000"}
         )
+        assert image == cwi
+
+    def test_invoke(self, local_lambda_driver: LocalLambdaDriver):
         response = local_lambda_driver.invoke("{}")
         assert response.StatusCode == 200
         lambda_env = json.loads(response.Payload)

@@ -1,0 +1,11 @@
+FROM ghcr.io/wheegee/entry:latest as entry
+FROM public.ecr.aws/lambda/python:latest AS runtime
+ENV AWS_LAMBDA_EXEC_WRAPPER=/bin/wrapper.sh
+COPY --chmod=755 --from=entry / /bin/
+
+FROM runtime AS kaixo
+COPY ./src/ ${LAMBDA_TASK_ROOT}
+
+RUN pip install -r requirements.txt
+
+CMD ["app.handler"]

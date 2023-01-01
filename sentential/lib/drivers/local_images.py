@@ -1,4 +1,5 @@
 from time import sleep
+from sentential.lib.drivers.spec import ImagesDriver
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
 from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG, Image
@@ -9,7 +10,7 @@ import python_on_whales
 from typing import Any, List, Dict, Optional, Tuple, Union
 
 
-class LocalImagesDriver:
+class LocalImagesDriver(ImagesDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.repo_name = ontology.context.repository_name
