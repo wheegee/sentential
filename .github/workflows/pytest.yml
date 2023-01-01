@@ -62,4 +62,4 @@ jobs:
       - name: Run tests
         run: |
           source .venv/bin/activate
-          pytest tests/lib/mounts/test_local_lambda_public_url.py
+          pytest tests
