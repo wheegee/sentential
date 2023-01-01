@@ -16,7 +16,7 @@ deploy = typer.Typer()
 def local(
     tag: str = typer.Argument(CURRENT_WORKING_IMAGE_TAG, envvar="TAG"),
     arch: Architecture = typer.Option("amd64"),
-    public_gw: bool = typer.Option(False, help="[experimental]"),
+    public_url: bool = typer.Option(False, help="[experimental]"),
 ):
     """build and deploy local lambda container"""
     ontology = Ontology()
@@ -32,7 +32,7 @@ def local(
 
     print(func.deploy(image))
 
-    if public_gw:
+    if public_url:
         print(LocalLambdaPublicUrlMount(ontology).mount())
     else:
         LocalLambdaPublicUrlMount(ontology).umount()
@@ -42,7 +42,7 @@ def local(
 def aws(
     tag: str = typer.Argument(None, envvar="TAG"),
     arch: Architecture = typer.Option("amd64"),
-    public_gw: bool = typer.Option(False, help="[experimental]"),
+    public_url: bool = typer.Option(False, help="[experimental]"),
 ):
     """deploy lambda image to aws"""
     ontology = Ontology()
@@ -55,7 +55,7 @@ def aws(
     image = ecr.image_by_tag(tag, arch.value)
     print(func.deploy(image))
 
-    if public_gw:
+    if public_url:
         print(AwsLambdaPublicUrlMount(ontology).mount())
     else:
         AwsLambdaPublicUrlMount(ontology).umount()
