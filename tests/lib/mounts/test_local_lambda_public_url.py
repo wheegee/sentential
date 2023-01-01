@@ -31,8 +31,14 @@ class TestAwsLambdaPublicUrlMount:
         assert image == cwi
 
     def test_containers(self):
-        assert any(container.name == "sentential" for container in clients.docker.container.list())
-        assert any(container.name == "sentential-gw" for container in clients.docker.container.list())
+        assert any(
+            container.name == "sentential"
+            for container in clients.docker.container.list()
+        )
+        assert any(
+            container.name == "sentential-gw"
+            for container in clients.docker.container.list()
+        )
 
     # def test_invoke(self):
     #     resp = requests.get("http://localhost:8999")
