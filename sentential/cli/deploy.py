@@ -34,7 +34,7 @@ def aws(
     """deploy lambda image to aws"""
     ontology = Ontology()
     image = AwsEcrDriver(ontology).get_image(tag)
-    print(AwsLambdaDriver(ontology).deploy(image, arch.value))
+    print(AwsLambdaDriver(ontology).deploy(image, arch))
 
     if public_url:
         AwsLambdaPublicUrlMount(ontology).mount()

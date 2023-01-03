@@ -26,7 +26,7 @@ def http_handler_returns_environ(init):
 class TestAwsLambdaPublicUrlMount:
     def test_build(self, local_images_driver: LocalImagesDriver):
         local_images_driver.ontology.args.write("buildarg", ["present"])
-        local_images_driver.build(Architecture.system().value)
+        local_images_driver.build(Architecture.system())
 
     def test_deploy(self, cwi: Image, local_lambda_driver: LocalLambdaDriver):
         local_lambda_driver.ontology.envs.write("ENVVAR", ["present"])

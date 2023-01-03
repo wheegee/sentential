@@ -30,10 +30,9 @@ class TestLocalLambdaDriver:
     def test_build(
         self,
         local_images_driver: LocalImagesDriver,
-        local_lambda_driver: LocalLambdaDriver,
     ):
         local_images_driver.ontology.args.write("buildarg", ["present"])
-        local_images_driver.build(Architecture.system().value)
+        local_images_driver.build(Architecture.system())
 
     def test_deploy(
         self,

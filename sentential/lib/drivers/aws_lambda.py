@@ -34,7 +34,7 @@ class AwsLambdaDriver(LambdaDriver):
         return cast(Provision, self.ontology.configs.parameters)
 
     def deploy(
-        self, image: AwsImageDetail, arch: Union[str, None]
+        self, image: AwsImageDetail, arch: Union[Architecture, None]
     ) -> AwsManifestListDistribution:
         chosen_dist = self._choose_dist(image, arch)
 
@@ -51,7 +51,7 @@ class AwsLambdaDriver(LambdaDriver):
         return chosen_dist
 
     def _choose_dist(
-        self, image: AwsImageDetail, arch: str
+        self, image: AwsImageDetail, arch: Union[Architecture, None]
     ) -> AwsManifestListDistribution:
         if not isinstance(image.imageManifest, AwsManifestList):
             raise AwsDriverError(f"image manifest not of type manifest list")
@@ -70,7 +70,7 @@ class AwsLambdaDriver(LambdaDriver):
             raise AwsDriverError(f"must specify an architecture {archs}")
         else:
             for choice in image.imageManifest.manifests:
-                if choice.platform.architecture == arch:
+                if choice.platform.architecture == arch.value:
                     chosen_dist = choice
 
         if chosen_dist is None:

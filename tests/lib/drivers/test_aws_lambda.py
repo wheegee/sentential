@@ -21,7 +21,7 @@ class TestAwsLambdaDriver:
         self, aws_lambda_driver: AwsLambdaDriver, aws_ecr_driver: AwsEcrDriver
     ):
         image = aws_ecr_driver.get_image()
-        aws_lambda_driver.deploy(image, Architecture.system().value)
+        aws_lambda_driver.deploy(image, Architecture.system())
         function_name = aws_lambda_driver.ontology.context.resource_name
         deployed_digest = self.get_lambda(function_name)["Configuration"]["CodeSha256"]
         image.imageManifest
@@ -50,7 +50,7 @@ class TestAwsLambdaDriver:
         configs.write("security_group_ids", ["sg-123", "sg-456"])
 
         image = aws_ecr_driver.get_image("0.0.1")
-        aws_lambda_driver.deploy(image, Architecture.system().value)
+        aws_lambda_driver.deploy(image, Architecture.system())
 
         lambda_config = self.get_lambda_config(function_name)
         ssm_config = cast(Provision, configs.parameters)

@@ -13,14 +13,14 @@ class LocalImagesDriver:
         self.repo_name = ontology.context.repository_name
         self.repo_url = ontology.context.repository_url
 
-    def build(self, arch: str) -> Image:
-        platform = f"linux/{arch}"
+    def build(self, arch: Architecture) -> Image:
+        platform = f"linux/{arch.value}"
         manifest_uri = f"{self.repo_name}:{CURRENT_WORKING_IMAGE_TAG}"
         self._build(manifest_uri, platform)
         return self.get_image()
 
-    def publish(self, tag: str, arch: List[str]) -> List[Image]:
-        platforms = [f"linux/{a}" for a in arch]
+    def publish(self, tag: str, arch: List[Architecture]) -> List[Image]:
+        platforms = [f"linux/{a.value}" for a in arch]
         manifest_list_uri = f"{self.repo_url}:{tag}"
         image_manifest_uris = []
         built: List[Image] = []

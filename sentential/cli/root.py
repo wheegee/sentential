@@ -23,7 +23,7 @@ def init(repository_name: str, runtime: Runtimes):
 @root.command()
 def build(arch: Architecture = typer.Option(Architecture.system().value)):
     """build lambda image"""
-    LocalImagesDriver(Ontology()).build(arch.value)
+    LocalImagesDriver(Ontology()).build(arch)
 
 
 @root.command()
@@ -39,9 +39,9 @@ def publish(
     docker = LocalImagesDriver(ontology)
 
     if multiarch:
-        docker.publish(tag, [a.value for a in Architecture])
+        docker.publish(tag, [a for a in Architecture])
     else:
-        docker.publish(tag, [a.value for a in arch])
+        docker.publish(tag, [a for a in arch])
 
 
 @root.command()
