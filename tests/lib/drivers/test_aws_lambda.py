@@ -1,8 +1,7 @@
 import pytest
 from typing import cast
-from sentential.lib.shapes import Provision
+from sentential.lib.shapes import Provision, Architecture
 from sentential.lib.clients import clients
-from sentential.lib.ontology import Ontology
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.aws_ecr import AwsEcrDriver
 from sentential.lib.exceptions import AWS_EXCEPTIONS
@@ -21,11 +20,13 @@ class TestAwsLambdaDriver:
     def test_deploy(
         self, aws_lambda_driver: AwsLambdaDriver, aws_ecr_driver: AwsEcrDriver
     ):
-        image = aws_ecr_driver.image_by_tag("0.0.1", "amd64")
-        aws_lambda_driver.deploy(image)
+        image = aws_ecr_driver.get_image()
+        aws_lambda_driver.deploy(image, Architecture.system().value)
         function_name = aws_lambda_driver.ontology.context.resource_name
         deployed_digest = self.get_lambda(function_name)["Configuration"]["CodeSha256"]
-        assert f"sha256:{deployed_digest}" in image.uri  # type: ignore
+        image.imageManifest
+        arch_digest = { f"{manifest.platform.architecture}": manifest.digest for manifest in image.imageManifest.manifests }
+        assert f"sha256:{deployed_digest}" == arch_digest[Architecture.system().value]
 
     def test_destroy(self, aws_lambda_driver: AwsLambdaDriver):
         aws_lambda_driver.destroy()
@@ -45,8 +46,8 @@ class TestAwsLambdaDriver:
         configs.write("subnet_ids", ["sn-123", "sn-456"])
         configs.write("security_group_ids", ["sg-123", "sg-456"])
 
-        image = aws_ecr_driver.image_by_tag("0.0.1", "amd64")
-        aws_lambda_driver.deploy(image)
+        image = aws_ecr_driver.get_image("0.0.1")
+        aws_lambda_driver.deploy(image, Architecture.system().value)
 
         lambda_config = self.get_lambda_config(function_name)
         ssm_config = cast(Provision, configs.parameters)

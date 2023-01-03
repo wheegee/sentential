@@ -10,14 +10,9 @@ invoke = typer.Typer()
 @invoke.command()
 def local(event: str):
     """build and deploy local lambda container"""
-    ontology = Ontology()
-    local = LocalLambdaDriver(ontology)
-    print(local.invoke(event))
-
+    print(LocalLambdaDriver(Ontology()).invoke(event))
 
 @invoke.command()
 def aws(event: str):
     """deploy lambda image to aws"""
-    ontology = Ontology()
-    aws = AwsLambdaDriver(ontology)
-    print(aws.invoke(event))
+    print(AwsLambdaDriver(Ontology()).invoke(event))

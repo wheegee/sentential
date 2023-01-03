@@ -1,75 +1,58 @@
 import pytest
 from tests.helpers import rewrite
 from sentential.lib.clients import clients
-from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.exceptions import LocalDriverError
-from sentential.lib.shapes import Image
+from sentential.lib.drivers.local_images import LocalImagesDriver
+from sentential.lib.shapes import Architecture
+from python_on_whales.components.image.cli_wrapper import Image
 
+@pytest.fixture(scope="class")
+def cross_arch() -> str:
+        cross_arch = [a.value for a in Architecture]
+        host_arch_index = cross_arch.index(Architecture.system().value)
+        del cross_arch[host_arch_index]
+        return cross_arch[0]
+
+@pytest.fixture(scope="class")
+def native_arch() -> str:
+        return Architecture.system().value
 
 @pytest.mark.usefixtures(
-    "moto", "init", "ontology", "mock_repo", "local_images_driver", "cwi"
+    "moto", "init", "ontology", "mock_repo", "local_images_driver", "native_arch", "cross_arch"
 )
 class TestLocalImagesDriver:
+    def test_build(self, local_images_driver: LocalImagesDriver, native_arch):
+        assert "test:cwi" in local_images_driver.build(native_arch).repo_tags
 
-    #
-    # Test Helpers
-    #
+    def test_get_image(self, cwi: Image, local_images_driver: LocalImagesDriver):
+        assert local_images_driver.get_image() == cwi
 
-    def get_ecr_image_tags(self):
-        images = clients.ecr.describe_images(repositoryName="test")["imageDetails"]
-        image_tags = []
-        for image in images:
-            if "imageTags" in image:
-                for tag in image["imageTags"]:
-                    image_tags.append(tag)
-        return image_tags
+    def test_publish(self, cwi: Image, local_images_driver: LocalImagesDriver, native_arch):
+        assert cwi in local_images_driver.publish("1.0.0", [native_arch])
 
-    #
-    # Tests
-    #
+    def test_publish_multi_arch(self, cwi: Image, local_images_driver: LocalImagesDriver):
+        built = local_images_driver.publish("2.0.0", [a.value for a in Architecture])
+        archs = [image.architecture for image in built]
+        assert len(archs) == 2
+        assert "amd64" in archs
+        assert "arm64" in archs
+        assert cwi in built
 
-    def test_tag(self, cwi: Image):
-        assert "cwi" in cwi.tags
+    def test_cross_build(self, local_images_driver: LocalImagesDriver, cross_arch):
+        assert local_images_driver.build(cross_arch).architecture == cross_arch
 
-    def test_digest(self, cwi: Image):
-        assert cwi.digest is None
+    def test_cross_publish_failure(self, local_images_driver: LocalImagesDriver, native_arch):
+        with pytest.raises(LocalDriverError):
+            local_images_driver.publish("1.0.1", [native_arch])
 
-    def test_arch(self, cwi: Image):
-        assert "amd" in cwi.arch or "arm" in cwi.arch
-
-    def test_images(self, cwi: Image, local_images_driver: LocalImagesDriver):
-        assert cwi in local_images_driver.images()
-
-    def test_image_by_tag(self, local_images_driver: LocalImagesDriver, cwi: Image):
-        assert local_images_driver.image_by_tag(cwi.tags[0]) == cwi
-
-    def test_image_by_id(self, local_images_driver: LocalImagesDriver, cwi: Image):
-        assert local_images_driver.image_by_id(cwi.id) == cwi
-
-    def test_publish(self, local_images_driver: LocalImagesDriver):
-        local_images_driver.publish("cwi", ["amd64", "arm64"])
-        ecr_tags = self.get_ecr_image_tags()
-        assert "cwi-amd64" in ecr_tags
-        assert "cwi-arm64" in ecr_tags
-        assert "cwi" in ecr_tags
+    def test_cross_publish(self, local_images_driver: LocalImagesDriver, cross_arch):
+        built = local_images_driver.publish("1.0.1", [cross_arch])
+        archs = [image.architecture for image in built]
+        assert len(archs) == 1
+        assert cross_arch in archs
 
     def test_clean(self, local_images_driver: LocalImagesDriver):
         local_images_driver.clean()
-        assert len(local_images_driver.images()) == 0
-
-    def test_block_publish_when_no_cwi(self, local_images_driver: LocalImagesDriver):
-        local_images_driver.clean()
         with pytest.raises(LocalDriverError):
-            local_images_driver.publish("latest", ["amd64"])
+            local_images_driver.get_image()
 
-    def test_block_publish_when_cwi_differs(
-        self, local_images_driver: LocalImagesDriver
-    ):
-        local_images_driver.build("amd64")
-        rewrite(
-            "Dockerfile",
-            "# insert application specific build steps here",
-            "RUN echo 123",
-        )
-        with pytest.raises(LocalDriverError):
-            local_images_driver.publish("latest", ["amd64"])

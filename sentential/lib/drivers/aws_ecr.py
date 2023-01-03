@@ -1,24 +1,25 @@
-from sentential.lib.drivers.spec import ImagesDriver
+import re
+from typing import List, Union
+from functools import lru_cache
+import semantic_version as semver
+import requests
+from distutils.version import LooseVersion
+from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.shapes import (
+    AwsEcrAuthorizationData,
+    AwsEcrAuthorizationToken,
     AwsImageDescriptions,
     AwsImageDetail,
     AwsImageDetails,
     AwsImageManifest,
     AwsManifestList,
     AwsManifestListManifestPlatform,
-    Image,
-    AwsEcrAuthorizationData,
-    AwsEcrAuthorizationToken,
 )
-from sentential.lib.clients import clients
-from typing import Dict, List, Tuple, Union
-from functools import lru_cache
-import requests
-
 
 class ECRApi:
+    """currently unused, but will be needed soon enough"""
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
@@ -41,31 +42,68 @@ class ECRApi:
         response.raise_for_status()
         return response
 
+class SemVer:
+    """encapsulates semver behavior, only used via AwsEcrDriver"""
+    def __init__(self, images: List[AwsImageDetail]) -> None:
+        self.images = images
+        self.regex = r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
 
-class AwsEcrDriver(ImagesDriver):
+    @property
+    def versions(self) -> List[str]:
+        images = self.images
+        versions = []
+        for image in images:
+            if image.imageId.imageTag:
+                versions.append(image.imageId.imageTag)
+        return list(set(versions))
+
+    @property
+    def semver(self) -> List[str]:
+        matcher = re.compile(self.regex)
+        versions = self.versions
+        versions = [version for version in versions if matcher.match(version)]
+        versions = sorted(versions, key=lambda v: LooseVersion(v))
+        return versions
+
+    @property
+    def latest(self) -> str:
+        if self.semver:
+            return self.semver[-1]
+        else:
+            return "0.0.0"
+
+    def next(self, major=False, minor=False) -> str:
+        latest = semver.Version(self.latest)
+        if major:
+            return str(latest.next_major())
+        if minor:
+            return str(latest.next_minor())
+        else:
+            return str(latest.next_patch())
+
+
+class AwsEcrDriver:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.repo_name = self.ontology.context.repository_name
-        self.api = ECRApi(ontology)
 
-    def images(self) -> List[Image]:
-        images = []
-        for image_id, image_digest in self._image_identifiers():
-            images.append(
-                Image(
-                    id=image_id,
-                    digest=self._get_pulled_digest(image_digest),
-                    uri=self._get_image_uri(image_digest),
-                    tags=self._get_tags(image_digest),
-                    versions=self._get_tags(image_digest),
-                    arch=self._get_arch(image_digest),
-                )
-            )
-        self._image_details.cache_clear()
-        return images
+    def get_image(self, tag: Union[str, None] = None) -> AwsImageDetail:
+        manifest_lists = self._manifest_lists()
+        
+        if tag is None:
+            tag = SemVer(manifest_lists).latest
+
+        for manifest in manifest_lists:
+            if manifest.imageId.imageTag == tag:
+                return manifest
+
+        raise AwsDriverError("no image found for {tag} tag")
+
+    def next(self, major: bool = False, minor: bool = False) -> str:
+        return SemVer(self._manifest_lists()).next(major, minor)
 
     def clean(self) -> None:
-        image_details = self._image_details()
+        image_details = self._manifests()
         manifest_digests = [
             {"imageDigest": detail.imageId.imageDigest} for detail in image_details
         ]
@@ -73,133 +111,17 @@ class AwsEcrDriver(ImagesDriver):
             repositoryName=self.ontology.context.repository_name,
             imageIds=manifest_digests,
         )
-        self._image_details.cache_clear()
+        self._manifests.cache_clear()
 
-    def image_by_tag(self, tag: str, arch: str = "any") -> Image:
-        return self._image_by("tags", tag, arch)
-
-    def image_by_digest(self, digest: str, arch: str = "any") -> Image:
-        return self._image_by("digest", digest, arch)
-
-    def image_by_id(self, id: str, arch: str = "any") -> Image:
-        return self._image_by("id", id, arch)
-
-    def _image_by(self, attribute: str, value: str, arch: str = "any") -> Image:
-        results = []
-        images = self.images()
-
-        if arch != "any":
-            images = [image for image in images if image.arch == arch]
-
-        for image in images:
-            attr = getattr(image, attribute)
-            if isinstance(attr, list):
-                if value in attr:
-                    results.append(image)
-            elif isinstance(attr, str):
-                if value == attr:
-                    results.append(image)
-            else:
-                raise AwsDriverError("unhandled type in image query")
-
-        humanized_value = value.replace("sha256:", "")[0:12]
-        if len(results) == 0:
-            raise AwsDriverError(
-                f"no images found where {attribute} is {humanized_value} and arch is {arch}"
-            )
-        elif len(results) > 1:
-            raise AwsDriverError(
-                f"ambiguous match where {attribute} is {humanized_value} and arch is {arch}"
-            )
-        else:
-            return results[0]
-
-    def _image_identifiers(self) -> List[Tuple[str, str]]:
-        pairs = []
-        for detail in self._image_details():
-            if isinstance(detail.imageManifest, AwsImageManifest):
-                image_id = detail.imageManifest.config.digest
-                image_digest = detail.imageId.imageDigest
-                pairs.append((image_id, image_digest))
-        return list(set(pairs))
-
-    def _get_image_uri(self, image_digest: str) -> str:
-        return self._uri_list()[image_digest]
-
-    def _get_tags(self, image_digest: str) -> List[str]:
-        tags = self._tag_list()[image_digest]
-        return [tag for tag in tags if tag is not None]
-
-    def _get_arch(self, image_digest: str) -> str:
-        return self._arch_list()[image_digest]
-
-    def _get_pulled_digest(self, image_digest: str) -> str:
-        return self._digest_list()[image_digest]
-
-    def _uri_list(self) -> Dict[str, str]:
-        uri_list = {}
-        for detail in self._image_details():
-            if isinstance(detail.imageManifest, AwsImageManifest):
-                image_uri = f"{self.ontology.context.repository_url}@{detail.imageId.imageDigest}"
-                uri_list[detail.imageId.imageDigest] = image_uri
-        return uri_list
-
-    def _digest_list(self) -> Dict[str, str]:
-        digest_list = {}
-        for detail in self._image_details():
-            if isinstance(detail.imageManifest, AwsManifestList):
-                for manifest in detail.imageManifest.manifests:
-                    image_digest = manifest.digest
-                    digest_list[image_digest] = detail.imageId.imageDigest
-
-        for detail in self._image_details():
-            if isinstance(detail.imageManifest, AwsImageManifest):
-                image_digest = detail.imageId.imageDigest
-                if image_digest not in digest_list.keys():
-                    digest_list[image_digest] = image_digest
-
-        return digest_list
-
-    def _tag_list(self) -> Dict[str, List[Union[str, None]]]:
-        tag_list = {}
-        for detail in self._image_details():
-            if isinstance(detail.imageManifest, AwsImageManifest):
-                image_digest = detail.imageId.imageDigest
-                tag = detail.imageId.imageTag
-                if image_digest in tag_list.keys():
-                    tag_list[image_digest].append(tag)
-                else:
-                    tag_list[image_digest] = [tag]
-
-            if isinstance(detail.imageManifest, AwsManifestList):
-                for manifest in detail.imageManifest.manifests:
-                    image_digest = manifest.digest
-                    tag = detail.imageId.imageTag
-                    if image_digest in tag_list.keys():
-                        tag_list[image_digest].append(tag)
-                    else:
-                        tag_list[image_digest] = [tag]
-
-        return tag_list
-
-    def _arch_list(self) -> Dict[str, str]:
-        arch_list = {}
-        for detail in self._image_details():
-            if isinstance(detail.imageManifest, AwsManifestList):
-                for manifest in detail.imageManifest.manifests:
-                    arch_list[manifest.digest] = manifest.platform.architecture
-
-        for detail in self._image_details():
-            if isinstance(detail.imageManifest, AwsImageManifest):
-                image_digest = detail.imageId.imageDigest
-                if image_digest not in arch_list.keys():
-                    inspect = self.api.inspect(detail.imageManifest)
-                    arch_list[image_digest] = inspect.architecture
-
-        return arch_list
+    def _manifest_lists(self) -> List[AwsImageDetail]:
+        manifest_lists = []
+        for manifest in self._manifests():
+            if isinstance(manifest.imageManifest, AwsManifestList):
+                manifest_lists.append(manifest)
+        return manifest_lists
 
     @lru_cache
-    def _image_details(self) -> List[AwsImageDetail]:
+    def _manifests(self) -> List[AwsImageDetail]:
         response = clients.ecr.describe_images(repositoryName=self.repo_name)
         image_desc = AwsImageDescriptions(**response).imageDetails
         if len(image_desc) == 0:

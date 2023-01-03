@@ -6,11 +6,11 @@ from sentential.lib.template import Policy
 from sentential.lib.ontology import Ontology
 from sentential.lib.exceptions import LocalDriverError
 from sentential.lib.drivers.spec import LambdaDriver
+from python_on_whales.components.image.cli_wrapper import Image
 from sentential.lib.shapes import (
     AWSAssumeRole,
     AWSCredentials,
     AWSFederationToken,
-    Image,
     LambdaInvokeResponse,
 )
 

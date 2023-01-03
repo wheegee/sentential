@@ -9,7 +9,7 @@ from sentential.lib.shapes import (
     AwsImageManifest,
     AwsImageManifestLayer,
     AwsManifestList,
-    AwsManifestListManifest,
+    AwsManifestListDistribution,
     AwsManifestListManifestPlatform,
 )
 
@@ -85,8 +85,8 @@ def generate_manifest_list_manifest(
     image_size: int,
     image_architecture: str = "amd64",
     image_os: str = "linux",
-) -> AwsManifestListManifest:
-    return AwsManifestListManifest(
+) -> AwsManifestListDistribution:
+    return AwsManifestListDistribution(
         digest=image_manifest_digest,
         size=image_size,
         platform=AwsManifestListManifestPlatform(
