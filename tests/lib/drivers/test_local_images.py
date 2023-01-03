@@ -6,19 +6,28 @@ from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.shapes import Architecture
 from python_on_whales.components.image.cli_wrapper import Image
 
+
 @pytest.fixture(scope="class")
 def cross_arch() -> str:
-        cross_arch = [a.value for a in Architecture]
-        host_arch_index = cross_arch.index(Architecture.system().value)
-        del cross_arch[host_arch_index]
-        return cross_arch[0]
+    cross_arch = [a.value for a in Architecture]
+    host_arch_index = cross_arch.index(Architecture.system().value)
+    del cross_arch[host_arch_index]
+    return cross_arch[0]
+
 
 @pytest.fixture(scope="class")
 def native_arch() -> str:
-        return Architecture.system().value
+    return Architecture.system().value
+
 
 @pytest.mark.usefixtures(
-    "moto", "init", "ontology", "mock_repo", "local_images_driver", "native_arch", "cross_arch"
+    "moto",
+    "init",
+    "ontology",
+    "mock_repo",
+    "local_images_driver",
+    "native_arch",
+    "cross_arch",
 )
 class TestLocalImagesDriver:
     def test_build(self, local_images_driver: LocalImagesDriver, native_arch):
@@ -27,10 +36,14 @@ class TestLocalImagesDriver:
     def test_get_image(self, cwi: Image, local_images_driver: LocalImagesDriver):
         assert local_images_driver.get_image() == cwi
 
-    def test_publish(self, cwi: Image, local_images_driver: LocalImagesDriver, native_arch):
+    def test_publish(
+        self, cwi: Image, local_images_driver: LocalImagesDriver, native_arch
+    ):
         assert cwi in local_images_driver.publish("1.0.0", [native_arch])
 
-    def test_publish_multi_arch(self, cwi: Image, local_images_driver: LocalImagesDriver):
+    def test_publish_multi_arch(
+        self, cwi: Image, local_images_driver: LocalImagesDriver
+    ):
         built = local_images_driver.publish("2.0.0", [a.value for a in Architecture])
         archs = [image.architecture for image in built]
         assert len(archs) == 2
@@ -41,7 +54,9 @@ class TestLocalImagesDriver:
     def test_cross_build(self, local_images_driver: LocalImagesDriver, cross_arch):
         assert local_images_driver.build(cross_arch).architecture == cross_arch
 
-    def test_cross_publish_failure(self, local_images_driver: LocalImagesDriver, native_arch):
+    def test_cross_publish_failure(
+        self, local_images_driver: LocalImagesDriver, native_arch
+    ):
         with pytest.raises(LocalDriverError):
             local_images_driver.publish("1.0.1", [native_arch])
 
@@ -55,4 +70,3 @@ class TestLocalImagesDriver:
         local_images_driver.clean()
         with pytest.raises(LocalDriverError):
             local_images_driver.get_image()
-

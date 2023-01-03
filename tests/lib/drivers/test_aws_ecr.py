@@ -25,13 +25,13 @@ class TestAwsEcrDriver:
     def test_get_image_missing(self, aws_ecr_driver: AwsEcrDriver):
         with pytest.raises(AwsDriverError):
             aws_ecr_driver.get_image("3.1.4")
-    
+
     def test_get_next_build(self, aws_ecr_driver: AwsEcrDriver):
         assert "0.0.4" == aws_ecr_driver.next()
 
     def test_get_next_minor(self, aws_ecr_driver: AwsEcrDriver):
         assert "0.1.0" == aws_ecr_driver.next(False, True)
-    
+
     def test_get_next_major(self, aws_ecr_driver: AwsEcrDriver):
         assert "1.0.0" == aws_ecr_driver.next(True, False)
 

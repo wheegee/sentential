@@ -18,8 +18,10 @@ from sentential.lib.shapes import (
     AwsManifestListManifestPlatform,
 )
 
+
 class ECRApi:
     """currently unused, but will be needed soon enough"""
+
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
@@ -42,8 +44,10 @@ class ECRApi:
         response.raise_for_status()
         return response
 
+
 class SemVer:
     """encapsulates semver behavior, only used via AwsEcrDriver"""
+
     def __init__(self, images: List[AwsImageDetail]) -> None:
         self.images = images
         self.regex = r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
@@ -89,7 +93,7 @@ class AwsEcrDriver:
 
     def get_image(self, tag: Union[str, None] = None) -> AwsImageDetail:
         manifest_lists = self._manifest_lists()
-        
+
         if tag is None:
             tag = SemVer(manifest_lists).latest
 

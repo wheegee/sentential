@@ -25,7 +25,10 @@ class TestAwsLambdaDriver:
         function_name = aws_lambda_driver.ontology.context.resource_name
         deployed_digest = self.get_lambda(function_name)["Configuration"]["CodeSha256"]
         image.imageManifest
-        arch_digest = { f"{manifest.platform.architecture}": manifest.digest for manifest in image.imageManifest.manifests }
+        arch_digest = {
+            f"{manifest.platform.architecture}": manifest.digest
+            for manifest in image.imageManifest.manifests
+        }
         assert f"sha256:{deployed_digest}" == arch_digest[Architecture.system().value]
 
     def test_destroy(self, aws_lambda_driver: AwsLambdaDriver):

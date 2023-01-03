@@ -12,6 +12,7 @@ def local(event: str):
     """build and deploy local lambda container"""
     print(LocalLambdaDriver(Ontology()).invoke(event))
 
+
 @invoke.command()
 def aws(event: str):
     """deploy lambda image to aws"""

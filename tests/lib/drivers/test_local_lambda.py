@@ -8,10 +8,15 @@ from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.drivers.local_images import LocalImagesDriver
 from tests.helpers import rewrite
 
+
 @pytest.fixture(scope="class")
 def hander_returns_environ(init):
     copyfile("./fixtures/app.py", f"{init}/src/app.py")
-    rewrite("Dockerfile", "# insert application specific build steps here", "ARG buildarg\nENV BUILDARG=$buildarg")
+    rewrite(
+        "Dockerfile",
+        "# insert application specific build steps here",
+        "ARG buildarg\nENV BUILDARG=$buildarg",
+    )
 
 
 @pytest.mark.usefixtures(
@@ -21,13 +26,20 @@ def hander_returns_environ(init):
     "local_lambda_driver",
     "local_images_driver",
 )
-
 class TestLocalLambdaDriver:
-    def test_build(self, local_images_driver: LocalImagesDriver, local_lambda_driver: LocalLambdaDriver):
-        local_images_driver.ontology.args.write("buildarg",["present"])
+    def test_build(
+        self,
+        local_images_driver: LocalImagesDriver,
+        local_lambda_driver: LocalLambdaDriver,
+    ):
+        local_images_driver.ontology.args.write("buildarg", ["present"])
         local_images_driver.build(Architecture.system().value)
 
-    def test_deploy(self, local_images_driver: LocalImagesDriver, local_lambda_driver: LocalLambdaDriver):
+    def test_deploy(
+        self,
+        local_images_driver: LocalImagesDriver,
+        local_lambda_driver: LocalLambdaDriver,
+    ):
         cwi = local_images_driver.get_image()
         local_lambda_driver.ontology.envs.write("ENVVAR", ["present"])
         image = local_lambda_driver.deploy(

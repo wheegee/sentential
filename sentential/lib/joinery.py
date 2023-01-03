@@ -16,11 +16,18 @@ class Joinery:
         table = Table(box=box.SIMPLE, *["tag", "arch", "digest"])
         for manifest in self.ecr_images._manifest_lists():
             if not isinstance(manifest.imageManifest, AwsManifestList):
-                raise JoineryError(f"joinery recieved something that isn't a manifest list")
+                raise JoineryError(
+                    f"joinery recieved something that isn't a manifest list"
+                )
 
             tag = manifest.imageId.imageTag
-            arch = ", ".join([dist.platform.architecture for dist in manifest.imageManifest.manifests])
-            digest = manifest.imageId.imageDigest.replace("sha256:","")[0:12]
+            arch = ", ".join(
+                [
+                    dist.platform.architecture
+                    for dist in manifest.imageManifest.manifests
+                ]
+            )
+            digest = manifest.imageId.imageDigest.replace("sha256:", "")[0:12]
             table.add_row(*[tag, arch, digest])
 
         return table

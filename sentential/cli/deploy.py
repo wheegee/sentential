@@ -13,10 +13,7 @@ deploy = typer.Typer()
 
 
 @deploy.command()
-def local(
-    tag: str = typer.Argument(None),
-    public_url: bool = typer.Option(False)
-):
+def local(tag: str = typer.Argument(None), public_url: bool = typer.Option(False)):
     """deploy local lambda container"""
     ontology = Ontology()
     image = LocalImagesDriver(ontology).get_image(tag)
@@ -27,11 +24,12 @@ def local(
     else:
         LocalLambdaPublicUrlMount(ontology).umount()
 
+
 @deploy.command()
 def aws(
     tag: str = typer.Argument(None),
     arch: Architecture = typer.Option(None),
-    public_url: bool = typer.Option(False)
+    public_url: bool = typer.Option(False),
 ):
     """deploy lambda image to aws"""
     ontology = Ontology()

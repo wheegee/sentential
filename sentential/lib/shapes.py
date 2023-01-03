@@ -37,6 +37,7 @@ class Provision(Shaper):
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
         return v
 
+
 # https://github.com/BretFisher/multi-platform-docker-build
 #   Value    Normalized
 #   aarch64  arm64      # the latest v8 arm architecture. Used on Apple M1, AWS Graviton, and Raspberry Pi 3's and 4's
@@ -215,6 +216,7 @@ class AWSAssumeRole(BaseModel):
 #
 # Lambda
 #
+
 
 class Runtimes(Enum):
     """https://gallery.ecr.aws/lambda?page=1"""
