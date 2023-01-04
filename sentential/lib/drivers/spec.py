@@ -29,13 +29,5 @@ class ImagesDriver(ABC):
         ...
 
     @abstractmethod
-    def image_by_tag(self):
-        ...
-
-    @abstractmethod
-    def image_by_digest(self):
-        ...
-
-    @abstractmethod
-    def image_by_id(self):
+    def get_image(self):
         ...

@@ -14,11 +14,6 @@ from sentential.lib.shapes import (
     LambdaInvokeResponse,
 )
 
-#
-# NOTE: Docker images locally are primary key'd (conceptually) off of their id, this is normalized by the Image type
-#
-
-
 class LocalLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology

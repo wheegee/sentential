@@ -17,11 +17,6 @@ from sentential.lib.shapes import (
 from sentential.lib.clients import clients
 from sentential.lib.template import Policy
 
-#
-# NOTE: Docker images in ECR are primary key'd (conceptually) off of their digest, this is normalized by the Image type
-#
-
-
 class AwsLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -44,8 +39,8 @@ class AwsLambdaDriver(LambdaDriver):
         tags = self.ontology.tags.as_dict()
 
         clients.iam.attach_role_policy(
-            RoleName=self._put_role()["Role"]["RoleName"],
-            PolicyArn=self._put_policy()["Policy"]["Arn"],
+            RoleName=self._put_role(tags)["Role"]["RoleName"],
+            PolicyArn=self._put_policy(tags)["Policy"]["Arn"],
         )
         self._put_lambda(chosen_dist, tags)
         return chosen_dist
@@ -151,6 +146,7 @@ class AwsLambdaDriver(LambdaDriver):
                 RoleName=role_name,
                 Tags=[{"Key": key, "Value": value} for (key, value) in tags.items()],
             )
+
         return clients.iam.get_role(RoleName=role_name)
 
     def _put_policy(self, tags: Optional[Dict[str, str]] = None) -> Dict:

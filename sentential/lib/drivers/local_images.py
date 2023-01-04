@@ -1,13 +1,13 @@
 from time import sleep
 from typing import List, Union
 from python_on_whales.components.image.cli_wrapper import Image
+from sentential.lib.drivers.spec import ImagesDriver
 from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG, Architecture
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
 from sentential.lib.exceptions import LocalDriverError
 
-
-class LocalImagesDriver:
+class LocalImagesDriver(ImagesDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.repo_name = ontology.context.repository_name

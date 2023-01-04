@@ -4,6 +4,7 @@ from functools import lru_cache
 import semantic_version as semver
 import requests
 from distutils.version import LooseVersion
+from sentential.lib.drivers.spec import ImagesDriver
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.exceptions import AwsDriverError
@@ -86,7 +87,7 @@ class SemVer:
             return str(latest.next_patch())
 
 
-class AwsEcrDriver:
+class AwsEcrDriver(ImagesDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.repo_name = self.ontology.context.repository_name
