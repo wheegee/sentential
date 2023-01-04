@@ -21,10 +21,6 @@ class LambdaDriver(ABC):
 
 class ImagesDriver(ABC):
     @abstractmethod
-    def images(self):
-        ...
-
-    @abstractmethod
     def clean(self):
         ...
 
