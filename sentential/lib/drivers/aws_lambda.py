@@ -38,7 +38,7 @@ class AwsLambdaDriver(LambdaDriver):
         self.ontology.tags.export_defaults()
 
         tags = self.ontology.tags.as_dict()
-        
+
         clients.iam.attach_role_policy(
             RoleName=self._put_role(tags)["Role"]["RoleName"],
             PolicyArn=self._put_policy(tags)["Policy"]["Arn"],
