@@ -14,6 +14,7 @@ from sentential.lib.shapes import (
     LambdaInvokeResponse,
 )
 
+
 class LocalLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
