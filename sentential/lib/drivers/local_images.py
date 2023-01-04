@@ -7,6 +7,7 @@ from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
 from sentential.lib.exceptions import LocalDriverError
 
+
 class LocalImagesDriver(ImagesDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology

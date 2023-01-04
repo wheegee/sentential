@@ -17,6 +17,7 @@ from sentential.lib.shapes import (
 from sentential.lib.clients import clients
 from sentential.lib.template import Policy
 
+
 class AwsLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
