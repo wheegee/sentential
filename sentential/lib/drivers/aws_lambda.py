@@ -38,7 +38,7 @@ class AwsLambdaDriver(LambdaDriver):
         self.ontology.tags.export_defaults()
 
         tags = self.ontology.tags.as_dict()
-
+        
         clients.iam.attach_role_policy(
             RoleName=self._put_role(tags)["Role"]["RoleName"],
             PolicyArn=self._put_policy(tags)["Policy"]["Arn"],
@@ -221,7 +221,6 @@ class AwsLambdaDriver(LambdaDriver):
                 },
             )
 
-            return function
         except clients.lmb.exceptions.ResourceConflictException:
             function = clients.lmb.update_function_configuration(
                 FunctionName=function_name,
@@ -248,7 +247,7 @@ class AwsLambdaDriver(LambdaDriver):
                 Publish=True,
             )
 
-            if tags:
-                clients.lmb.tag_resource(Resource=function["FunctionArn"], Tags=tags)
+        if tags:
+            clients.lmb.tag_resource(Resource=function["FunctionArn"], Tags=tags)
 
-            return function
+        return function
