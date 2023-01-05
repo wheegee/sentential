@@ -608,14 +608,14 @@ yaml = ["PyYaml (>=5.2)"]
 
 [[package]]
 name = "python-on-whales"
-version = "0.55.0"
+version = "0.56.0"
 description = "A Docker client for Python, designed to be fun and intuitive!"
 category = "main"
 optional = false
 python-versions = ">=3.7, <4"
 
 [package.dependencies]
-pydantic = "*"
+pydantic = ">=1.5"
 requests = "*"
 tqdm = "*"
 typer = ">=0.4.1"
@@ -1027,7 +1027,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "4bbd524221d193e7145e511ea6bb7ef31475de2dc73769f0d713c2375d9bcd46"
+content-hash = "ed42f4dcec862dc887731fabfbcf95fcf3f2133adf78fa682f28fe33a614a65b"
 
 [metadata.files]
 attrs = [
@@ -1374,8 +1374,8 @@ python-gitlab = [
     {file = "python_gitlab-3.12.0-py3-none-any.whl", hash = "sha256:a5eb36b49783fda34563376674d5251dbbdbd1abd23b287dadf82f67d861b2c1"},
 ]
 python-on-whales = [
-    {file = "python-on-whales-0.55.0.tar.gz", hash = "sha256:9b5c3f05bdd8656d082e7b40b5ae34ba198c98a63b20473bf336016e95032729"},
-    {file = "python_on_whales-0.55.0-py3-none-any.whl", hash = "sha256:9b8a9b3adfd626129a2da54c4e78573f0936d5c6c4df626896fe56104dfca884"},
+    {file = "python-on-whales-0.56.0.tar.gz", hash = "sha256:1bd49d51bf04155d63d9b08aa6ef0e80a0d914ef2db02ca891136ac957bef344"},
+    {file = "python_on_whales-0.56.0-py3-none-any.whl", hash = "sha256:a7d54106c7fbd5e1ab5939ef8b4201ef7b2f48c63385a07e417b0d7d22e877ad"},
 ]
 python-semantic-release = [
     {file = "python-semantic-release-7.32.2.tar.gz", hash = "sha256:4d8f5d20680723e1329765b6f3e28b43f058fd1ef5f423f6f95397cd927c3ebc"},
