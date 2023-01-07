@@ -1,5 +1,5 @@
 import pytest
-import json
+import os
 
 from sentential.lib.ontology import Ontology
 from sentential.lib.drivers.aws_ecr import AwsEcrDriver
@@ -36,6 +36,9 @@ class TestAwsEcrDriver:
         assert "1.0.0" == aws_ecr_driver.next(True, False)
 
     def test_clean(self, aws_ecr_driver: AwsEcrDriver):
+        dir = os.path.expanduser("~/.docker/manifests")
+        if not os.path.exists(dir):
+            os.makedirs(dir)
         aws_ecr_driver.clean()
         with pytest.raises(AwsDriverError):
             aws_ecr_driver.get_image()

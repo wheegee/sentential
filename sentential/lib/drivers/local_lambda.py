@@ -40,7 +40,6 @@ class LocalLambdaDriver(LambdaDriver):
 
         clients.docker.run(
             image.id,
-            add_hosts=[("host.docker.internal", "host-gateway")],
             name=LocalBridge.config.lambda_name,
             hostname=LocalBridge.config.lambda_name,
             networks=[LocalBridge.config.bridge_name],
