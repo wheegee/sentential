@@ -1,4 +1,5 @@
 import re
+import os
 from typing import List, Union
 from functools import lru_cache
 import semantic_version as semver
@@ -91,6 +92,7 @@ class AwsEcrDriver(ImagesDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.repo_name = self.ontology.context.repository_name
+        self.manifest_list_ref = ontology.context.repository_url.replace("/", "_")
 
     def get_image(self, tag: Union[str, None] = None) -> AwsImageDetail:
         manifest_lists = self._manifest_lists()
@@ -109,6 +111,8 @@ class AwsEcrDriver(ImagesDriver):
 
     def clean(self) -> None:
         image_details = self._manifests()
+        if len(image_details) == 0:
+            return
         manifest_digests = [
             {"imageDigest": detail.imageId.imageDigest} for detail in image_details
         ]
@@ -116,6 +120,7 @@ class AwsEcrDriver(ImagesDriver):
             repositoryName=self.ontology.context.repository_name,
             imageIds=manifest_digests,
         )
+        self._clean_manifests()
         self._manifests.cache_clear()
 
     def _manifest_lists(self) -> List[AwsImageDetail]:
@@ -137,3 +142,11 @@ class AwsEcrDriver(ImagesDriver):
         )
         image_details = AwsImageDetails(**response)
         return image_details.images
+
+    def _clean_manifests(self) -> None:
+        dir = os.path.expanduser("~/.docker/manifests/")
+        for manifest in os.listdir(dir):
+            if re.search(self.manifest_list_ref, manifest):
+                for file in os.listdir(os.path.join(dir, manifest)):
+                    os.remove(os.path.join(dir, manifest, file))
+                os.rmdir(os.path.join(dir, manifest))
