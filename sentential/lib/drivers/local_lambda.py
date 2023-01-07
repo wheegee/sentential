@@ -1,4 +1,5 @@
 import os
+from sys import platform
 from typing import Dict
 from sentential.lib.clients import clients
 from sentential.lib.drivers.local_bridge import LocalBridge
@@ -33,6 +34,11 @@ class LocalLambdaDriver(LambdaDriver):
         if credentials.SessionToken:
             credentials_env["AWS_SESSION_TOKEN"] = credentials.SessionToken
 
+        hosts = []
+        # required to properly resolve `host.docker.internal` in Linux
+        if platform == "linux":
+            hosts = [("host.docker.internal", "host-gateway")]
+
         default_env = {
             "AWS_REGION": self.ontology.context.region,
             "PARTITION": self.ontology.envs.path,
@@ -40,6 +46,7 @@ class LocalLambdaDriver(LambdaDriver):
 
         clients.docker.run(
             image.id,
+            add_hosts=hosts,
             name=LocalBridge.config.lambda_name,
             hostname=LocalBridge.config.lambda_name,
             networks=[LocalBridge.config.bridge_name],

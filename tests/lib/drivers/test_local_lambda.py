@@ -1,5 +1,6 @@
 import json
 import pytest
+from os import environ
 from shutil import copyfile
 from python_on_whales.components.image.cli_wrapper import Image
 from sentential.lib.clients import clients
@@ -42,7 +43,8 @@ class TestLocalLambdaDriver:
         cwi = local_images_driver.get_image()
         local_lambda_driver.ontology.envs.write("ENVVAR", ["present"])
         image = local_lambda_driver.deploy(
-            cwi, {"AWS_ENDPOINT": "http://host.docker.internal:5000"}
+            cwi,
+            {"AWS_ENDPOINT": "http://host.docker.internal:5000"},
         )
         assert image == cwi
 
