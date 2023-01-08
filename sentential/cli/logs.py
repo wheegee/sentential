@@ -9,12 +9,10 @@ logs = typer.Typer()
 @logs.command()
 def local(follow: bool = typer.Option(False)):
     """dump running container logs"""
-    local = LocalLambdaDriver(Ontology())
-    local.logs(follow)
+    LocalLambdaDriver(Ontology()).logs(follow)
 
 
 @logs.command()
 def aws(follow: bool = typer.Option(False)):
     """dump running container logs"""
-    aws = AwsLambdaDriver(Ontology())
-    aws.logs(follow)
+    AwsLambdaDriver(Ontology()).logs(follow)

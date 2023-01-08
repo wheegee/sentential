@@ -1,23 +1,21 @@
 import json
 import os
 from time import sleep
-from typing import Dict, List, Optional, cast
-from sentential.lib.exceptions import AwsDriverError
+from typing import Dict, List, Optional, Union, cast
 from sentential.lib.drivers.spec import LambdaDriver
 from sentential.lib.ontology import Ontology
-from sentential.lib.drivers.aws_ecr import AwsEcrDriver
+from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
-    Image,
+    Architecture,
+    AwsImageDetail,
+    AwsManifestList,
     LambdaInvokeResponse,
     Provision,
+    AwsManifestListDistribution,
 )
 from sentential.lib.clients import clients
 from sentential.lib.template import Policy
-
-#
-# NOTE: Docker images in ECR are primary key'd (conceptually) off of their digest, this is normalized by the Image type
-#
 
 
 class AwsLambdaDriver(LambdaDriver):
@@ -31,18 +29,52 @@ class AwsLambdaDriver(LambdaDriver):
         # there must be a better way to do polymorphic type stuff...
         return cast(Provision, self.ontology.configs.parameters)
 
-    def deploy(self, image: Image) -> Image:
+    def deploy(
+        self, image: AwsImageDetail, arch: Union[Architecture, None]
+    ) -> AwsManifestListDistribution:
+        chosen_dist = self._choose_dist(image, arch)
+
         self.ontology.envs.export_defaults()
         self.ontology.tags.export_defaults()
 
         tags = self.ontology.tags.as_dict()
 
         clients.iam.attach_role_policy(
-            RoleName=self._put_role()["Role"]["RoleName"],
-            PolicyArn=self._put_policy()["Policy"]["Arn"],
+            RoleName=self._put_role(tags)["Role"]["RoleName"],
+            PolicyArn=self._put_policy(tags)["Policy"]["Arn"],
         )
-        self._put_lambda(image, tags)
-        return image
+        self._put_lambda(chosen_dist, tags)
+        return chosen_dist
+
+    def _choose_dist(
+        self, image: AwsImageDetail, arch: Union[Architecture, None]
+    ) -> AwsManifestListDistribution:
+        if not isinstance(image.imageManifest, AwsManifestList):
+            raise AwsDriverError(f"image manifest not of type manifest list")
+
+        chosen_dist = None
+        archs = [
+            manifest.platform.architecture for manifest in image.imageManifest.manifests
+        ]
+
+        if len(image.imageManifest.manifests) == 0:
+            raise AwsDriverError(f"image manifest list is empty")
+
+        if arch is None and len(image.imageManifest.manifests) == 1:
+            return image.imageManifest.manifests[0]
+        if arch is None and len(image.imageManifest.manifests) > 1:
+            raise AwsDriverError(f"must specify an architecture {archs}")
+        else:
+            for choice in image.imageManifest.manifests:
+                if choice.platform.architecture == arch.value:
+                    chosen_dist = choice
+
+        if chosen_dist is None:
+            raise AwsDriverError(
+                f"no such distribution for {arch} found in image manifest list\n available: {archs}"
+            )
+
+        return chosen_dist
 
     def destroy(self) -> None:
         try:
@@ -115,6 +147,7 @@ class AwsLambdaDriver(LambdaDriver):
                 RoleName=role_name,
                 Tags=[{"Key": key, "Value": value} for (key, value) in tags.items()],
             )
+
         return clients.iam.get_role(RoleName=role_name)
 
     def _put_policy(self, tags: Optional[Dict[str, str]] = None) -> Dict:
@@ -155,20 +188,28 @@ class AwsLambdaDriver(LambdaDriver):
         clients.iam.get_waiter("policy_exists").wait(PolicyArn=policy_arn)
         return policy
 
-    def _put_lambda(self, image: Image, tags: Optional[Dict[str, str]] = None) -> Dict:
+    def _put_lambda(
+        self, image: AwsManifestListDistribution, tags: Optional[Dict[str, str]] = None
+    ) -> Dict:
         role_name = self.function_name
         function_name = self.function_name
         role_arn = clients.iam.get_role(RoleName=role_name)["Role"]["Arn"]
-        image_arch = "x86_64" if image.arch == "amd64" else image.arch
+        image_arch = (
+            "x86_64"
+            if image.platform.architecture == "amd64"
+            else image.platform.architecture
+        )
+        image_uri = f"{self.ontology.context.repository_url}@{image.digest}"
         envs_path = self.ontology.envs.path
+
         sleep(10)
         try:
             function = clients.lmb.create_function(
                 FunctionName=function_name,
                 Role=role_arn,
                 PackageType="Image",
-                Code={"ImageUri": image.uri},
-                Description=f"sententially deployed {image.uri}",
+                Code={"ImageUri": image_uri},
+                Description=f"sententially deployed {image_uri}",
                 Environment={"Variables": {"PARTITION": envs_path}},
                 Architectures=[image_arch],
                 EphemeralStorage={"Size": self.provision.storage},
@@ -180,12 +221,11 @@ class AwsLambdaDriver(LambdaDriver):
                 },
             )
 
-            return function
         except clients.lmb.exceptions.ResourceConflictException:
             function = clients.lmb.update_function_configuration(
                 FunctionName=function_name,
                 Role=role_arn,
-                Description=f"sententially deployed {image.uri}",
+                Description=f"sententially deployed {image_uri}",
                 Environment={"Variables": {"PARTITION": envs_path}},
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
@@ -202,12 +242,12 @@ class AwsLambdaDriver(LambdaDriver):
 
             clients.lmb.update_function_code(
                 FunctionName=function_name,
-                ImageUri=image.uri,
+                ImageUri=image_uri,
                 Architectures=[image_arch],
                 Publish=True,
             )
 
-            if tags:
-                clients.lmb.tag_resource(Resource=function["FunctionArn"], Tags=tags)
+        if tags:
+            clients.lmb.tag_resource(Resource=function["FunctionArn"], Tags=tags)
 
-            return function
+        return function

@@ -16,48 +16,6 @@ CURRENT_WORKING_IMAGE_TAG = "cwi"
 #
 # Internally Defined Shapes
 #
-class Image(BaseModel):
-    id: str
-    digest: Union[str, None]
-    uri: Union[str, None]
-    tags: List[str]
-    arch: str
-    versions: List[str]
-
-    @validator("versions")
-    def coerce_versions(cls, v):
-        if v is not None:
-            return list(set([re.sub(r"-.*64$", "", version) for version in v]))
-        else:
-            return []
-
-    @validator("tags")
-    def coerce_tags(cls, v):
-        if v is not None:
-            return list(set(v))
-        else:
-            return []
-
-
-class ImageView(Image):
-    @validator("id")
-    def humanize_id(cls, v):
-        return v.replace("sha256:", "")[0:12]
-
-    @validator("digest")
-    def humanize_digest(cls, v):
-        if v:
-            return v.replace("sha256:", "")[0:12]
-
-
-class Function(BaseModel):
-    image: Image
-    name: str
-    role_arn: str
-    role_name: str
-    region: str
-    arn: str
-    web_console_url: Union[str, None]
 
 
 class Provision(Shaper):
@@ -78,6 +36,36 @@ class Provision(Shaper):
         if v not in valid_auth_types:
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
         return v
+
+
+# https://github.com/BretFisher/multi-platform-docker-build
+#   Value    Normalized
+#   aarch64  arm64      # the latest v8 arm architecture. Used on Apple M1, AWS Graviton, and Raspberry Pi 3's and 4's
+#   armhf    arm        # 32-bit v7 architecture. Used in Raspberry Pi 3 and  Pi 4 when 32bit Raspbian Linux is used
+#   armel    arm/v6     # 32-bit v6 architecture. Used in Raspberry Pi 1, 2, and Zero
+#   i386     386        # older Intel 32-Bit architecture, originally used in the 386 processor
+#   x86_64   amd64      # all modern Intel-compatible x84 64-Bit architectures
+#   x86-64   amd64      # same
+
+
+class Architecture(Enum):
+    amd64 = "amd64"
+    arm64 = "arm64"
+
+    @classmethod
+    def system(cls):
+        sys_arch = clients.docker.system.info().architecture
+        try:
+            normalized = {"aarch64": "arm64", "x86_64": "amd64", "x86-64": "amd64"}[
+                sys_arch
+            ]
+            return getattr(cls, normalized)
+        except KeyError:
+            print(
+                f"there was an issue normalizing your host arch {sys_arch} to arm64 or amd64"
+            )
+            print("defaulting to amd64")
+            return cls.amd64
 
 
 #
@@ -102,7 +90,7 @@ class AwsManifestListManifestPlatform(BaseModel):
     os: str
 
 
-class AwsManifestListManifest(BaseModel):
+class AwsManifestListDistribution(BaseModel):
     mediaType: str = "application/vnd.docker.distribution.manifest.v2+json"
     size: int
     digest: str
@@ -112,7 +100,7 @@ class AwsManifestListManifest(BaseModel):
 class AwsManifestList(BaseModel):
     schemaVersion: int = 2
     mediaType: str = "application/vnd.docker.distribution.manifest.list.v2+json"
-    manifests: List[AwsManifestListManifest]
+    manifests: List[AwsManifestListDistribution]
 
 
 # Image Manifest
@@ -228,36 +216,6 @@ class AWSAssumeRole(BaseModel):
 #
 # Lambda
 #
-
-
-class Architecture(Enum):
-    amd64 = "amd64"
-    arm64 = "arm64"
-
-    @classmethod
-    def system(cls):
-        sys_arch = clients.docker.system.info().architecture
-        try:
-            normalized = {"aarch64": "arm64", "x86_64": "amd64", "x86-64": "amd64"}[
-                sys_arch
-            ]
-            return getattr(cls, normalized)
-        except KeyError:
-            print(
-                f"there was an issue normalizing your host arch {sys_arch} to arm64 or amd64"
-            )
-            print("defaulting to amd64")
-            return cls.amd64
-
-
-# https://github.com/BretFisher/multi-platform-docker-build
-#   Value    Normalized
-#   aarch64  arm64      # the latest v8 arm architecture. Used on Apple M1, AWS Graviton, and Raspberry Pi 3's and 4's
-#   armhf    arm        # 32-bit v7 architecture. Used in Raspberry Pi 3 and  Pi 4 when 32bit Raspbian Linux is used
-#   armel    arm/v6     # 32-bit v6 architecture. Used in Raspberry Pi 1, 2, and Zero
-#   i386     386        # older Intel 32-Bit architecture, originally used in the 386 processor
-#   x86_64   amd64      # all modern Intel-compatible x84 64-Bit architectures
-#   x86-64   amd64      # same
 
 
 class Runtimes(Enum):

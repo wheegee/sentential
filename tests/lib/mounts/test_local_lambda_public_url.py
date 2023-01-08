@@ -1,13 +1,14 @@
-from shutil import copyfile
-from time import sleep
 import pytest
-from tests.helpers import rewrite
-from sentential.lib.drivers.local_lambda import LocalLambdaDriver
-from sentential.lib.mounts.local_lambda_public_url import LocalLambdaPublicUrlMount
-from sentential.lib.shapes import Image
-from sentential.lib.clients import clients
 import requests
 import backoff
+from shutil import copyfile
+from python_on_whales.components.image.cli_wrapper import Image
+from sentential.lib.shapes import Architecture
+from sentential.lib.drivers.local_lambda import LocalLambdaDriver
+from sentential.lib.drivers.local_images import LocalImagesDriver
+from sentential.lib.mounts.local_lambda_public_url import LocalLambdaPublicUrlMount
+from sentential.lib.clients import clients
+from tests.helpers import rewrite
 
 
 @pytest.fixture(scope="class")
@@ -17,19 +18,22 @@ def http_handler_returns_environ(init):
     rewrite(
         "./Dockerfile",
         "# insert application specific build steps here",
-        "RUN pip install -r requirements.txt",
+        "ARG buildarg\nENV BUILDARG=$buildarg\nRUN pip install -r requirements.txt",
     )
 
 
-@pytest.mark.usefixtures("moto", "init", "http_handler_returns_environ", "cwi")
+@pytest.mark.usefixtures("moto", "init", "http_handler_returns_environ")
 class TestAwsLambdaPublicUrlMount:
+    def test_build(self, local_images_driver: LocalImagesDriver):
+        local_images_driver.ontology.args.write("buildarg", ["present"])
+        local_images_driver.build(Architecture.system())
+
     def test_deploy(self, cwi: Image, local_lambda_driver: LocalLambdaDriver):
-        ontology = local_lambda_driver.ontology
-        ontology.envs.write("HELLO", ["THIS_IS_ENV"])
+        local_lambda_driver.ontology.envs.write("ENVVAR", ["present"])
         image = local_lambda_driver.deploy(
             cwi, {"AWS_ENDPOINT": "http://host.docker.internal:5000"}
         )
-        LocalLambdaPublicUrlMount(ontology).mount()
+        LocalLambdaPublicUrlMount(local_lambda_driver.ontology).mount()
         assert image == cwi
 
     def test_containers(self):
@@ -46,4 +50,8 @@ class TestAwsLambdaPublicUrlMount:
     def test_invoke(self):
         resp = requests.get("http://localhost:8999")
         assert resp.status_code == 200
-        assert "HELLO" in resp.json()
+        lambda_env = resp.json()
+        assert "BUILDARG" in lambda_env
+        assert lambda_env["BUILDARG"] == "present"
+        assert "ENVVAR" in lambda_env
+        assert lambda_env["ENVVAR"] == "present"

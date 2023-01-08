@@ -5,7 +5,7 @@ import json
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.drivers.local_images import LocalImagesDriver
-from sentential.lib.shapes import AwsImageDetail
+from sentential.lib.shapes import AwsImageDetail, Architecture
 from tests.helpers import generate_image_manifest, generate_image_manifest_list
 
 #
@@ -17,7 +17,7 @@ from tests.helpers import generate_image_manifest, generate_image_manifest_list
 def cwi():
     local_images_driver = LocalImagesDriver(Ontology())
     local_images_driver.clean()
-    yield local_images_driver.build("amd64")
+    yield local_images_driver.build(Architecture.system())
 
 
 #
