@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.7.0 (2023-01-08)
+### Feature
+* Manifest Lists For Simpler Life ([#187](https://github.com/wheegee/sentential/issues/187)) ([`f35b1ff`](https://github.com/wheegee/sentential/commit/f35b1ff3cd53a2f85913f8a5f1f2925b5f995c30))
+
 ## v0.6.0 (2022-12-20)
 ### Feature
 * Multi-arch ([#168](https://github.com/wheegee/sentential/issues/168)) ([`cda3096`](https://github.com/wheegee/sentential/commit/cda30966375f81828164167a642776b99575a946))
