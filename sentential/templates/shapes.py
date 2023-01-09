@@ -21,10 +21,10 @@ Examples:
         env: str
 """
 
-# class Env(Shaper):
+# class Envs(Shaper):
 #   ...
 
-# class Arg(Shaper):
+# class Args(Shaper):
 #   ...
 
 # class Tags(Shaper):
