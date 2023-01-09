@@ -6,6 +6,9 @@
 ## Usage
 `sntl --help`
 
+## Documentation
+See the [wiki](https://github.com/wheegee/sentential/wiki)
+
 ## Develop
 ### venv
 `poetry shell`
