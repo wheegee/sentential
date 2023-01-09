@@ -455,7 +455,7 @@ xray = ["aws-xray-sdk (>=0.93,!=0.96)", "setuptools"]
 type = "git"
 url = "https://github.com/bkeane/moto.git"
 reference = "defaultKmsKeyIds"
-resolved_reference = "869f21155d60a5c9f5d8614f6a52e3a4a4f333d8"
+resolved_reference = "bd7b672dcdaeaca4a55c4af83ddcc1a115dda319"
 
 [[package]]
 name = "packaging"
@@ -490,7 +490,7 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "polars"
-version = "0.15.8"
+version = "0.15.14"
 description = "Blazingly fast DataFrame library"
 category = "main"
 optional = false
@@ -1304,12 +1304,12 @@ pluggy = [
     {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
 ]
 polars = [
-    {file = "polars-0.15.8-cp37-abi3-macosx_10_7_x86_64.whl", hash = "sha256:52fe1ad725574b03643c1f9da6a68c7dd5391da885fd4cc4bd15dead94558620"},
-    {file = "polars-0.15.8-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:50a68a13c9567b8196eb66a0e1c76697f2005299e4ca1301007a69fb6cd13a4c"},
-    {file = "polars-0.15.8-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:20722c1e6395a547abb83166e2f8bef3bed925e9737922e95baa634f6405343e"},
-    {file = "polars-0.15.8-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:224437629ddadf8ac96569fc10514eb41dceb35b8973858b711e402fd819641f"},
-    {file = "polars-0.15.8-cp37-abi3-win_amd64.whl", hash = "sha256:9277ef3e619382575af6a60c8083ce41cb53b999acbd9a1bddd4666c88d7abc7"},
-    {file = "polars-0.15.8.tar.gz", hash = "sha256:379babe82b67982964ed3002ec4742dcfc2616d1da85582214cfe9d68f8068b0"},
+    {file = "polars-0.15.14-cp37-abi3-macosx_10_7_x86_64.whl", hash = "sha256:364f9dee55795254abe6d78f1d2612d66588e9d7da21e408a67821dc1104977b"},
+    {file = "polars-0.15.14-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:e0e6baa463b5b231ec9f8b34dacc7b3be9172c893d105c4147d157098658b754"},
+    {file = "polars-0.15.14-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ea9c868c8f7bb03eb0e2e27def4d759bac43c2c1a485bb85d50231753706df26"},
+    {file = "polars-0.15.14-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a8dc2a74a390cd6b9db0f5dfb869c3618649f0c2f4f91f30738933bedb862816"},
+    {file = "polars-0.15.14-cp37-abi3-win_amd64.whl", hash = "sha256:b1e46e70cd374b005f2a2e4127146107a02595e684442af4325331b640ad16a8"},
+    {file = "polars-0.15.14.tar.gz", hash = "sha256:899441090b70451c5306b5d3ff6dce5407bcfce3753922a61eca046dca26df68"},
 ]
 pycparser = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
