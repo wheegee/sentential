@@ -14,7 +14,6 @@ from sentential.lib.shapes import (
     AWSAssumeRole,
     AWSCredentials,
     AWSFederationToken,
-    AwsFunctionConfiguration,
     LambdaInvokeResponse,
 )
 
@@ -80,7 +79,7 @@ class LocalLambdaDriver(LambdaDriver):
 
     def destroy(self) -> None:
         clients.docker.remove(
-            [LocalBridge.config.lambda_name], force=True, volumes=True
+            [LocalBridge.config.lambda_name, LocalBridge.config.gw_name], force=True, volumes=True
         )
 
     def logs(self, follow: bool = False):
