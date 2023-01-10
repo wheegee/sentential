@@ -1,6 +1,6 @@
 import os
 from sys import platform
-from typing import Dict
+from typing import Dict, Union
 from sentential.lib.clients import clients
 from sentential.lib.drivers.local_bridge import LocalBridge
 from sentential.lib.template import Policy
@@ -8,10 +8,13 @@ from sentential.lib.ontology import Ontology
 from sentential.lib.exceptions import LocalDriverError
 from sentential.lib.drivers.spec import LambdaDriver
 from python_on_whales.components.image.cli_wrapper import Image
+from python_on_whales.components.container.cli_wrapper import Container
+
 from sentential.lib.shapes import (
     AWSAssumeRole,
     AWSCredentials,
     AWSFederationToken,
+    AwsFunctionConfiguration,
     LambdaInvokeResponse,
 )
 
@@ -20,7 +23,7 @@ class LocalLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
-    def deploy(self, image: Image, inject_env: Dict[str, str] = {}) -> Image:
+    def deploy(self, image: Image, inject_env: Dict[str, str] = {}) -> str:
         LocalBridge.setup()  # hoist to cli callback when things are more generalized
         self.destroy()
         self.ontology.envs.export_defaults()
@@ -61,7 +64,19 @@ class LocalLambdaDriver(LambdaDriver):
             envs={**default_env, **credentials_env, **inject_env},
         )
 
-        return image
+        return f"deployed {self.ontology.context.resource_name} to local"
+
+    def deployed_function(self) -> Union[None, Container]:
+        for container in clients.docker.ps(True):
+            if container.name == LocalBridge.config.lambda_name:
+                return container
+        return None
+
+    def deployed_public_url(self) -> Union[None, Container]:
+        for container in clients.docker.ps(True):
+            if container.name == LocalBridge.config.gw_name:
+                return container
+        return None
 
     def destroy(self) -> None:
         clients.docker.remove(

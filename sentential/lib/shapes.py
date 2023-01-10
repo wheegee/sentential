@@ -5,7 +5,7 @@ from pathlib import PosixPath
 from typing import List, Union, Optional, Dict
 from pydantic import BaseModel, Field, validator, Json
 from sentential.support.shaper import Shaper
-from sentential.lib.exceptions import ArchitectureDiscoveryError, ShapeError
+from sentential.lib.exceptions import ShapeError
 from sentential.lib.clients import clients
 
 #

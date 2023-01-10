@@ -8,6 +8,8 @@ from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
     Architecture,
+    AwsFunctionConfiguration,
+    AwsFunctionPublicUrl,
     AwsImageDetail,
     AwsManifestList,
     LambdaInvokeResponse,
@@ -31,7 +33,7 @@ class AwsLambdaDriver(LambdaDriver):
 
     def deploy(
         self, image: AwsImageDetail, arch: Union[Architecture, None]
-    ) -> AwsManifestListDistribution:
+    ) -> str:
         chosen_dist = self._choose_dist(image, arch)
 
         self.ontology.envs.export_defaults()
@@ -44,7 +46,22 @@ class AwsLambdaDriver(LambdaDriver):
             PolicyArn=self._put_policy(tags)["Policy"]["Arn"],
         )
         self._put_lambda(chosen_dist, tags)
-        return chosen_dist
+        
+        return f"deployed {self.ontology.context.resource_name} to aws"
+
+    def deployed_function(self) -> Union[None, AwsFunctionConfiguration]:
+        try:
+            resp = clients.lmb.get_function(FunctionName=self.ontology.context.resource_name)
+            return AwsFunctionConfiguration(**resp['Configuration'])
+        except:
+            return None
+
+    def deployed_public_url(self) -> Union[None, AwsFunctionPublicUrl]:
+        try:
+            resp = clients.lmb.get_function_url_config(FunctionName=self.ontology.context.resource_name)
+            return AwsFunctionPublicUrl(**resp)
+        except:
+            return None
 
     def _choose_dist(
         self, image: AwsImageDetail, arch: Union[Architecture, None]
