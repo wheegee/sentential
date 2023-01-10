@@ -1,8 +1,6 @@
 from rich.table import Table, box
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import (
-    AwsFunctionConfiguration,
-    AwsFunctionPublicUrl,
     AwsManifestList,
 )
 from sentential.lib.exceptions import JoineryError
@@ -24,14 +22,10 @@ class Joinery:
         return f"[link={url}]{text}[/link]"
 
     def _webconsole_hyperlink(self) -> str:
-        # https://us-west-2.console.aws.amazon.com/lambda/home?region=us-west-2#/functions/AIDAZ3TS3GEY6AB73ZHGR-us-west-2-kaixo
         region = self.ontology.context.region
         function = self.ontology.context.resource_name
         url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function}"
-        return self._to_hyperlink(url, "webconsole")
-
-    # def _public_url_hyperlink(self, function: AwsFunctionPublicUrl) -> str:
-    #     ...
+        return self._to_hyperlink(url, "console")
 
     def list(self) -> Table:
         table = Table(box=box.SIMPLE, *["tag", "arch", "digest", "status", "hrefs"])
@@ -52,13 +46,12 @@ class Joinery:
                 ]
             )
 
-            manifest_list_digest = manifest.imageId.imageDigest.replace("sha256:", "")[
-                0:12
-            ]
+            manifest_list_digest = manifest.imageId.imageDigest.replace("sha256:", "")
+
             image_digests = [dist.digest for dist in manifest.imageManifest.manifests]
 
             if deployed and f"sha256:{deployed.CodeSha256}" in image_digests:
-                status = deployed.State
+                status = deployed.State.lower()
                 hrefs = [self._webconsole_hyperlink()]
                 if public_url:
                     hrefs.append(
@@ -68,6 +61,6 @@ class Joinery:
                 status = ""
                 hrefs = ""
 
-            table.add_row(*[tag, arch, manifest_list_digest, status, ", ".join(hrefs)])
+            table.add_row(*[tag, arch, manifest_list_digest[0:12], status, ", ".join(hrefs)])
 
         return table
