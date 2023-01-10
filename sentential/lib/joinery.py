@@ -16,6 +16,7 @@ from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from rich.panel import Panel
 from rich import print
 
+
 class Joinery:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -48,11 +49,11 @@ class Joinery:
             for container in clients.docker.ps(True):
                 if container.image == cwi.id:
                     status = container.state.status
-            
+
             if self.local_lambda.deployed_public_url():
                 href = self._to_hyperlink(LocalBridge.config.gw_port, "public_url")
 
-            return [tag, arch, digest, status, href] # type: ignore
+            return [tag, arch, digest, status, href]  # type: ignore
         except LocalDriverError:
             return None
 
@@ -89,7 +90,9 @@ class Joinery:
                 status = ""
                 hrefs = ""
 
-            rows.append([tag, arch, manifest_list_digest[0:12], status, ", ".join(hrefs)])
+            rows.append(
+                [tag, arch, manifest_list_digest[0:12], status, ", ".join(hrefs)]
+            )
 
         return sorted(rows, key=lambda row: LooseVersion(row[0]), reverse=True)
 
