@@ -61,6 +61,8 @@ class Joinery:
                 status = ""
                 hrefs = ""
 
-            table.add_row(*[tag, arch, manifest_list_digest[0:12], status, ", ".join(hrefs)])
+            table.add_row(
+                *[tag, arch, manifest_list_digest[0:12], status, ", ".join(hrefs)]
+            )
 
         return table
