@@ -31,9 +31,7 @@ class AwsLambdaDriver(LambdaDriver):
         # there must be a better way to do polymorphic type stuff...
         return cast(Provision, self.ontology.configs.parameters)
 
-    def deploy(
-        self, image: AwsImageDetail, arch: Union[Architecture, None]
-    ) -> str:
+    def deploy(self, image: AwsImageDetail, arch: Union[Architecture, None]) -> str:
         chosen_dist = self._choose_dist(image, arch)
 
         self.ontology.envs.export_defaults()
@@ -46,19 +44,23 @@ class AwsLambdaDriver(LambdaDriver):
             PolicyArn=self._put_policy(tags)["Policy"]["Arn"],
         )
         self._put_lambda(chosen_dist, tags)
-        
+
         return f"deployed {self.ontology.context.resource_name} to aws"
 
     def deployed_function(self) -> Union[None, AwsFunctionConfiguration]:
         try:
-            resp = clients.lmb.get_function(FunctionName=self.ontology.context.resource_name)
-            return AwsFunctionConfiguration(**resp['Configuration'])
+            resp = clients.lmb.get_function(
+                FunctionName=self.ontology.context.resource_name
+            )
+            return AwsFunctionConfiguration(**resp["Configuration"])
         except:
             return None
 
     def deployed_public_url(self) -> Union[None, AwsFunctionPublicUrl]:
         try:
-            resp = clients.lmb.get_function_url_config(FunctionName=self.ontology.context.resource_name)
+            resp = clients.lmb.get_function_url_config(
+                FunctionName=self.ontology.context.resource_name
+            )
             return AwsFunctionPublicUrl(**resp)
         except:
             return None
