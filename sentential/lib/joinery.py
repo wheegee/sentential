@@ -13,6 +13,7 @@ from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 
+
 class Joinery:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
@@ -29,7 +30,6 @@ class Joinery:
         function = self.ontology.context.resource_name
         url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function}"
         return self._to_hyperlink(url, "console")
-            
 
     def _get_aws_rows(self) -> List[List[str]]:
         deployed = self.aws_lambda.deployed_function()
@@ -50,7 +50,9 @@ class Joinery:
                 ]
             )
 
-            manifest_list_digest = manifest.imageId.imageDigest.replace("sha256:", "")[0:12]
+            manifest_list_digest = manifest.imageId.imageDigest.replace("sha256:", "")[
+                0:12
+            ]
 
             image_digests = [dist.digest for dist in manifest.imageManifest.manifests]
             hrefs = []
@@ -64,9 +66,7 @@ class Joinery:
             else:
                 status = ""
 
-            rows.append(
-                [tag, arch, manifest_list_digest, status, ", ".join(hrefs)]
-            )
+            rows.append([tag, arch, manifest_list_digest, status, ", ".join(hrefs)])
 
         return sorted(rows, key=lambda row: LooseVersion(row[0]), reverse=True)
 
@@ -85,7 +85,7 @@ class Joinery:
             hrefs = ""
 
             if cwi.repo_digests:
-                digest = cwi.repo_digests[0].split("@")[-1].replace("sha256:","")[0:12]
+                digest = cwi.repo_digests[0].split("@")[-1].replace("sha256:", "")[0:12]
 
             if cwc and cwc.image == cwi.id:
                 if cwc.state.status:
@@ -120,6 +120,5 @@ class Joinery:
 
         for row in rows:
             table.add_row(*row)
-
 
         return table
