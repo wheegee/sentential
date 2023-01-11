@@ -100,12 +100,11 @@ class Joinery:
             return None
 
     def _highlight(self, rows):
-        if rows[0][0] == "local" and rows[0][2]:
+        if rows and rows[0][0] == "local" and rows[0][2]:
             digest = rows[0][2]
             for i, row in enumerate(rows):
                 if row[2] == digest:
                     rows[i][2] = f"[yellow]{row[2]}[/yellow]"
-                    matched = True
 
     def list(self) -> Table:
         columns = ["build", "arch", "digest", "status", "hrefs"]
