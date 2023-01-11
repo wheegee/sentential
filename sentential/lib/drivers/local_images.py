@@ -64,14 +64,28 @@ class LocalImagesDriver(ImagesDriver):
             raise LocalDriverError("docker build driver returned unexpected type")
 
     def get_image(self, tag: Union[str, None] = None) -> Image:
-        # TODO: work pull logic into here
         if tag is None:
             tag = CURRENT_WORKING_IMAGE_TAG
 
         for image in clients.docker.images():
             if f"{self.repo_name}:{tag}" in image.repo_tags:
                 return image
-        raise LocalDriverError(f"no image with {tag} tag present")
+
+        if tag is not CURRENT_WORKING_IMAGE_TAG:
+            pulled_image = clients.docker.pull(f"{self.repo_url}:{tag}")
+            if isinstance(pulled_image, Image):
+                pulled_image.tag(f"{self.repo_name}:{CURRENT_WORKING_IMAGE_TAG}")
+                return pulled_image
+
+        raise LocalDriverError(f"no image with {tag} tag found")
+
+    def get_images(self) -> List[Image]:
+        images = []
+        for image in clients.docker.images():
+            image_repo = image.repo_tags[0].split("/")[-1].split(":")[0]
+            if self.repo_name == image_repo:
+                images.append(image)
+        return images
 
     def clean(self) -> None:
         images = clients.docker.images()
