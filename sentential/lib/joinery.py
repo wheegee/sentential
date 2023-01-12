@@ -49,9 +49,14 @@ class Joinery:
                 ]
             )
 
-            manifest_list_digest = manifest.imageId.imageDigest.replace("sha256:", "")[0:12]
-            image_digests = [dist.digest.replace("sha256:","")[0:12] for dist in manifest.imageManifest.manifests]
-            
+            manifest_list_digest = manifest.imageId.imageDigest.replace("sha256:", "")[
+                0:12
+            ]
+            image_digests = [
+                dist.digest.replace("sha256:", "")[0:12]
+                for dist in manifest.imageManifest.manifests
+            ]
+
             hrefs = []
             status = ""
             cwi = "false"
@@ -61,7 +66,7 @@ class Joinery:
                 if public_url:
                     hrefs.append(
                         self._to_hyperlink(public_url.FunctionUrl, "public_url")
-                    )                
+                    )
 
                 if cwi_digest:
                     if cwi_digest == manifest_list_digest:
@@ -69,7 +74,9 @@ class Joinery:
                     if cwi_digest in image_digests:
                         cwi = "true"
 
-            rows.append([cwi, tag, arch, manifest_list_digest, status, ", ".join(hrefs)])
+            rows.append(
+                [cwi, tag, arch, manifest_list_digest, status, ", ".join(hrefs)]
+            )
 
         return sorted(rows, key=lambda row: LooseVersion(row[0]), reverse=True)
 
@@ -88,7 +95,7 @@ class Joinery:
             hrefs = ""
 
             if cwi.repo_digests:
-                digest = cwi.repo_digests[0].split("@")[-1].replace("sha256:","")[0:12]
+                digest = cwi.repo_digests[0].split("@")[-1].replace("sha256:", "")[0:12]
 
             if cwc and cwc.image == cwi.id:
                 if cwc.state.status:
@@ -117,7 +124,7 @@ class Joinery:
             rows.insert(0, cwi_row)
         else:
             rows = self._get_aws_rows()
-            
+
         self._highlight(rows)
 
         for row in rows:
