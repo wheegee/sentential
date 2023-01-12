@@ -63,11 +63,11 @@ class Joinery:
                         self._to_hyperlink(public_url.FunctionUrl, "public_url")
                     )                
 
-                if cwi_digest:
-                    if cwi_digest == manifest_list_digest:
-                        cwi = "true"
-                    if cwi_digest in image_digests:
-                        cwi = "true"
+            if cwi_digest:
+                if cwi_digest == manifest_list_digest:
+                    cwi = "true"
+                if cwi_digest in image_digests:
+                    cwi = "true"
 
             rows.append([cwi, tag, arch, manifest_list_digest, status, ", ".join(hrefs)])
 
