@@ -78,7 +78,7 @@ class Joinery:
                 [cwi, tag, arch, manifest_list_digest, status, ", ".join(hrefs)]
             )
 
-        return sorted(rows, key=lambda row: LooseVersion(row[0]), reverse=True)
+        return sorted(rows, key=lambda row: LooseVersion(row[1]), reverse=True)
 
     def _get_cwi_row(self) -> Union[None, List[str]]:
         try:
