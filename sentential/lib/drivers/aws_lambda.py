@@ -1,4 +1,3 @@
-import json
 import os
 from time import sleep
 from typing import Dict, List, Optional, Union, cast
@@ -8,8 +7,6 @@ from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
     Architecture,
-    AwsFunctionConfiguration,
-    AwsFunctionPublicUrl,
     AwsImageDetail,
     AwsManifestList,
     LambdaInvokeResponse,
@@ -117,13 +114,13 @@ class AwsLambdaDriver(LambdaDriver):
             cmd.append("--follow")
         os.system(" ".join(cmd))
 
-    def invoke(self, payload: str) -> LambdaInvokeResponse:
+    def invoke(self, payload: str) -> str:
         response = clients.lmb.invoke(
             FunctionName=self.function_name, Payload=payload, LogType="Tail"
         )
         response["Payload"] = response["Payload"].read()
         response["Payload"] = response["Payload"].decode("utf-8")
-        return LambdaInvokeResponse(**response)
+        return LambdaInvokeResponse(**response).json()
 
     def _put_role(self, tags: Optional[Dict[str, str]] = None) -> Dict:
         role_name = self.function_name

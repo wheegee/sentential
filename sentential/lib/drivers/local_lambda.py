@@ -78,7 +78,7 @@ class LocalLambdaDriver(LambdaDriver):
             cmd.append("--follow")
         os.system(" ".join(cmd))
 
-    def invoke(self, payload: str) -> LambdaInvokeResponse:
+    def invoke(self, payload: str) -> str:
         local = clients.boto3.client(
             "lambda", endpoint_url=f"http://localhost:{LocalBridge.config.lambda_port}"
         )
@@ -87,7 +87,7 @@ class LocalLambdaDriver(LambdaDriver):
         )
         response["Payload"] = response["Payload"].read()
         response["Payload"] = response["Payload"].decode("utf-8")
-        return LambdaInvokeResponse(**response)
+        return LambdaInvokeResponse(**response).json()
 
     def _get_credentials(self) -> AWSCredentials:
         policy_json = Policy(self.ontology).render()

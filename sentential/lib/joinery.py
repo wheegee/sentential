@@ -20,7 +20,6 @@ from pydantic import BaseModel
 from python_on_whales.components.image.cli_wrapper import Image
 
 class Row(BaseModel):
-    # ["build", "arch", "digest", "dist_digests" "status", "hrefs"]
     build: str
     arch: str
     digest: str
@@ -63,7 +62,7 @@ class Joinery:
             cwi = self.local_images.get_image(CURRENT_WORKING_IMAGE_TAG)
             row["build"] = "local"
             row["arch"] = cwi.architecture
-            row["digest"] = self._extract_digest(cwi)
+            row["digest"] = self._humanize_digest(self._extract_digest(cwi))
             row["dist_digests"] = []
             row["status"] = ""
             row["hrefs"] = []
@@ -92,13 +91,13 @@ class Joinery:
             row = {}
             row["build"] = manifest.imageId.imageTag
             row["arch"] = self._extract_arch(manifest.imageManifest)
-            row["digest"] = manifest.imageId.imageDigest
-            row["dist_digests"] = self._extract_dist_digests(manifest.imageManifest)
+            row["digest"] = self._humanize_digest(manifest.imageId.imageDigest)
+            row["dist_digests"] = self._humanize_digests(self._extract_dist_digests(manifest.imageManifest))
             row["status"] = ""
             row["hrefs"] = []
 
             if isinstance(deployed_function, AwsFunction):
-                deployed_digest = f"sha256:{deployed_function.Configuration.CodeSha256}"
+                deployed_digest = self._humanize_digest(deployed_function.Configuration.CodeSha256)
                 if deployed_digest == row["digest"] or deployed_digest in row["dist_digests"]:
                     row["status"] = deployed_function.Configuration.State.lower()
                     row["hrefs"].append(self._webconsole())
@@ -163,14 +162,20 @@ class Joinery:
         url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function}"
         return f"[link={url}]console[/link]"
 
+    def _extract_arch(self, manifest: AwsManifestList) -> str:
+        return ", ".join([ m.platform.architecture for m in manifest.manifests])
+    
     def _extract_digest(self, image: Image) -> str:
         if image.repo_digests:
             return image.repo_digests[0].split("@")[-1]
         else:
             return ""
 
-    def _extract_arch(self, manifest: AwsManifestList) -> str:
-        return ", ".join([ m.platform.architecture for m in manifest.manifests])
-    
     def _extract_dist_digests(self, manifest: AwsManifestList) -> List[str]:
         return [ dist.digest for dist in manifest.manifests ]
+
+    def _humanize_digest(self, digest: str) -> str:
+            return digest.replace("sha256:","")[0:12]
+    
+    def _humanize_digests(self, digests: List[str]) -> List[str]:
+        return [ d.replace("sha256:", "")[0:12] for d in digests ]

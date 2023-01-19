@@ -1,5 +1,4 @@
 import typer
-from rich import print
 from sentential.lib.ontology import Ontology
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
