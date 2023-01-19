@@ -53,9 +53,9 @@ def login():
 
 
 @root.command()
-def ls():
+def ls(verbose: bool = typer.Option(False)):
     """list image information"""
-    print(Joinery(Ontology()).list())
+    print(Joinery(Ontology()).list(verbose))
 
 
 @root.command()

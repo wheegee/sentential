@@ -1,9 +1,13 @@
 from distutils.version import LooseVersion
-from typing import Any, List, Union
+from functools import lru_cache
+from typing import List, Union
 from rich.table import Table, box
 from sentential.lib.clients import clients
+from sentential.lib.drivers.local_bridge import LocalBridge
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import (
+    AwsFunction,
+    AwsFunctionPublicUrl,
     AwsManifestList,
 )
 from sentential.lib.exceptions import JoineryError, LocalDriverError
@@ -11,7 +15,18 @@ from sentential.lib.drivers.aws_ecr import AwsEcrDriver
 from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
+from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG
+from pydantic import BaseModel
+from python_on_whales.components.image.cli_wrapper import Image
 
+class Row(BaseModel):
+    # ["build", "arch", "digest", "dist_digests" "status", "hrefs"]
+    build: str
+    arch: str
+    digest: str
+    dist_digests: List[str]
+    status: str
+    hrefs: List[str]
 
 class Joinery:
     def __init__(self, ontology: Ontology) -> None:
@@ -21,113 +36,141 @@ class Joinery:
         self.aws_lambda = AwsLambdaDriver(self.ontology)
         self.local_lambda = LocalLambdaDriver(self.ontology)
 
-    def _to_hyperlink(self, url: str, text: str) -> str:
-        return f"[link={url}]{text}[/link]"
+    def list(self, verbose: bool = False) -> Table:
+        cwi = self._cwi()
+        published = self._published()
+        merged = self._merge(published, cwi)
+        drop = ["digest", "dist_digests"]
 
-    def _webconsole_hyperlink(self) -> str:
-        region = self.ontology.context.region
-        function = self.ontology.context.resource_name
-        url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function}"
-        return self._to_hyperlink(url, "console")
+        columns = list(Row.schema()['properties'].keys())
+        if not verbose:
+            for column in drop:
+                columns.remove(column)
+       
+        table = Table(box=box.SIMPLE, *columns)
 
-    def _get_aws_rows(self, cwi_digest: str = "") -> List[List[str]]:
-        deployed = self.aws_lambda.deployed_function()
-        public_url = self.aws_lambda.deployed_public_url()
-
-        rows = []
-        for manifest in self.ecr_images._manifest_lists():
-            if not isinstance(manifest.imageManifest, AwsManifestList):
-                raise JoineryError(
-                    f"joinery recieved something that isn't a manifest list"
-                )
-
-            tag = manifest.imageId.imageTag
-            arch = ", ".join(
-                [
-                    dist.platform.architecture
-                    for dist in manifest.imageManifest.manifests
-                ]
-            )
-
-            manifest_list_digest = manifest.imageId.imageDigest.replace("sha256:", "")[
-                0:12
-            ]
-            image_digests = [
-                dist.digest.replace("sha256:", "")[0:12]
-                for dist in manifest.imageManifest.manifests
-            ]
-
-            hrefs = []
-            status = ""
-            cwi = "false"
-            if deployed and deployed.CodeSha256[0:12] in image_digests:
-                status = deployed.State.lower()
-                hrefs = [self._webconsole_hyperlink()]
-                if public_url:
-                    hrefs.append(
-                        self._to_hyperlink(public_url.FunctionUrl, "public_url")
-                    )
-
-            if cwi_digest:
-                if cwi_digest == manifest_list_digest:
-                    cwi = "true"
-                if cwi_digest in image_digests:
-                    cwi = "true"
-
-            rows.append(
-                [cwi, tag, arch, manifest_list_digest, status, ", ".join(hrefs)]
-            )
-
-        return sorted(rows, key=lambda row: LooseVersion(row[1]), reverse=True)
-
-    def _get_cwi_row(self) -> Union[None, List[str]]:
-        try:
-            cwc = self.local_lambda.deployed_function()
-            if cwc:
-                cwi = clients.docker.image.inspect(cwc.image)
+        for row in merged:
+            if verbose:
+                table.add_row(*[str(v) for v in row.dict().values()])
             else:
-                cwi = self.local_images.get_image("cwi")
+                table.add_row(*[str(v) for v in row.dict(exclude=set(drop)).values()])
+        
+        return table
 
-            url = self.local_lambda.deployed_public_url()
-            arch = cwi.architecture
-            digest = ""
-            status = ""
-            hrefs = ""
+    def _cwi(self) -> Union[Row, None]:
+        try:
+            row = {}
+            cwi = self.local_images.get_image(CURRENT_WORKING_IMAGE_TAG)
+            row["build"] = "local"
+            row["arch"] = cwi.architecture
+            row["digest"] = self._extract_digest(cwi)
+            row["dist_digests"] = []
+            row["status"] = ""
+            row["hrefs"] = []
+            
+            if cwi.container:
+                cwc = clients.docker.container.inspect(cwi.container)
+                row["status"] = cwc.state.status.lower()
 
-            if cwi.repo_digests:
-                digest = cwi.repo_digests[0].split("@")[-1].replace("sha256:", "")[0:12]
+            if clients.docker.container.exists("sentential-gw"):
+                row["hrefs"].append(self._public_url(f"http://localhost:{LocalBridge.config.gw_port}"))
 
-            if cwc and cwc.image == cwi.id:
-                if cwc.state.status:
-                    status = cwc.state.status
-
-            if url:
-                hrefs = self._to_hyperlink(url, "public_url")
-
-            return ["true", "local", arch, digest, status, hrefs]
-
+            return Row(**row)
         except LocalDriverError:
             return None
 
-    def _highlight(self, rows):
-        for i, row in enumerate(rows):
-            if row[0] == "true":
-                rows[i][1] = f"[yellow]{rows[i][1]}[/yellow]"
+    def _published(self) -> List[Row]:
+        rows = []
+        deployed_function = self._deployed_function()
+        deployed_url = self._deployed_url()
+        for manifest in self.ecr_images._manifest_lists():
+            if not isinstance(manifest.imageManifest, AwsManifestList):
+                raise JoineryError(
+                    "expected AwsManifestList object"
+                )
+            
+            row = {}
+            row["build"] = manifest.imageId.imageTag
+            row["arch"] = self._extract_arch(manifest.imageManifest)
+            row["digest"] = manifest.imageId.imageDigest
+            row["dist_digests"] = self._extract_dist_digests(manifest.imageManifest)
+            row["status"] = ""
+            row["hrefs"] = []
 
-    def list(self) -> Table:
-        columns = ["build", "arch", "digest", "status", "hrefs"]
-        table = Table(box=box.SIMPLE, *columns)
-        cwi_row = self._get_cwi_row()
+            if isinstance(deployed_function, AwsFunction):
+                deployed_digest = f"sha256:{deployed_function.Configuration.CodeSha256}"
+                if deployed_digest == row["digest"] or deployed_digest in row["dist_digests"]:
+                    row["status"] = deployed_function.Configuration.State.lower()
+                    row["hrefs"].append(self._webconsole())
+                    if isinstance(deployed_url, AwsFunctionPublicUrl):
+                        row["hrefs"].append(self._public_url(deployed_url.FunctionUrl))
+            rows.append(Row(**row)) # row yer boat
 
-        if cwi_row:
-            rows = self._get_aws_rows(cwi_row[3])
-            rows.insert(0, cwi_row)
+        return sorted(rows, key=lambda row: LooseVersion(row.build), reverse=True)
+
+
+    
+    def _merge(self, published: List[Row], cwi: Union[Row, None]) -> List[Row]:
+        if cwi:
+            matched = False
+            for i, manifest in enumerate(published):
+                if cwi.digest == manifest.digest:
+                    published[i].build = f"[yellow]{published[i].build}[/yellow]"
+                    published[i].digest = f"[yellow]{manifest.digest}[/yellow]"
+                    matched = True
+                
+                for k, dist in enumerate(manifest.dist_digests):
+                    if cwi.digest == dist:
+                        published[i].build = f"[yellow]{published[i].build}[/yellow]"
+                        published[i].dist_digests[k] = f"[yellow]{dist}[/yellow]"
+                        matched = True
+            
+            if matched:
+                cwi.build = f"[yellow]{cwi.build}[/yellow]"
+                cwi.digest = f"[yellow]{cwi.digest}[/yellow]"
+
+            published.insert(0, cwi)
+            return published
         else:
-            rows = self._get_aws_rows()
+            return published
 
-        self._highlight(rows)
+    @lru_cache()
+    def _deployed_function(self) -> Union[None, AwsFunction]:
+        try:
+            resp = clients.lmb.get_function(
+                FunctionName=self.ontology.context.resource_name
+            )
+            return AwsFunction(**resp)
+        except:
+            return None
 
-        for row in rows:
-            table.add_row(*row[1:])
+    @lru_cache()
+    def _deployed_url(self) -> Union[None, AwsFunctionPublicUrl]:
+        try:
+            resp = clients.lmb.get_function_url_config(
+                FunctionName=self.ontology.context.resource_name
+            )
+            return AwsFunctionPublicUrl(**resp)
+        except:
+            return None
 
-        return table
+    def _public_url(self, url: str) -> str:
+        return f"[link={url}]public_url[/link]"
+    
+    def _webconsole(self) -> str:
+        region = self.ontology.context.region
+        function = self.ontology.context.resource_name
+        url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function}"
+        return f"[link={url}]console[/link]"
+
+    def _extract_digest(self, image: Image) -> str:
+        if image.repo_digests:
+            return image.repo_digests[0].split("@")[-1]
+        else:
+            return ""
+
+    def _extract_arch(self, manifest: AwsManifestList) -> str:
+        return ", ".join([ m.platform.architecture for m in manifest.manifests])
+    
+    def _extract_dist_digests(self, manifest: AwsManifestList) -> List[str]:
+        return [ dist.digest for dist in manifest.manifests ]

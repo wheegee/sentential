@@ -47,24 +47,6 @@ class AwsLambdaDriver(LambdaDriver):
 
         return f"deployed {self.ontology.context.resource_name} to aws"
 
-    def deployed_function(self) -> Union[None, AwsFunctionConfiguration]:
-        try:
-            resp = clients.lmb.get_function(
-                FunctionName=self.ontology.context.resource_name
-            )
-            return AwsFunctionConfiguration(**resp["Configuration"])
-        except:
-            return None
-
-    def deployed_public_url(self) -> Union[None, AwsFunctionPublicUrl]:
-        try:
-            resp = clients.lmb.get_function_url_config(
-                FunctionName=self.ontology.context.resource_name
-            )
-            return AwsFunctionPublicUrl(**resp)
-        except:
-            return None
-
     def _choose_dist(
         self, image: AwsImageDetail, arch: Union[Architecture, None]
     ) -> AwsManifestListDistribution:

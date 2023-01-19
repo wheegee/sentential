@@ -65,22 +65,6 @@ class LocalLambdaDriver(LambdaDriver):
 
         return f"deployed {self.ontology.context.resource_name} to local"
 
-    def deployed_function(self) -> Union[None, Container]:
-        for container in clients.docker.ps(True):
-            if container.name == LocalBridge.config.lambda_name:
-                image = clients.docker.image.inspect(container.image)
-                if image.repo_tags:
-                    image_repo = image.repo_tags[0].split("/")[-1].split(":")[0]
-                    if image_repo == self.ontology.context.repository_name:
-                        return container
-        return None
-
-    def deployed_public_url(self) -> Union[None, str]:
-        for container in clients.docker.ps(True):
-            if container.name == LocalBridge.config.gw_name:
-                return f"http://localhost:{LocalBridge.config.gw_port}"
-        return None
-
     def destroy(self) -> None:
         clients.docker.remove(
             [LocalBridge.config.lambda_name, LocalBridge.config.gw_name],
