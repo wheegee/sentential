@@ -94,13 +94,20 @@ class Joinery:
             row["build"] = manifest.imageId.imageTag
             row["arch"] = self._extract_arch(manifest.imageManifest)
             row["digest"] = self._humanize_digest(manifest.imageId.imageDigest)
-            row["dist_digests"] = self._humanize_digests(self._extract_dist_digests(manifest.imageManifest))
+            row["dist_digests"] = self._humanize_digests(
+                self._extract_dist_digests(manifest.imageManifest)
+            )
             row["status"] = ""
             row["hrefs"] = []
 
             if isinstance(deployed_function, AwsFunction):
-                deployed_digest = self._humanize_digest(deployed_function.Configuration.CodeSha256)
-                if deployed_digest == row["digest"] or deployed_digest in row["dist_digests"]:
+                deployed_digest = self._humanize_digest(
+                    deployed_function.Configuration.CodeSha256
+                )
+                if (
+                    deployed_digest == row["digest"]
+                    or deployed_digest in row["dist_digests"]
+                ):
                     row["status"] = deployed_function.Configuration.State.lower()
                     row["hrefs"].append(self._webconsole())
                     if isinstance(deployed_url, AwsFunctionPublicUrl):
@@ -163,8 +170,8 @@ class Joinery:
         return f"[link={url}]console[/link]"
 
     def _extract_arch(self, manifest: AwsManifestList) -> str:
-        return ", ".join([ m.platform.architecture for m in manifest.manifests])
-    
+        return ", ".join([m.platform.architecture for m in manifest.manifests])
+
     def _extract_digest(self, image: Image) -> str:
         if image.repo_digests:
             return image.repo_digests[0].split("@")[-1]
@@ -172,10 +179,10 @@ class Joinery:
             return ""
 
     def _extract_dist_digests(self, manifest: AwsManifestList) -> List[str]:
-        return [ dist.digest for dist in manifest.manifests ]
+        return [dist.digest for dist in manifest.manifests]
 
     def _humanize_digest(self, digest: str) -> str:
-            return digest.replace("sha256:","")[0:12]
-    
+        return digest.replace("sha256:", "")[0:12]
+
     def _humanize_digests(self, digests: List[str]) -> List[str]:
-        return [ d.replace("sha256:", "")[0:12] for d in digests ]
+        return [d.replace("sha256:", "")[0:12] for d in digests]
