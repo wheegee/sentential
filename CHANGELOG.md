@@ -2,6 +2,11 @@
 
 <!--next-version-placeholder-->
 
+## v0.8.0 (2023-01-20)
+### Feature
+* Highviz ([#207](https://github.com/wheegee/sentential/issues/207)) ([`f3dcda0`](https://github.com/wheegee/sentential/commit/f3dcda01aad30703b5be71ca1ea103149e2a1524))
+* Visualize state in ls, normalize invoke output ([`10609e5`](https://github.com/wheegee/sentential/commit/10609e5b3822e6a875674b4da65573b06153f27b))
+
 ## v0.7.0 (2023-01-08)
 ### Feature
 * Manifest Lists For Simpler Life ([#187](https://github.com/wheegee/sentential/issues/187)) ([`f35b1ff`](https://github.com/wheegee/sentential/commit/f35b1ff3cd53a2f85913f8a5f1f2925b5f995c30))
