@@ -32,7 +32,7 @@ class Provision(Shaper):
 
     @validator("auth_type")
     def is_valid_auth_type(cls, v):
-        valid_auth_types = ["NONE", "AWS"]
+        valid_auth_types = ["NONE", "AWS_IAM"]
         if v not in valid_auth_types:
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
         return v
