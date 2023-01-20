@@ -69,9 +69,9 @@ class Joinery:
             row["status"] = ""
             row["hrefs"] = []
 
-            if cwi.container:
-                cwc = clients.docker.container.inspect(cwi.container)
-                row["status"] = cwc.state.status.lower()
+            for container in clients.docker.ps(True):
+                if cwi.id == container.image:
+                    row["status"] = container.state.status.lower()
 
             if clients.docker.container.exists("sentential-gw"):
                 row["hrefs"].append(
