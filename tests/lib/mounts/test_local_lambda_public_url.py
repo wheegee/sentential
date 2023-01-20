@@ -30,11 +30,11 @@ class TestAwsLambdaPublicUrlMount:
 
     def test_deploy(self, cwi: Image, local_lambda_driver: LocalLambdaDriver):
         local_lambda_driver.ontology.envs.write("ENVVAR", ["present"])
-        image = local_lambda_driver.deploy(
+        message = local_lambda_driver.deploy(
             cwi, {"AWS_ENDPOINT": "http://host.docker.internal:5000"}
         )
         LocalLambdaPublicUrlMount(local_lambda_driver.ontology).mount()
-        assert image == cwi
+        assert "AKIAIOSFODNN7EXAMPLE-us-west-2-test" in message
 
     def test_containers(self):
         assert any(

@@ -4,7 +4,7 @@ from os import environ
 from shutil import copyfile
 from python_on_whales.components.image.cli_wrapper import Image
 from sentential.lib.clients import clients
-from sentential.lib.shapes import Architecture
+from sentential.lib.shapes import Architecture, LambdaInvokeResponse
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.drivers.local_images import LocalImagesDriver
 from tests.helpers import rewrite
@@ -42,14 +42,15 @@ class TestLocalLambdaDriver:
     ):
         cwi = local_images_driver.get_image()
         local_lambda_driver.ontology.envs.write("ENVVAR", ["present"])
-        image = local_lambda_driver.deploy(
+        message = local_lambda_driver.deploy(
             cwi,
             {"AWS_ENDPOINT": "http://host.docker.internal:5000"},
         )
-        assert image == cwi
+        assert "AKIAIOSFODNN7EXAMPLE-us-west-2-test" in message
 
     def test_invoke(self, local_lambda_driver: LocalLambdaDriver):
-        response = local_lambda_driver.invoke("{}")
+        response = json.loads(local_lambda_driver.invoke("{}"))
+        response = LambdaInvokeResponse(**response)
         assert response.StatusCode == 200
         lambda_env = json.loads(response.Payload)
         assert "AWS_SESSION_TOKEN" in lambda_env.keys()

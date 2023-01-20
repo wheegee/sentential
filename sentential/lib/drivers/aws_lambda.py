@@ -1,4 +1,3 @@
-import json
 import os
 from time import sleep
 from typing import Dict, List, Optional, Union, cast
@@ -29,9 +28,7 @@ class AwsLambdaDriver(LambdaDriver):
         # there must be a better way to do polymorphic type stuff...
         return cast(Provision, self.ontology.configs.parameters)
 
-    def deploy(
-        self, image: AwsImageDetail, arch: Union[Architecture, None]
-    ) -> AwsManifestListDistribution:
+    def deploy(self, image: AwsImageDetail, arch: Union[Architecture, None]) -> str:
         chosen_dist = self._choose_dist(image, arch)
 
         self.ontology.envs.export_defaults()
@@ -44,7 +41,8 @@ class AwsLambdaDriver(LambdaDriver):
             PolicyArn=self._put_policy(tags)["Policy"]["Arn"],
         )
         self._put_lambda(chosen_dist, tags)
-        return chosen_dist
+
+        return f"deployed {self.ontology.context.resource_name} to aws"
 
     def _choose_dist(
         self, image: AwsImageDetail, arch: Union[Architecture, None]
@@ -116,13 +114,13 @@ class AwsLambdaDriver(LambdaDriver):
             cmd.append("--follow")
         os.system(" ".join(cmd))
 
-    def invoke(self, payload: str) -> LambdaInvokeResponse:
+    def invoke(self, payload: str) -> str:
         response = clients.lmb.invoke(
             FunctionName=self.function_name, Payload=payload, LogType="Tail"
         )
         response["Payload"] = response["Payload"].read()
         response["Payload"] = response["Payload"].decode("utf-8")
-        return LambdaInvokeResponse(**response)
+        return LambdaInvokeResponse(**response).json()
 
     def _put_role(self, tags: Optional[Dict[str, str]] = None) -> Dict:
         role_name = self.function_name

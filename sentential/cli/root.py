@@ -2,12 +2,12 @@ from typing import List, Optional
 import typer
 from sentential.lib.clients import clients
 from sentential.lib.drivers.local_images import LocalImagesDriver
+from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.drivers.aws_ecr import AwsEcrDriver
 from sentential.lib.template import Init
 from sentential.lib.shapes import Architecture, Runtimes
 from sentential.lib.ontology import Ontology
 from sentential.lib.joinery import Joinery
-from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG
 from rich import print
 
 root = typer.Typer()
@@ -23,7 +23,9 @@ def init(repository_name: str, runtime: Runtimes):
 @root.command()
 def build(arch: Architecture = typer.Option(Architecture.system().value)):
     """build lambda image"""
-    LocalImagesDriver(Ontology()).build(arch)
+    ontology = Ontology()
+    LocalLambdaDriver(ontology).destroy()
+    LocalImagesDriver(ontology).build(arch)
 
 
 @root.command()
@@ -51,9 +53,9 @@ def login():
 
 
 @root.command()
-def ls():
+def ls(verbose: bool = typer.Option(False)):
     """list image information"""
-    print(Joinery(Ontology()).list())
+    print(Joinery(Ontology()).list(verbose))
 
 
 @root.command()

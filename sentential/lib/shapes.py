@@ -5,7 +5,7 @@ from pathlib import PosixPath
 from typing import List, Union, Optional, Dict
 from pydantic import BaseModel, Field, validator, Json
 from sentential.support.shaper import Shaper
-from sentential.lib.exceptions import ArchitectureDiscoveryError, ShapeError
+from sentential.lib.exceptions import ShapeError
 from sentential.lib.clients import clients
 
 #
@@ -32,7 +32,7 @@ class Provision(Shaper):
 
     @validator("auth_type")
     def is_valid_auth_type(cls, v):
-        valid_auth_types = ["NONE", "AWS"]
+        valid_auth_types = ["NONE", "AWS_IAM"]
         if v not in valid_auth_types:
             raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
         return v

@@ -1,6 +1,6 @@
 import os
 from sys import platform
-from typing import Dict
+from typing import Dict, Union
 from sentential.lib.clients import clients
 from sentential.lib.drivers.local_bridge import LocalBridge
 from sentential.lib.template import Policy
@@ -8,6 +8,8 @@ from sentential.lib.ontology import Ontology
 from sentential.lib.exceptions import LocalDriverError
 from sentential.lib.drivers.spec import LambdaDriver
 from python_on_whales.components.image.cli_wrapper import Image
+from python_on_whales.components.container.cli_wrapper import Container
+
 from sentential.lib.shapes import (
     AWSAssumeRole,
     AWSCredentials,
@@ -20,7 +22,7 @@ class LocalLambdaDriver(LambdaDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
 
-    def deploy(self, image: Image, inject_env: Dict[str, str] = {}) -> Image:
+    def deploy(self, image: Image, inject_env: Dict[str, str] = {}) -> str:
         LocalBridge.setup()  # hoist to cli callback when things are more generalized
         self.destroy()
         self.ontology.envs.export_defaults()
@@ -61,11 +63,13 @@ class LocalLambdaDriver(LambdaDriver):
             envs={**default_env, **credentials_env, **inject_env},
         )
 
-        return image
+        return f"deployed {self.ontology.context.resource_name} to local"
 
     def destroy(self) -> None:
         clients.docker.remove(
-            [LocalBridge.config.lambda_name], force=True, volumes=True
+            [LocalBridge.config.lambda_name, LocalBridge.config.gw_name],
+            force=True,
+            volumes=True,
         )
 
     def logs(self, follow: bool = False):
@@ -74,7 +78,7 @@ class LocalLambdaDriver(LambdaDriver):
             cmd.append("--follow")
         os.system(" ".join(cmd))
 
-    def invoke(self, payload: str) -> LambdaInvokeResponse:
+    def invoke(self, payload: str) -> str:
         local = clients.boto3.client(
             "lambda", endpoint_url=f"http://localhost:{LocalBridge.config.lambda_port}"
         )
@@ -83,7 +87,7 @@ class LocalLambdaDriver(LambdaDriver):
         )
         response["Payload"] = response["Payload"].read()
         response["Payload"] = response["Payload"].decode("utf-8")
-        return LambdaInvokeResponse(**response)
+        return LambdaInvokeResponse(**response).json()
 
     def _get_credentials(self) -> AWSCredentials:
         policy_json = Policy(self.ontology).render()
