@@ -72,6 +72,7 @@ class Architecture(Enum):
 # ECR
 #
 
+
 # describe_image()
 class AwsImageDescription(BaseModel):
     imageDigest: str

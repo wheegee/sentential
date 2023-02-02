@@ -44,7 +44,7 @@ class Shaper(BaseModel):
 
     @classmethod
     def constrained_parse_obj(cls, data: dict):
-        for (name, field) in cls.__fields__.items():
+        for name, field in cls.__fields__.items():
             # disallow types
             if field.outer_type_ not in ALLOWED_TYPES:
                 raise ShaperError(f"disallowed type {field.outer_type_}")
