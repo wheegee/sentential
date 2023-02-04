@@ -1,5 +1,3 @@
-# `sntl` 
-
 ## Install
 `pip install sentential`
 
@@ -7,7 +5,7 @@
 `sntl --help`
 
 ## Documentation
-See the [docs](https://wheegee.github.io/sentential/)
+See the [wiki](https://github.com/wheegee/sentential/wiki)
 
 ## Develop
 ### venv

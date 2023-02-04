@@ -1,0 +1,12 @@
+<!-- docs/_sidebar.md -->
+* [Home](README.md)
+* [Install](install.md)
+* [Flow](basics.md)
+* [Explore](examples/project.md)
+    * [Hello World](examples/echo.md)
+    * [Envs & Secrets](examples/envs.md)
+    * [Policy](examples/policy.json.md)
+    * [Partition](examples/partition.md)
+    * [Shapes](examples/shapes.md)
+    * [Function URL](examples/public_url.md)
+    * [Custom Images](examples/custom_images.md)
