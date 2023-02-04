@@ -7,7 +7,7 @@
 `sntl --help`
 
 ## Documentation
-See the [wiki](https://github.com/wheegee/sentential/wiki)
+See the [docs](https://wheegee.github.io/sentential/)
 
 ## Develop
 ### venv
