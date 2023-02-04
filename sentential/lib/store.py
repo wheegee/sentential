@@ -36,7 +36,7 @@ class Common:
             raise StoreError(f"no key '{key}' persisted")
 
     def clear(self):
-        for (key, value) in self._unsafe_dict().items():
+        for key, value in self._unsafe_dict().items():
             self.delete(key)
 
 
@@ -58,7 +58,7 @@ class GenericStore(Common):
     def read(self) -> Table:
         data = self._unsafe_dict()
         table = Table("field", "value", box=box.SIMPLE)
-        for (key, value) in data.items():
+        for key, value in data.items():
             table.add_row(key, value)
         return table
 
@@ -94,7 +94,7 @@ class ModeledStore(Common):
     def export_defaults(self) -> None:
         if self.model:
             current_state = self._unsafe_dict()
-            for (name, field) in self.model.__fields__.items():
+            for name, field in self.model.__fields__.items():
                 if field.name not in current_state.keys():
                     if hasattr(field, "default") and field.default != None:
                         self.write(field.name, field.default)
@@ -131,7 +131,6 @@ class ModeledStore(Common):
         return table
 
     def write(self, key: str, value: List[str]):
-
         # Typer doesn't support Union[str, List[str]], understandably
         # So desired behavior is implemented here, to the insult of typing
         if len(value) == 1:
