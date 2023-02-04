@@ -59,24 +59,6 @@ Inject this new policy statement along with the others.
 <!-- tabs:end -->
 
 
-
-
-Create a file `src/app.py` and populate it with...
-
-```python
-import boto3
-from os import environ
-
-MY_REGION = "us-west-2"
-
-region = environ.get('AWS_DEFAULT_REGION', MY_REGION)
-s3 = boto3.client("s3", region_name=region)
-
-def handler(event, context):
-     buckets = s3.list_buckets()['Buckets']
-     return [ bucket['Name'] for bucket in buckets ]
-```
-
 ### build
 
 ```shell
