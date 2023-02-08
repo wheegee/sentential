@@ -27,9 +27,10 @@ Create or modify...
 #### **./src/app.py**
 
 ```python
-# src/app.py
+from os import environ
+
 def handler(event, context):
-     return upper(event["str"])
+     return environ["MY_SECRET"]
 ```
 
 <!-- tabs:end -->
