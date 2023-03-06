@@ -6,6 +6,7 @@ from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.mounts.local_lambda_public_url import LocalLambdaPublicUrlMount
 from sentential.lib.mounts.aws_lambda_public_url import AwsLambdaPublicUrlMount
+from sentential.lib.mounts.aws_event_schedule import AwsEventScheduleMount
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Architecture
 
@@ -30,6 +31,9 @@ def aws(
     tag: str = typer.Argument(None),
     arch: Architecture = typer.Option(None),
     public_url: bool = typer.Option(False),
+    schedule: str = typer.Option(
+        None, help="<Minutes> <Hours> <Day-of-month> <Month> <Day-of-week> <Year>"
+    ),  # TODO: add cron expression validation
 ):
     """deploy lambda image to aws"""
     ontology = Ontology()
@@ -40,3 +44,8 @@ def aws(
         AwsLambdaPublicUrlMount(ontology).mount()
     else:
         AwsLambdaPublicUrlMount(ontology).umount()
+
+    if schedule:
+        AwsEventScheduleMount(ontology).mount(schedule)
+    else:
+        AwsEventScheduleMount(ontology).umount()
