@@ -488,7 +488,7 @@ testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
 name = "polars"
-version = "0.15.18"
+version = "0.15.16"
 description = "Blazingly fast DataFrame library"
 category = "main"
 optional = false
@@ -500,7 +500,7 @@ typing_extensions = {version = ">=4.0.0", markers = "python_version < \"3.10\""}
 [package.extras]
 all = ["polars[connectorx,deltalake,fsspec,matplotlib,numpy,pandas,pyarrow,timezone,xlsx2csv]"]
 connectorx = ["connectorx"]
-deltalake = ["deltalake (>=0.6.2)"]
+deltalake = ["deltalake"]
 fsspec = ["fsspec"]
 matplotlib = ["matplotlib"]
 numpy = ["numpy (>=1.16.0)"]
@@ -1025,7 +1025,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "4bbd524221d193e7145e511ea6bb7ef31475de2dc73769f0d713c2375d9bcd46"
+content-hash = "749f9ac799cb049c78746d7a57128acd0ca48be9056284801aa0936fc2b33e50"
 
 [metadata.files]
 attrs = [
@@ -1395,12 +1395,12 @@ pluggy = [
     {file = "pluggy-1.0.0.tar.gz", hash = "sha256:4224373bacce55f955a878bf9cfa763c1e360858e330072059e10bad68531159"},
 ]
 polars = [
-    {file = "polars-0.15.18-cp37-abi3-macosx_10_7_x86_64.whl", hash = "sha256:3d31d881cb7e8f433567ef32c0c8e293f80ad7c53c73339d458a7227c8145db2"},
-    {file = "polars-0.15.18-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:9a920e333f288ff11248a8708019f04aaead2e707aed4dc5f9d3c487de861d6b"},
-    {file = "polars-0.15.18-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:47b407d9ef401dcb3b10fc76f25c4ce9e7177c9b11c161e4d19d8bb486a3cdcc"},
-    {file = "polars-0.15.18-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:915e23170683b86d6b1dd47aca04de43158efa2cb312aa429c2210a4020db3ec"},
-    {file = "polars-0.15.18-cp37-abi3-win_amd64.whl", hash = "sha256:086e9101b6dd47d3001515eb7ed9e58195a83a23e4d4596fa3f233cc05f1d070"},
-    {file = "polars-0.15.18.tar.gz", hash = "sha256:6ccc76d981c1524842aa9a78d0b030b228db3facc56222c8d23b99f1ba3b72a1"},
+    {file = "polars-0.15.16-cp37-abi3-macosx_10_7_x86_64.whl", hash = "sha256:833524a5ec8da84aad2828a23a23441bcb73ac280f883129ec075c05d1d1d13e"},
+    {file = "polars-0.15.16-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:80238aae55b502b673e0e0c9bf0652697221b5af63ab34beb03ba626d55bc3e5"},
+    {file = "polars-0.15.16-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:7dbacba17140a73a6c22908654987178930e329f2ac5faebfd42fff820adfd49"},
+    {file = "polars-0.15.16-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:564ac6c116df24b3d71baccf8756c2ca60406327b0dd6153de4067507a0fc6fb"},
+    {file = "polars-0.15.16-cp37-abi3-win_amd64.whl", hash = "sha256:558d3d51dbdf4e0eaed6acc8b51a8ebf99a54ce8f7db3526de8e98adcb6f8f8f"},
+    {file = "polars-0.15.16.tar.gz", hash = "sha256:41457f817cd80a3326bb77dc0636cb019d41bba3f27aa60a1d15ef5855ac2016"},
 ]
 pycparser = [
     {file = "pycparser-2.21-py2.py3-none-any.whl", hash = "sha256:8ee45429555515e1f6b185e78100aea234072576aa43ab53aefcae078162fca9"},
