@@ -1,4 +1,7 @@
-### Custom Images
+### Python
+
+> reduce this doc down after filling in requirements.md
+
 By default Sentential templates an [AWS maintained base image](https://gallery.ecr.aws/lambda?page=1) into your `./Dockerfile` at `init` time. For the most part, these images do the job.
 
 However, there are reasons to use your own desired distribution. For example, your organization might require you to only build off of internally maintained base docker images. Or perhaps you are really leet and you refuse to use anything other than Arch. Whatever the case may be, this is a guide aims to help you on your way.

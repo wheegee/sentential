@@ -1,5 +1,5 @@
 ## Partition
-You may already be asking yourself: "how do I deploy more than one lambda?"
+You may already be asking yourself: "how do I deploy more than one instance of my lambda?"
 
 Enter `PARTITION`.
 

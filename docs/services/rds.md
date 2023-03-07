@@ -23,7 +23,13 @@ In your infrastructure directory create an `rds.tf` like so...
 
 This should already be populated from the [prerequisite step]((/services/vpc)).
 
-#### **./elasticache.tf**
+#### **./rds.tf**
+
+> :lock: best practice deams you should
+> 1. Not allow secrets to enter your terraform state.
+> 2. Not use static credentials for RDS access.
+>
+> See the [further reading](/services/rds?id=further-reading) section for more.
 
 ```hcl
 locals {
@@ -246,11 +252,6 @@ Now we can move on to our usual validation flow...
 ```
 
 ### further reading
-
-> :lock: best practice deams you should
-> 1. Not allow secrets into your terraform state.
-> 2. Not use static credentials for RDS access.
-> Below are some readings on mitigating these risks...
 
 - [Terraform State & Secrets](https://developer.hashicorp.com/terraform/language/state/sensitive-data)
 - [IAM RDS connections](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)
