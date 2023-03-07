@@ -14,11 +14,11 @@ class AwsEventScheduleMount:
     def autocomplete(self) -> None:
         pass
 
-    def mount(self, schedule) -> str:
+    def mount(self, schedule, payload) -> str:
         resp = self._put_rule(schedule)
         _ = self._put_permission(resp["RuleArn"])
-        _ = self._put_targets()
-        return resp["RuleArn"]
+        _ = self._put_targets(payload)
+        return f"mounted {schedule} to {self.resource_name}"
 
     def umount(self) -> None:
         _ = self._delete_targets()
@@ -26,24 +26,22 @@ class AwsEventScheduleMount:
         _ = self._delete_rule()
 
     def mounts(self) -> List[str]:
-        resp = clients.lmb.get_function_url_config(FunctionName=self.resource_name)
-        if "FunctionUrl" in resp:
-            return [resp["FunctionUrl"]]
+        resp = clients.ebr.describe_rule(Name=self.resource_name)
+        if "ScheduleExpression" in resp:
+            return [resp["ScheduleExpression"]]
         else:
             return []
 
     def _put_rule(self, schedule) -> Dict:
         try:
-            clients.ebr.delete_rule(Name=self.resource_name)
-        except clients.ebr.exceptions.ResourceNotFoundException:
+            return clients.ebr.put_rule(
+                Name=self.resource_name,
+                ScheduleExpression=f"cron({schedule})",
+            )
+        except clients.ebr.exceptions.InvalidEventPatternException:
             pass
 
-        return clients.ebr.put_rule(
-            Name=self.resource_name,
-            ScheduleExpression=f"cron({schedule})",
-        )
-
-    def _put_targets(self) -> None:
+    def _put_targets(self, payload) -> None:
         try:
             clients.ebr.put_targets(
                 Rule=self.resource_name,
@@ -51,6 +49,7 @@ class AwsEventScheduleMount:
                     {
                         "Id": self.resource_name,
                         "Arn": self.resource_arn,
+                        "Input": payload,
                     }
                 ],
             )
