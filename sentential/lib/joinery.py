@@ -15,6 +15,7 @@ from sentential.lib.drivers.aws_ecr import AwsEcrDriver
 from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
+from sentential.lib.mounts.aws_event_schedule import AwsEventScheduleMount
 from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG
 from pydantic import BaseModel
 from python_on_whales.components.image.cli_wrapper import Image
@@ -27,6 +28,7 @@ class Row(BaseModel):
     dist_digests: List[str]
     status: str
     hrefs: List[str]
+    mounts: List[str]
 
 
 class Joinery:
@@ -68,6 +70,7 @@ class Joinery:
             row["dist_digests"] = []
             row["status"] = ""
             row["hrefs"] = []
+            row["mounts"] = []
 
             for container in clients.docker.ps(True):
                 if cwi.id == container.image:
@@ -86,6 +89,7 @@ class Joinery:
         rows = []
         deployed_function = self._deployed_function()
         deployed_url = self._deployed_url()
+        deployed_schedule = self._deployed_schedule()
         for manifest in self.ecr_images._manifest_lists():
             if not isinstance(manifest.imageManifest, AwsManifestList):
                 raise JoineryError("expected AwsManifestList object")
@@ -99,6 +103,7 @@ class Joinery:
             )
             row["status"] = ""
             row["hrefs"] = []
+            row["mounts"] = []
 
             if isinstance(deployed_function, AwsFunction):
                 deployed_digest = self._humanize_digest(
@@ -112,6 +117,8 @@ class Joinery:
                     row["hrefs"].append(self._webconsole())
                     if isinstance(deployed_url, AwsFunctionPublicUrl):
                         row["hrefs"].append(self._public_url(deployed_url.FunctionUrl))
+                    if deployed_schedule is not None:
+                        row["mounts"].append(deployed_schedule)
             rows.append(Row(**row))  # row yer boat
 
         return sorted(rows, key=lambda row: LooseVersion(row.build), reverse=True)
@@ -157,6 +164,13 @@ class Joinery:
                 FunctionName=self.ontology.context.resource_name
             )
             return AwsFunctionPublicUrl(**resp)
+        except:
+            return None
+        
+    @lru_cache()
+    def _deployed_schedule(self) -> Union[None, str]:
+        try:
+            return AwsEventScheduleMount(Ontology()).mounts()[0]
         except:
             return None
 
