@@ -25,7 +25,9 @@ class TestAwsEventScheduleMount:
         payload = '{"foo": "bar"}'
         image = aws_ecr_driver.get_image()
         aws_lambda_driver.deploy(image, Architecture.system())
-        AwsEventScheduleMount(aws_lambda_driver.ontology).mount(cron_expression, payload)
+        AwsEventScheduleMount(aws_lambda_driver.ontology).mount(
+            cron_expression, payload
+        )
         schedule_expression = self.get_rule(
             aws_lambda_driver.ontology.context.resource_name
         )["ScheduleExpression"]

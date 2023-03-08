@@ -166,7 +166,7 @@ class Joinery:
             return AwsFunctionPublicUrl(**resp)
         except:
             return None
-        
+
     @lru_cache()
     def _deployed_schedule(self) -> Union[None, str]:
         try:
