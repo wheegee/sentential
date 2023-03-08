@@ -3,7 +3,7 @@
 This example aims to illustrate how to arrive at a basic RDS setup with a lambda.
 
 ### prerequisites
-1. you have initialized the [explore project](/examples/project).
+1. you have initialized the [explore project](/explore/project).
 1. you have initialized the [service infrastructure vpc](/services/vpc).
 
 ### infrastructure

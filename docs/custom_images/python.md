@@ -10,7 +10,7 @@ Note that nothing in this document is particular to Sentential. But Sentential d
 
 
 ### prerequisites
-you have initialized the [explore project](/examples/project) and are operating in said directory.
+you have initialized the [explore project](/explore/project) and are operating in said directory.
 
 ### develop
 

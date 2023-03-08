@@ -10,7 +10,7 @@ In this document we are going to briefly explore the behavior of `PARTITION`; yo
 > :warning: This document describes a key configuration for Sentential which is camping on the environment variable `PARTITION`. I say "camping" because `PARTITION` is a really useful environment variable for a lot of different applications. We will be changing this in the near future to something more wise like `SNTL_ENV`.
 
 ### prerequisites
-you have initialized the [explore project](/examples/project) and are operating in said directory.
+you have initialized the [explore project](/explore/project) and are operating in said directory.
 
 ### scenario
 Our development team has convinced product that we have to fix some tech debt. Across our code base is a plethora of string-to-uppercase method implementations. Instead of using STDLIB or a shared library, we have decided to go cloud native with a microservice to uppercase strings, replacing the old-school approaches with a more modern and convenient POST request. We are deciding between naming it after a Lord Of The Rings character or just picking a random word and removing a few letters (`sntl`?). That's not blocking though, so let's get to work.

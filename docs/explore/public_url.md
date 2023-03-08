@@ -6,7 +6,7 @@ Sentential exposes a simple way to deploy HTTP based lambdas both locally and on
 To demonstrate deploying an HTTP based lambda, we are going to use the python framework FastAPI. As an example, let's implement a "what is my IP?" service.
 
 ### prerequisites
-you have initialized the [explore project](/examples/project) and are operating in said directory.
+you have initialized the [explore project](/explore/project) and are operating in said directory.
 
 ### develop
 

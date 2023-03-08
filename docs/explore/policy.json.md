@@ -2,7 +2,7 @@
 Lambdas allow for granting granular permissions to your function via AWS IAM [actions and conditions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html). Sententinal implements this via the `policy.json` of your project. To exercise this, let's create a lambda which returns a list of all S3 buckets in our current AWS account.
 
 ### Prerequisites
-you have initialized the [explore project](/examples/project) and are operating in said directory.
+you have initialized the [explore project](/explore/project) and are operating in said directory.
 
 
 ### develop

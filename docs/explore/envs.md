@@ -4,7 +4,7 @@ When running an application we generally want secrets and configurations in our 
 > :lock: Currently all key/values stored via Sentential are encrypted in SSM. By default `aws/ssm` KMS key is used, this can be modified via the `AWS_KMS_KEY_ALIAS` environment variable.
 
 ### prerequisites
-you have initialized the [explore project](/examples/project) and are operating in said directory.
+you have initialized the [explore project](/explore/project) and are operating in said directory.
 
 ### env store
 let's write an environment variable to the env store and read it back...

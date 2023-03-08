@@ -2,7 +2,7 @@
 Let's deploy a simple `echo` style function to aquaint ourselves with Sentential.
 
 ### prerequisites
-you have initialized the [explore project](/examples/project) and are operating in said directory.
+you have initialized the [explore project](/explore/project) and are operating in said directory.
 
 ### develop
 
