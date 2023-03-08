@@ -39,7 +39,6 @@ class AwsEventScheduleMount:
             ScheduleExpression=schedule,
         )
         return EbrPutRuleResponse(**resp)
-    
 
     def _put_targets(self, payload) -> None:
         try:

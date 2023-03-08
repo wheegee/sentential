@@ -406,9 +406,11 @@ class LambdaInvokeResponse(BaseModel):
     StatusCode: int
     Payload: str
 
+
 #
 # Mount Shapes (time to split up shapes)
 #
+
 
 class EbrDescribeRuleResponse(BaseModel):
     Name: str
@@ -419,6 +421,7 @@ class EbrDescribeRuleResponse(BaseModel):
     CreatedBy: str
     ResponseMetadata: Dict[str, Any]
     RetryAttempts: Optional[int]
+
 
 class EbrPutRuleResponse(BaseModel):
     RuleArn: str
