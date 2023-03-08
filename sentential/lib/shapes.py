@@ -11,12 +11,12 @@ from sentential.lib.clients import clients
 #
 # Global Constants
 #
+
 CURRENT_WORKING_IMAGE_TAG = "cwi"
 
 #
 # Internally Defined Shapes
 #
-
 
 class Provision(Shaper):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
@@ -47,7 +47,6 @@ class Provision(Shaper):
 #   x86_64   amd64      # all modern Intel-compatible x84 64-Bit architectures
 #   x86-64   amd64      # same
 
-
 class Architecture(Enum):
     amd64 = "amd64"
     arm64 = "arm64"
@@ -72,7 +71,6 @@ class Architecture(Enum):
 # ECR
 #
 
-
 # describe_image()
 class AwsImageDescription(BaseModel):
     imageDigest: str
@@ -86,6 +84,7 @@ class AwsImageDescriptions(BaseModel):
 
 # Manifest List
 # https://docs.docker.com/registry/spec/manifest-v2-2/
+
 class AwsManifestListManifestPlatform(BaseModel):
     architecture: str
     os: str
@@ -106,6 +105,7 @@ class AwsManifestList(BaseModel):
 
 # Image Manifest
 # https://docs.docker.com/registry/spec/manifest-v2-2/
+
 class AwsImageManifestLayer(BaseModel):
     mediaType: str = "application/vnd.docker.image.rootfs.diff.tar.gzip"
     size: int
@@ -149,6 +149,7 @@ class AwsEcrAuthorizationToken(BaseModel):
 #
 # IAM
 #
+
 class AWSPolicyStatement(BaseModel):
     """https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_statement.html"""
 
@@ -217,7 +218,6 @@ class AWSAssumeRole(BaseModel):
 #
 # Lambda
 #
-
 
 class Runtimes(Enum):
     """https://gallery.ecr.aws/lambda?page=1"""
@@ -311,6 +311,7 @@ class AwsFunction(BaseModel):
 #
 # Pathing
 #
+
 class Paths(BaseModel):
     root: PosixPath
     sntl: PosixPath
@@ -340,6 +341,7 @@ def derive_paths(root: PosixPath = PosixPath(".")):
 #
 # API Gateway
 #
+
 class ApiGatewayIntegration(BaseModel):
     ConnectionType: str = "INTERNET"
     Description: str = "managed by sentential"
@@ -408,7 +410,7 @@ class LambdaInvokeResponse(BaseModel):
 
 
 #
-# Mount Shapes (time to split up shapes)
+# EventBridge
 #
 
 

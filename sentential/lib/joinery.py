@@ -114,11 +114,11 @@ class Joinery:
                     or deployed_digest in row["dist_digests"]
                 ):
                     row["status"] = deployed_function.Configuration.State.lower()
-                    row["hrefs"].append(self._webconsole())
+                    row["hrefs"].append(self._console_web())
                     if isinstance(deployed_url, AwsFunctionPublicUrl):
                         row["hrefs"].append(self._public_url(deployed_url.FunctionUrl))
                     if deployed_schedule is not None:
-                        row["mounts"].append(deployed_schedule)
+                        row["mounts"].append(self._console_schedule(deployed_schedule))
             rows.append(Row(**row))  # row yer boat
 
         return sorted(rows, key=lambda row: LooseVersion(row.build), reverse=True)
@@ -177,11 +177,20 @@ class Joinery:
     def _public_url(self, url: str) -> str:
         return f"[link={url}]public_url[/link]"
 
-    def _webconsole(self) -> str:
+    def _console_web(self) -> str:
         region = self.ontology.context.region
         function = self.ontology.context.resource_name
         url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function}"
         return f"[link={url}]console[/link]"
+    
+    def _console_schedule(self, schedule: str):
+        region = self.ontology.context.region
+        function = self.ontology.context.resource_name
+        url = f"https://{region}.console.aws.amazon.com/events/home?region={region}#/eventbus/default/rules/{function}"
+        try:
+            return f"[link={url}]{schedule}[/link]"
+        except:
+            return None
 
     def _extract_arch(self, manifest: AwsManifestList) -> str:
         return ", ".join([m.platform.architecture for m in manifest.manifests])
