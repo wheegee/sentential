@@ -36,7 +36,7 @@ class AwsEventScheduleMount:
         try:
             return clients.ebr.put_rule(
                 Name=self.resource_name,
-                ScheduleExpression=f"cron({schedule})",
+                ScheduleExpression=schedule,
             )
         except clients.ebr.exceptions.InvalidEventPatternException:
             pass

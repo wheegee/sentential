@@ -21,7 +21,7 @@ class TestAwsEventScheduleMount:
     def test_mount(
         self, aws_lambda_driver: AwsLambdaDriver, aws_ecr_driver: AwsEcrDriver
     ):
-        cron_expression = "0 20 * * ? *"
+        cron_expression = "cron(0 20 * * ? *)"
         payload = '{"foo": "bar"}'
         image = aws_ecr_driver.get_image()
         aws_lambda_driver.deploy(image, Architecture.system())
@@ -32,7 +32,7 @@ class TestAwsEventScheduleMount:
         schedule_targets = self.get_targets(
             aws_lambda_driver.ontology.context.resource_name
         )["Targets"]
-        assert f"cron({cron_expression})" == schedule_expression
+        assert cron_expression == schedule_expression
         assert (
             aws_lambda_driver.ontology.context.resource_arn
             == schedule_targets[0]["Arn"]
