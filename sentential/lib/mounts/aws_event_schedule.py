@@ -1,7 +1,7 @@
 from typing import Dict, List, cast
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import Provision
+from sentential.lib.shapes import Provision, EbrDescribeRuleResponse, EbrPutRuleResponse
 
 
 class AwsEventScheduleMount:
@@ -16,7 +16,7 @@ class AwsEventScheduleMount:
 
     def mount(self, schedule, payload) -> str:
         resp = self._put_rule(schedule)
-        _ = self._put_permission(resp["RuleArn"])
+        _ = self._put_permission(resp.RuleArn)
         _ = self._put_targets(payload)
         return f"mounted {schedule} to {self.resource_name}"
 
@@ -27,19 +27,19 @@ class AwsEventScheduleMount:
 
     def mounts(self) -> List[str]:
         resp = clients.ebr.describe_rule(Name=self.resource_name)
-        if "ScheduleExpression" in resp:
-            return [resp["ScheduleExpression"]]
+        resp = EbrDescribeRuleResponse(**resp)
+        if resp.ScheduleExpression:
+            return [resp.ScheduleExpression]
         else:
             return []
 
-    def _put_rule(self, schedule) -> Dict:
-        try:
-            return clients.ebr.put_rule(
-                Name=self.resource_name,
-                ScheduleExpression=schedule,
-            )
-        except clients.ebr.exceptions.InvalidEventPatternException:
-            pass
+    def _put_rule(self, schedule) -> EbrPutRuleResponse:
+        resp = clients.ebr.put_rule(
+            Name=self.resource_name,
+            ScheduleExpression=schedule,
+        )
+        return EbrPutRuleResponse(**resp)
+    
 
     def _put_targets(self, payload) -> None:
         try:
@@ -56,7 +56,7 @@ class AwsEventScheduleMount:
         except clients.ebr.exceptions.ResourceNotFoundException:
             pass
 
-    def _put_permission(self, rule_arn) -> Dict:
+    def _put_permission(self, rule_arn) -> None:
         try:
             clients.lmb.remove_permission(
                 FunctionName=self.resource_name,
@@ -65,7 +65,7 @@ class AwsEventScheduleMount:
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
 
-        return clients.lmb.add_permission(
+        clients.lmb.add_permission(
             FunctionName=self.resource_name,
             StatementId="EventBridgeAllowInvoke",
             Action="lambda:InvokeFunction",

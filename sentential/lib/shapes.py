@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from enum import Enum
 from pathlib import PosixPath
-from typing import List, Union, Optional, Dict
+from typing import Any, List, Union, Optional, Dict
 from pydantic import BaseModel, Field, validator, Json
 from sentential.support.shaper import Shaper
 from sentential.lib.exceptions import ShapeError
@@ -405,3 +405,22 @@ class LambdaInvokeResponse(BaseModel):
     ResponseMetadata: Dict
     StatusCode: int
     Payload: str
+
+#
+# Mount Shapes (time to split up shapes)
+#
+
+class EbrDescribeRuleResponse(BaseModel):
+    Name: str
+    Arn: str
+    ScheduleExpression: str
+    State: str
+    EventBusName: str
+    CreatedBy: str
+    ResponseMetadata: Dict[str, Any]
+    RetryAttempts: Optional[int]
+
+class EbrPutRuleResponse(BaseModel):
+    RuleArn: str
+    ResponseMetadata: Dict[str, Any]
+    RetryAttempts: Optional[int]
