@@ -16,6 +16,13 @@ sntl --help
 
 See the [docs](https://wheegee.github.io/sentential/).
 
+### Local serving
+
+```sh
+npm i docsify-cli -g
+docsify serve docs/
+```
+
 ## Develop
 
 ### Virtual environment
