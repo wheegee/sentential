@@ -182,7 +182,7 @@ class Joinery:
         function = self.ontology.context.resource_name
         url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function}"
         return f"[link={url}]console[/link]"
-    
+
     def _console_schedule(self, schedule: str):
         region = self.ontology.context.region
         function = self.ontology.context.resource_name
