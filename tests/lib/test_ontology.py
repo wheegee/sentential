@@ -70,9 +70,8 @@ class TestContext(object):
 
     def test_resource_name(self, ontology: Ontology):
         partition = ontology.context.partition
-        region = ontology.context.region
         repo = ontology.context.repository_name
-        assert ontology.context.resource_name == f"{partition}-{region}-{repo}"
+        assert ontology.context.resource_name == f"{partition}-{repo}"
 
     def test_ecr_rest_url(self, ontology: Ontology):
         host = ontology.context.registry_url

@@ -24,7 +24,7 @@ class Context:
 
     @property
     def resource_name(self) -> str:
-        return f"{self.partition}-{self.region}-{self.repository_name}"
+        return f"{self.partition}-{self.repository_name}"
 
     @property
     def resource_arn(self) -> str:
