@@ -22,6 +22,7 @@ class AwsLambdaDriver(LambdaDriver):
         self.ontology = ontology
         self.function_name = ontology.context.resource_name
         self.policy_arn = f"arn:aws:iam::{self.ontology.context.account_id}:policy/{self.ontology.context.resource_name}"
+        self.log_group = f"/aws/lambda/{self.function_name}"
 
     @property
     def provision(self) -> Provision:
@@ -41,6 +42,7 @@ class AwsLambdaDriver(LambdaDriver):
             PolicyArn=self._put_policy(tags)["Policy"]["Arn"],
         )
         self._put_lambda(chosen_dist, tags)
+        self._put_log_policy()
 
         return f"deployed {self.ontology.context.resource_name} to aws"
 
@@ -121,6 +123,9 @@ class AwsLambdaDriver(LambdaDriver):
         response["Payload"] = response["Payload"].read()
         response["Payload"] = response["Payload"].decode("utf-8")
         return LambdaInvokeResponse(**response).json()
+
+    def clean(self) -> None:
+        self._clean_logs()
 
     def _put_role(self, tags: Optional[Dict[str, str]] = None) -> Dict:
         role_name = self.function_name
@@ -249,3 +254,20 @@ class AwsLambdaDriver(LambdaDriver):
             clients.lmb.tag_resource(Resource=function["FunctionArn"], Tags=tags)
 
         return function
+
+    def _put_log_policy(self) -> None:
+        try:
+            clients.logs.put_retention_policy(
+                logGroupName=self.log_group,
+                retentionInDays=self.provision.log_retention,
+            )
+        except clients.logs.exceptions.ResourceNotFoundException:
+            pass
+
+    def _clean_logs(self) -> None:
+        try:
+            clients.logs.delete_log_group(
+                logGroupName=self.log_group,
+            )
+        except clients.logs.exceptions.ResourceNotFoundException:
+            pass
