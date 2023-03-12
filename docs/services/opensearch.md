@@ -96,30 +96,24 @@ from opensearchpy import OpenSearch, AWSV4SignerAuth, RequestsHttpConnection
 
 if os.environ.get("HOSTNAME") != "sentential":
     print("establishing connection to opensearch...")
+    host = os.environ.get("OPENSEARCH_HOST")
     credentials = boto3.Session().get_credentials()
-    auth = AWSV4SignerAuth(credentials, 'us-west-2')
-    client = OpenSearch(    
-                hosts=os.environ.get("OPENSEARCH_HOST"),    
-                http_compress=True,    
-                http_auth=auth,    
-                use_ssl=True,
-                verify_certs=False,    
-                ssl_assert_hostname=False,    
-                ssl_show_warn=False,    
-                connection_class=RequestsHttpConnection
-            )
+    http_auth = AWSV4SignerAuth(credentials, 'us-west-2')
 else:
     print("establising connection to host.docker.internal opensearch...")
-    client = OpenSearch(    
-                hosts='host.docker.internal',    
-                http_compress=True,    
-                http_auth="admin:admin",    
-                use_ssl=True,
-                verify_certs=False,    
-                ssl_assert_hostname=False,    
-                ssl_show_warn=False,
-                connection_class=RequestsHttpConnection
-            )
+    hosts='host.docker.internal'
+    http_auth="admin:admin"
+
+client = OpenSearch(    
+          hosts=host,
+          http_compress=True,
+          http_auth=auth,
+          use_ssl=True,
+          verify_certs=False,
+          ssl_assert_hostname=False,
+          ssl_show_warn=False,
+          connection_class=RequestsHttpConnection
+     )
 
 def handler(event, context):
     return client.cat.indices()
