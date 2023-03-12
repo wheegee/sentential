@@ -15,6 +15,7 @@ class Clients:
         self.ecr = boto3.client("ecr", **boto3_config[env])
         self.ssm = boto3.client("ssm", **boto3_config[env])
         self.kms = boto3.client("kms", **boto3_config[env])
+        self.ebr = boto3.client("events", **boto3_config[env])
         self.api_gw = boto3.client("apigatewayv2", **boto3_config[env])
         self.cloudwatch = boto3.client("logs", **boto3_config[env])
         self.docker = docker

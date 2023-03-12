@@ -46,7 +46,7 @@ class TestLocalLambdaDriver:
             cwi,
             {"AWS_ENDPOINT": "http://host.docker.internal:5000"},
         )
-        assert "AKIAIOSFODNN7EXAMPLE-us-west-2-test" in message
+        assert "AKIAIOSFODNN7EXAMPLE-test" in message
 
     def test_invoke(self, local_lambda_driver: LocalLambdaDriver):
         response = json.loads(local_lambda_driver.invoke("{}"))

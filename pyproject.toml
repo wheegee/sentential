@@ -18,7 +18,7 @@ Jinja2 = "^3.1.2"
 tabulate = "^0.8.10"
 rich = "^12.5.1"
 semantic-version = "^2.10.0"
-polars = "^0.15.2"
+polars = "^0.16.12"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.2"

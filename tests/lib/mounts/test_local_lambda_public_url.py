@@ -34,7 +34,7 @@ class TestAwsLambdaPublicUrlMount:
             cwi, {"AWS_ENDPOINT": "http://host.docker.internal:5000"}
         )
         LocalLambdaPublicUrlMount(local_lambda_driver.ontology).mount()
-        assert "AKIAIOSFODNN7EXAMPLE-us-west-2-test" in message
+        assert "AKIAIOSFODNN7EXAMPLE-test" in message
 
     def test_containers(self):
         assert any(

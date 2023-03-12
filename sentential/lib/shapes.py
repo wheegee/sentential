@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 from enum import Enum
 from pathlib import PosixPath
-from typing import List, Union, Optional, Dict
+from typing import Any, List, Union, Optional, Dict
 from pydantic import BaseModel, Field, validator, Json
 from sentential.support.shaper import Shaper
 from sentential.lib.exceptions import ShapeError
@@ -11,6 +11,7 @@ from sentential.lib.clients import clients
 #
 # Global Constants
 #
+
 CURRENT_WORKING_IMAGE_TAG = "cwi"
 
 #
@@ -86,6 +87,8 @@ class AwsImageDescriptions(BaseModel):
 
 # Manifest List
 # https://docs.docker.com/registry/spec/manifest-v2-2/
+
+
 class AwsManifestListManifestPlatform(BaseModel):
     architecture: str
     os: str
@@ -106,6 +109,8 @@ class AwsManifestList(BaseModel):
 
 # Image Manifest
 # https://docs.docker.com/registry/spec/manifest-v2-2/
+
+
 class AwsImageManifestLayer(BaseModel):
     mediaType: str = "application/vnd.docker.image.rootfs.diff.tar.gzip"
     size: int
@@ -149,6 +154,8 @@ class AwsEcrAuthorizationToken(BaseModel):
 #
 # IAM
 #
+
+
 class AWSPolicyStatement(BaseModel):
     """https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_statement.html"""
 
@@ -311,6 +318,8 @@ class AwsFunction(BaseModel):
 #
 # Pathing
 #
+
+
 class Paths(BaseModel):
     root: PosixPath
     sntl: PosixPath
@@ -340,6 +349,8 @@ def derive_paths(root: PosixPath = PosixPath(".")):
 #
 # API Gateway
 #
+
+
 class ApiGatewayIntegration(BaseModel):
     ConnectionType: str = "INTERNET"
     Description: str = "managed by sentential"
@@ -405,3 +416,25 @@ class LambdaInvokeResponse(BaseModel):
     ResponseMetadata: Dict
     StatusCode: int
     Payload: str
+
+
+#
+# EventBridge
+#
+
+
+class EbrDescribeRuleResponse(BaseModel):
+    Name: str
+    Arn: str
+    ScheduleExpression: str
+    State: str
+    EventBusName: str
+    CreatedBy: str
+    ResponseMetadata: Dict[str, Any]
+    RetryAttempts: Optional[int]
+
+
+class EbrPutRuleResponse(BaseModel):
+    RuleArn: str
+    ResponseMetadata: Dict[str, Any]
+    RetryAttempts: Optional[int]

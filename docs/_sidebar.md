@@ -9,4 +9,5 @@
     * [Partition](examples/partition.md)
     * [Shapes](examples/shapes.md)
     * [Function URL](examples/public_url.md)
+    * [Schedule](examples/schedule.md)
     * [Custom Images](examples/custom_images.md)
