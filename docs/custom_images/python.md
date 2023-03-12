@@ -1,18 +1,10 @@
-### Python
+# Python
 
-> reduce this doc down after filling in requirements.md
+### Prerequisites
 
-By default Sentential templates an [AWS maintained base image](https://gallery.ecr.aws/lambda?page=1) into your `./Dockerfile` at `init` time. For the most part, these images do the job.
+You have initialized the [explore project](/explore/project) and are operating in said directory.
 
-However, there are reasons to use your own desired distribution. For example, your organization might require you to only build off of internally maintained base docker images. Or perhaps you are really leet and you refuse to use anything other than Arch. Whatever the case may be, this is a guide aims to help you on your way.
-
-Note that nothing in this document is particular to Sentential. But Sentential does make it easier to go about experimenting with building your own custom lambda docker image.
-
-
-### prerequisites
-you have initialized the [explore project](/explore/project) and are operating in said directory.
-
-### develop
+### Develop
 
 Create or modify...
 
@@ -28,7 +20,7 @@ def handler(event, context):
 
 #### **./lambda-entrypoint.sh**
 
-```sh
+```bash
 #!/bin/sh
 
 if [ $# -ne 1 ]; then
@@ -82,14 +74,15 @@ CMD ["app.handler"]
 
 <!-- tabs:end -->
 
-### build
-```shell
+### Build
+
+```bash
 > sntl build
 ```
 
-### verify
+### Verify
 
-```shell
+```bash
 > sntl deploy local
 > sntl invoke local '{}'
 
@@ -108,7 +101,8 @@ CMD ["app.handler"]
 }
 ```
 
-### further reading
+### Further reading
+
 - [custom runtime docs](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-walkthrough.html)
 - [runtime interface clients](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-images.html#runtimes-api-client)
 - [runtime interface emulator](https://github.com/aws/aws-lambda-runtime-interface-emulator)

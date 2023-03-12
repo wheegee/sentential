@@ -1,11 +1,12 @@
-## Services VPC Setup
+# Services VPC setup
 
-For the examples in this section, you will need a VPC. The below VPC setup using [terraform](https://www.terraform.io/) is a minimized configuration to illuminate the requirements of the examples. These requirements can be overlayed onto whatever setup, using whatever IaC.
+For the examples in this section, you will need a VPC. The below VPC setup using [Terraform](https://www.terraform.io/) is a minimized configuration to illuminate the requirements of the examples. These requirements can be overlayed onto whatever setup, using whatever IaC.
 
-### infrastructure
+### Infrastructure
+
 Create a folder somewhere reasonable for infrastructure code and populate it like so...
 
-```shell
+```bash
 > tree
 .
 └── main.tf
@@ -34,14 +35,14 @@ module "vpc" {
   name = "explore"
   cidr = "10.0.0.0/16"
 
-  azs             = ["us-west-2a", "us-west-2b", "us-west-2c"]
-  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  public_subnets  = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+  azs                 = ["us-west-2a", "us-west-2b", "us-west-2c"]
+  private_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  public_subnets      = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
   elasticache_subnets = ["10.0.104.0/24", "10.0.105.0/24", "10.0.106.0/24"]
-  database_subnets = ["10.0.107.0/24", "10.0.108.0/24", "10.0.109.0/24"]
+  database_subnets    = ["10.0.107.0/24", "10.0.108.0/24", "10.0.109.0/24"]
   
-  enable_nat_gateway = false
-  single_nat_gateway = false
+  enable_nat_gateway     = false
+  single_nat_gateway     = false
   one_nat_gateway_per_az = false
 
   enable_dns_hostnames = true
@@ -102,9 +103,9 @@ module "endpoints" {
       subnet_ids          = module.vpc.private_subnets
     },
     logs = {
-        service = "logs"
+        service             = "logs"
         private_dns_enabled = true
-        subnet_ids = module.vpc.private_subnets
+        subnet_ids          = module.vpc.private_subnets
     }
   }
 

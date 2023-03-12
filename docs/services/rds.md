@@ -1,15 +1,17 @@
-## RDS
+# RDS
 
-This example aims to illustrate how to arrive at a basic RDS setup with a lambda.
+This example aims to illustrate how to arrive at a basic RDS setup with a Lambda.
 
-### prerequisites
-1. you have initialized the [explore project](/explore/project).
-1. you have initialized the [service infrastructure vpc](/services/vpc).
+### Prerequisites
 
-### infrastructure
+1. You have initialized the [explore project](/explore/project).
+1. You have initialized the [service infrastructure vpc](/services/vpc).
+
+### Infrastructure
+
 In your infrastructure directory create an `rds.tf` like so...
 
-```shell
+```bash
 > touch rds.tf
 > tree
 .
@@ -47,11 +49,11 @@ resource "aws_db_instance" "rds" {
   username             = local.db_user
   password             = local.db_pass
   
-  publicly_accessible = false
-  skip_final_snapshot  = true
+  publicly_accessible                 = false
+  skip_final_snapshot                 = true
   iam_database_authentication_enabled = true
   
-  db_subnet_group_name = module.vpc.database_subnet_group_name
+  db_subnet_group_name   = module.vpc.database_subnet_group_name
   vpc_security_group_ids = [aws_security_group.allow_self.id]
 }
 
@@ -59,7 +61,8 @@ module "rds_proxy" {
   source = "terraform-aws-modules/rds-proxy/aws"
 
   create_proxy = true
-  iam_auth = "DISABLED"
+  iam_auth     = "DISABLED"
+
   name                   = local.name
   iam_role_name          = local.name
   vpc_subnet_ids         = module.vpc.private_subnets
@@ -100,6 +103,7 @@ resource "aws_secretsmanager_secret" "superuser" {
   name        = "${local.db_user}-1"
   description = "${aws_db_instance.rds.db_name} RDS super user credentials"
   kms_key_id  = data.aws_kms_alias.secretsmanager.id
+  
   tags = local.tags
 }
 
@@ -130,7 +134,7 @@ output "rds_pass" {
 
 <!-- tabs:end -->
 
-## develop
+### Develop
 
 For this example, we are going to connect to our RDS instance via the RDS Proxy and get the current time.
 
@@ -185,12 +189,13 @@ RUN pip install -r requirements.txt
 
 <!-- tabs:end -->
 
-### configure
-In order for our lambda to be able to reach our RDS Proxy in our private subnet, we need to add some configurations.
+### Configure
+
+In order for our Lambda to be able to reach our RDS Proxy in our private subnet, we need to add some configurations.
 
 Note that this information is output by our terraform.
 
-```shell
+```bash
 > sntl configs write security_group_ids '["<tf_output_1>", ..., "<tf_output_n>"]'
 > sntl configs write subnet_ids '["<tf_output_1>", ..., "<tf_output_n>"]'
 > sntl envs write RDS_HOST <tf_output>
@@ -200,11 +205,11 @@ Note that this information is output by our terraform.
 
 > :people_hugging: The interface for passing arrays to the `configs` store is cludgy and tempermental. Follow the exact formatting as above, improvements will be made.
 
-### validate
+### Validate
 
-Since RDS is best left secured within a private subnet, we don't have access to it from our local environment. So let's create a local postgres instance for our lambda to use...
+Since RDS is best left secured within a private subnet, we don't have access to it from our local environment. So let's create a local Postgres instance for our Lambda to use...
 
-```shell
+```bash
 docker run --name sentential-postgres \
            -p 5432:5432 \
            -e POSTGRES_USER=throwaway \
@@ -215,7 +220,7 @@ docker run --name sentential-postgres \
 
 Now we can move on to our usual validation flow...
 
-```shell
+```bash
 > sntl build
 > sntl deploy local
 > sntl invoke local '{}' 
@@ -234,24 +239,24 @@ Now we can move on to our usual validation flow...
 }
 ```
 
-### deploy
+### Deploy
 
-```shell
+```bash
 > sntl publish
 > sntl deploy aws
 > sntl invoke aws '{}' 
 # this should return a similar response to the local invocation
 ```
 
-### cleanup
+### Cleanup
 
-```shell
+```bash
 > sntl destroy local
 > sntl destroy aws
 > docker rm -f sentential-postgres
 ```
 
-### further reading
+### Further reading
 
 - [Terraform State & Secrets](https://developer.hashicorp.com/terraform/language/state/sensitive-data)
 - [IAM RDS connections](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/UsingWithRDS.IAMDBAuth.html)

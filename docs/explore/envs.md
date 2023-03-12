@@ -1,14 +1,18 @@
-### Envs & Secrets
+# Envs & Secrets
+
 When running an application we generally want secrets and configurations in our environment. Sentential makes this easy through the `sntl envs` command.
 
 > :lock: Currently all key/values stored via Sentential are encrypted in SSM. By default `aws/ssm` KMS key is used, this can be modified via the `AWS_KMS_KEY_ALIAS` environment variable.
 
-### prerequisites
-you have initialized the [explore project](/explore/project) and are operating in said directory.
+### Prerequisites
 
-### env store
-let's write an environment variable to the env store and read it back...
-```shell
+You have initialized the [explore project](/explore/project) and are operating in said directory.
+
+### Env store
+
+Let's write an environment variable to the env store and read it back...
+
+```bash
 > sntl envs write MY_SECRET superdoopersecret
 > sntl envs read
 
@@ -19,7 +23,8 @@ let's write an environment variable to the env store and read it back...
 
 This is the most basic usage of a larger concept, for more see [Stores & Shapes](/examples/shapes).
 
-### develop
+### Develop
+
 Create or modify...
 
 <!-- tabs:start -->
@@ -35,15 +40,15 @@ def handler(event, context):
 
 <!-- tabs:end -->
 
-### build
+### Build
 
-```shell
+```bash
 > sntl build
 ```
 
-### verify
+### Verify
 
-```shell
+```bash
 > sntl deploy local
 > sntl invoke local '{}'
 
@@ -62,15 +67,15 @@ def handler(event, context):
 }
 ```
 
-### publish
+### Publish
 
-```shell
+```bash
 > sntl publish
 ```
 
-### deploy
+### Deploy
 
-```shell
+```bash
 > sntl deploy aws
 > sntl invoke aws '{}'
 
@@ -93,9 +98,9 @@ def handler(event, context):
 
 ```
 
-### cleanup
+### Cleanup
 
-```shell
+```bash
 > sntl destroy aws
 > sntl envs clear
 ```

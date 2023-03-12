@@ -1,15 +1,17 @@
-## OpenSearch
+# OpenSearch
 
-This example aims to illustrate how to arrive at a basic OpenSearch setup with a lambda.
+This example aims to illustrate how to arrive at a basic OpenSearch setup with a Lambda.
 
-### prerequisites
-1. you have initialized the [explore project](/explore/project).
-1. you have initialized the [service infrastructure vpc](/services/vpc).
+### Prerequisites
 
-### infrastructure
+1. You have initialized the [explore project](/explore/project).
+1. You have initialized the [service infrastructure vpc](/services/vpc).
+
+### Infrastructure
+
 In your infrastructure directory create an `opensearch.tf` like so...
 
-```shell
+```bash
 > touch opensearch.tf
 > tree
 .
@@ -36,16 +38,17 @@ resource "aws_iam_service_linked_role" "explore" {
 
 resource "aws_opensearch_domain" "explore" {
   depends_on = [aws_iam_service_linked_role.explore]
+
   domain_name    = "explore"
   engine_version = "OpenSearch_2.5"
 
   cluster_config {
-    instance_type = "t3.small.search"
+    instance_type          = "t3.small.search"
     zone_awareness_enabled = false
   }
 
   vpc_options {
-    subnet_ids = [module.vpc.private_subnets[0]]
+    subnet_ids         = [module.vpc.private_subnets[0]]
     security_group_ids = [aws_security_group.allow_self.id]
   }
 
@@ -55,7 +58,7 @@ resource "aws_opensearch_domain" "explore" {
   }
 
   access_policies = jsonencode({
-    Version = "2012-10-17",
+    Version   = "2012-10-17",
     Statement = [
         {
             Effect = "Allow"
@@ -67,6 +70,7 @@ resource "aws_opensearch_domain" "explore" {
         }
     ]
   })
+
   tags = local.tags
 }
 
@@ -81,7 +85,7 @@ output "opensearch_domain_endpoint" {
 
 <!-- tabs:end -->
 
-## develop
+### Develop
 
 For this example we are going use the `_cat` endpoint to list our current indices.
 
@@ -136,13 +140,13 @@ RUN pip install -r requirements.txt
 
 <!-- tabs:end -->
 
-### configure
+### Configure
 
-In order for our lambda to be able to reach our Elasticache instance in our private subnet, we need to add some configurations.
+In order for our Lambda to be able to reach our OpenSearch instance in our private subnet, we need to add some configurations.
 
-Note that this information is output by our terraform.
+Note that this information is output by our Terraform.
 
-```shell
+```bash
 > sntl configs write security_group_ids '["<tf_output_1>", ..., "<tf_output_n>"]'
 > sntl configs write subnet_ids '["<tf_output_1>", ..., "<tf_output_n>"]' # note: this will be the opensearch_subnet_id in the terraform output.
 > sntl envs write OPENSEARCH_HOST <tf_output>
@@ -151,35 +155,35 @@ Note that this information is output by our terraform.
 > :people_hugging: The interface for passing arrays to the `configs` store is cludgy and tempermental. Follow the exact formatting as above, improvements will be made.
 
 
-### validate
+### Validate
 
-Since our opensearch cluster is going to be inside a private subnet, we will need a local opensearch instance to develop against...
+Since our OpenSearch cluster is going to be inside a private subnet, we will need a local OpenSearch instance to develop against...
 
-```shell
+```bash
 > docker run -p 9200:9200 -p 9600:9600 -e "discovery.type=single-node" --name sentential-opensearch -d opensearchproject/opensearch:latest
 ```
 
 Now we can move on to our usual validation flow...
 
-```shell
+```bash
 > sntl build
 > sntl deploy local
 > sntl invoke local '{}' 
 # => returns indices
 ```
 
-### deploy
+### Deploy
 
-```shell
+```bash
 > sntl publish
 > sntl deploy aws
 > sntl invoke aws '{}' 
 # => returns indices
 ```
 
-### cleanup
+### Cleanup
 
-```shell
+```bash
 > sntl destroy local
 > sntl destroy aws
 > docker rm -f sentential-opensearch

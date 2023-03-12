@@ -1,10 +1,12 @@
-### Hello World
+# Hello World
+
 Let's deploy a simple `echo` style function to aquaint ourselves with Sentential.
 
-### prerequisites
-you have initialized the [explore project](/explore/project) and are operating in said directory.
+### Prerequisites
 
-### develop
+You have initialized the [explore project](/explore/project) and are operating in said directory.
+
+### Develop
 
 Create or modify...
 
@@ -19,15 +21,16 @@ def handler(event, context):
 
 <!-- tabs:end -->
 
-### build
+### Build
 
-```shell
+
+```bash
 > sntl build
 ```
 
-### verify
+### Verify
 
-```shell
+```bash
 > sntl deploy local
 > sntl invoke local '{ "hello": "world" }'
 
@@ -46,16 +49,16 @@ def handler(event, context):
 }
 ```
 
-### publish
+### Publish
 
-```shell
+```bash
 > sntl login
 > sntl publish
 ```
 
-### deploy
+### Deploy
 
-```shell
+```bash
 > sntl deploy aws
 > sntl invoke aws '{ "hello": "world!" }'
 
@@ -77,9 +80,9 @@ def handler(event, context):
 }
 ```
 
-### cleanup
+### Cleanup
 
-```shell
+```bash
 > sntl destroy local
 > sntl destroy aws
 ```

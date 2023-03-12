@@ -9,7 +9,7 @@
     * [Partition](explore/partition.md)
     * [Shapes](explore/shapes.md)
     * [Function URL](explore/public_url.md)
-    * [Schedule](examples/schedule.md)
+    * [Schedule](explore/schedule.md)
 * [Services](services/vpc.md)
     * [ElastiCache](services/elasticache.md)
     * [RDS](services/rds.md)
@@ -17,4 +17,4 @@
 * [Custom Images](custom_images/requirements.md)
     * [Python](custom_images/python.md)
     * [Go](custom_images/go.md)
-    * [Bash](custom_images/bash.md)
+    <!-- * [Bash](custom_images/bash.md) -->

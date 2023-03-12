@@ -1,15 +1,18 @@
 # Flow
+
 You will find this workflow repeated throughout the documentation.
+
 ```mermaid
 flowchart LR
-     develop([develop]) --> build([build])
-     build --> verify([verify]) --> publish([publish]) --> deploy([deploy]) --> develop
+  develop([develop]) --> build([build])
+  build --> verify([verify]) --> publish([publish]) --> deploy([deploy]) --> develop
 ```
 
-### develop
+### Develop
+
 See `sntl init --help`
 
-```shell
+```bash
 > sntl init <ecr_repo_name> <language>
 .
 ├── Dockerfile
@@ -22,10 +25,11 @@ See `sntl init --help`
 
 Develop your application within the `src` directory.
 
-### build
+### Build
+
 See `sntl build --help`
 
-Sentential uses container images as the deliverable artifact for Lambda functions. And so the `Dockerfile` created is *the* build definition for the project.
+Sentential uses container images as the deliverable artifact for Lambda functions. So the `Dockerfile` created is *the* build definition for the project.
 
 ```dockerfile
 FROM ghcr.io/wheegee/entry:latest AS entry
@@ -48,23 +52,25 @@ You will will notice this is a [multistage build](https://docs.docker.com/build/
 
 Also worthy of note is the `CMD` stanza. As can be derived from the [official documents](https://docs.aws.amazon.com/lambda/latest/dg/images-create.html), your lambda container image will use the dot notated path to find the file, and function name, of the handler. By default, `app.handler` implies a file such as `src/app.py` in which a function of name `handler` resides.
 
-### verify
+### Verify
+
 See `sntl deploy local --help`
 
 Once you have built your artifact you can deploy your lambda locally and invoke it to verify it...
 
-```shell
+```bash
 > sntl deploy local
 > sntl invoke local '{ "json": "payload" }'
 # verify expected output
 ```
 
-### publish
+### Publish
+
 See `sntl publish --help`
 
 If your artifact is verified and ready for deployment to AWS...
 
-```shell
+```bash
 > sntl login # ensure you are logged into ECR
 > sntl publish
 > sntl ls
@@ -77,10 +83,11 @@ If your artifact is verified and ready for deployment to AWS...
 
 You will see a semantically versioned image, in this case `0.0.1`, now available for deployment.
 
-### deploy
+### Deploy
+
 See `sntl deploy aws --help`
 
-```shell
+```bash
 > sntl deploy
 > sntl invoke aws '{ "json": "payload" }'
 # verify expected output

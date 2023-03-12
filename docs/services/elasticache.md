@@ -1,15 +1,17 @@
-## ElastiCache
+# ElastiCache
 
-This example aims to illustrate how to arrive at a basic ElastiCache setup with a lambda.
+This example aims to illustrate how to arrive at a basic ElastiCache setup with a Lambda.
 
-### prerequisites
-1. you have initialized the [explore project](/explore/project).
-1. you have initialized the [service infrastructure vpc](/services/vpc).
+### Prerequisites
 
-### infrastructure
+1. You have initialized the [explore project](/explore/project).
+1. You have initialized the [service infrastructure vpc](/services/vpc).
+
+### Infrastructure
+
 In your infrastructure directory create an `elasticache.tf` like so...
 
-```shell
+```bash
 > touch elasticache.tf
 > tree
 .
@@ -35,7 +37,7 @@ resource "aws_elasticache_cluster" "redis" {
   engine_version       = "7.0"
   port                 = 6379
   subnet_group_name    = module.vpc.elasticache_subnet_group_name
-  security_group_ids = [aws_security_group.allow_self.id]
+  security_group_ids   = [aws_security_group.allow_self.id]
 }
 
 output "redis_host" {
@@ -45,7 +47,7 @@ output "redis_host" {
 
 <!-- tabs:end -->
 
-## develop
+### Develop
 
 For this example we are going to simply validate the structure of an event. We will throw a validation error on failure, and return the event if it's valid.
 
@@ -114,13 +116,13 @@ CMD ["app.proxy"]
 
 <!-- tabs:end -->
 
-### configure
+### Configure
 
-In order for our lambda to be able to reach our Elasticache instance in our private subnet, we need to add some configurations.
+In order for our Lambda to be able to reach our ElastiCache instance in our private subnet, we need to add some configurations.
 
-Note that this information is output by our terraform.
+Note that this information is output by our Terraform.
 
-```shell
+```bash
 > sntl configs write security_group_ids '["<tf_output_1>", ..., "<tf_output_n>"]'
 > sntl configs write subnet_ids '["<tf_output_1>", ..., "<tf_output_n>"]'
 > sntl envs write REDIS_HOST <tf_output>
@@ -128,18 +130,17 @@ Note that this information is output by our terraform.
 
 > :people_hugging: The interface for passing arrays to the `configs` store is cludgy and tempermental. Follow the exact formatting as above, improvements will be made.
 
+### Validate
 
-### validate
+Since ElastiCache is best left secured within a private subnet, we don't have access to it from our local environment. So let's create a local Redis instance for our Lambda to use...
 
-Since elasticache is best left secured within a private subnet, we don't have access to it from our local environment. So let's create a local redis instance for our lambda to use...
-
-```shell
+```bash
 > docker run --name sentential-redis -p 6379:6379 -d redis
 ```
 
 Now we can move on to our usual validation flow...
 
-```shell
+```bash
 > sntl build
 > sntl deploy local
 > sntl invoke local '{}' 
@@ -150,9 +151,9 @@ Now we can move on to our usual validation flow...
 # => note that the function does not log that it ran the handler
 ```
 
-### deploy
+### Deploy
 
-```shell
+```bash
 > sntl publish
 > sntl deploy aws
 > sntl invoke aws '{}' 
@@ -163,9 +164,9 @@ Now we can move on to our usual validation flow...
 # => note that the function does not log that it ran the handler
 ```
 
-### cleanup
+### Cleanup
 
-```shell
+```bash
 > sntl destroy local
 > sntl destroy aws
 > docker rm -f sentential-redis

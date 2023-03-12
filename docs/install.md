@@ -1,21 +1,36 @@
 ## Requirements
+
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [AWS Account](https://aws.amazon.com/free/)
 
 ## Install
-`pip install sentential`
+
+```bash
+pip install sentential
+```
 
 ## Usage
-`sntl --help`
+
+```bash
+sntl --help
+```
 
 ## Develop
-### venv
-`poetry shell`
 
-### deps
-`poetry install`
+### Virtual environment
 
-### test
-`poetry run pytest`
+```bash
+poetry shell
+```
 
+### Dependencies
 
+```bash
+poetry install
+```
+
+### Test
+
+```bash
+poetry run pytest
+```
