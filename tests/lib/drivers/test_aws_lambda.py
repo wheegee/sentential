@@ -14,10 +14,7 @@ from sentential.lib.exceptions import AWS_EXCEPTIONS
 class TestAwsLambdaDriver:
     def create_log_group(self, log_group: str):
         clients.logs.create_log_group(logGroupName=log_group)
-        clients.logs.put_retention_policy(
-            logGroupName=log_group,
-            retentionInDays=7
-        )
+        clients.logs.put_retention_policy(logGroupName=log_group, retentionInDays=7)
 
     def get_lambda(self, function_name: str):
         return clients.lmb.get_function(FunctionName=function_name)
@@ -64,7 +61,9 @@ class TestAwsLambdaDriver:
 
         image = aws_ecr_driver.get_image("0.0.1")
         aws_lambda_driver.deploy(image, Architecture.system())
-        self.create_log_group(aws_lambda_driver.log_group) # Is this something that moto should be doing?
+        self.create_log_group(
+            aws_lambda_driver.log_group
+        )  # Is this something that moto should be doing?
 
         lambda_config = self.get_lambda_config(function_name)
         log_policy = self.get_log_policy(aws_lambda_driver.log_group)

@@ -66,5 +66,7 @@ def clean(remote: bool = typer.Option(False), remote_logs: bool = typer.Option(F
     LocalImagesDriver(ontology).clean()
     if remote:
         AwsEcrDriver(ontology).clean()
-    if remote_logs: # MAYBE: is it time to graduate to `clean local` and `clean remote`?
+    if (
+        remote_logs
+    ):  # MAYBE: is it time to graduate to `clean local` and `clean remote`?
         AwsLambdaDriver(ontology).clean()
