@@ -1,22 +1,44 @@
-# `sntl` 
+# Sentential
 
 ## Install
-`pip install sentential`
+
+```sh
+pip install sentential
+```
 
 ## Usage
-`sntl --help`
+
+```sh
+sntl --help
+```
 
 ## Documentation
-See the [docs](https://wheegee.github.io/sentential/)
+
+See the [docs](https://wheegee.github.io/sentential/).
+
+### Local serving
+
+```sh
+npm i docsify-cli -g
+docsify serve docs/
+```
 
 ## Develop
-### venv
-`poetry shell`
 
-### deps
-`poetry install`
+### Virtual environment
 
-### test
-`poetry run pytest`
+```sh
+poetry shell
+```
 
+### Dependencies
 
+```sh
+poetry install
+```
+
+### Test
+
+```sh
+poetry run pytest
+```

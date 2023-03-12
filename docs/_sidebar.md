@@ -9,6 +9,7 @@
     * [Partition](explore/partition.md)
     * [Shapes](explore/shapes.md)
     * [Function URL](explore/public_url.md)
+    * [Schedule](examples/schedule.md)
 * [Services](services/vpc.md)
     * [ElastiCache](services/elasticache.md)
     * [RDS](services/rds.md)

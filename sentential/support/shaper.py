@@ -76,7 +76,7 @@ class Shaper(BaseModel):
                 fields,
                 type_checks,
             ],
-            columns=columns,
+            schema=columns,
         )
 
     @classmethod
@@ -85,14 +85,14 @@ class Shaper(BaseModel):
         fields = [name for name in cls.__fields__.keys()]
         try:
             cls.constrained_parse_obj(data)
-            return pl.DataFrame([fields, [None for f in fields]], columns=columns)
+            return pl.DataFrame([fields, [None for f in fields]], schema=columns)
         except ValidationError as e:
             locations = [map(str, e["loc"]) for e in e.errors()]
             locations = ["/".join(loc) for loc in locations]
             messages = [e["msg"] for e in e.errors()]
             return pl.DataFrame(
                 [locations, messages],
-                columns=columns,
+                schema=columns,
             )
 
     @classmethod
@@ -125,5 +125,5 @@ class Shaper(BaseModel):
                 defaults,
                 descriptions,
             ],
-            columns=columns,
+            schema=columns,
         )

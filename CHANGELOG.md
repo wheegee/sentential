@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.9.0 (2023-03-12)
+### Feature
+* Add schedule mount ([#232](https://github.com/wheegee/sentential/issues/232)) ([`10ed4d0`](https://github.com/wheegee/sentential/commit/10ed4d06a23508703188af652629d6c0fdfa823d))
+
 ## v0.8.0 (2023-01-20)
 ### Feature
 * Highviz ([#207](https://github.com/wheegee/sentential/issues/207)) ([`f3dcda0`](https://github.com/wheegee/sentential/commit/f3dcda01aad30703b5be71ca1ea103149e2a1524))

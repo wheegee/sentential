@@ -26,8 +26,8 @@ class Common:
 
     def _unsafe_df(self):
         data = self._unsafe_dict()
-        data = [list(data.keys()), list(data.values())]
-        return pl.DataFrame(data, columns=[("field", pl.Utf8), ("value", pl.Utf8)])
+        data = {"field": list(data.keys()), "value": list(data.values())}
+        return pl.DataFrame(data, schema=[("field", pl.Utf8), ("value", pl.Utf8)])
 
     def delete(self, key: str):
         try:

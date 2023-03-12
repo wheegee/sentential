@@ -2,6 +2,8 @@ from sentential.cli.root import root
 from sentential.cli.store import store
 from sentential.cli.deploy import deploy
 from sentential.cli.destroy import destroy
+from sentential.cli.mount import mount
+from sentential.cli.umount import umount
 from sentential.cli.invoke import invoke
 from sentential.cli.logs import logs
 
@@ -13,6 +15,8 @@ root.add_typer(store, name="configs", help="provisioning")
 root.add_typer(store, name="tags", help="tagging")
 root.add_typer(deploy, name="deploy", help="create deployment")
 root.add_typer(destroy, name="destroy", help="destroy deployment")
+root.add_typer(mount, name="mount", help="mount integration")
+root.add_typer(umount, name="umount", help="unmount integration")
 root.add_typer(invoke, name="invoke", help="invoke function")
 root.add_typer(logs, name="logs", help="logging")
 
