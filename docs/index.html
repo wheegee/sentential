@@ -9,9 +9,10 @@
   <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
 </head>
 <body>
-  <script src="//cdn.jsdelivr.net/npm/docsify-edit-on-github"></script> 
+
   <div id="app"></div>
-  <script src="//cdn.jsdelivr.net/npm/docsify-edit-on-github"></script>
+  <!-- edit-on-github -->
+  <script src="//cdn.jsdelivr.net/npm/docsify-edit-on-github"></script> 
   <script>
     window.$docsify = {
       loadSidebar: true,
@@ -25,15 +26,23 @@
   </script>
   <!-- docsify -->
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+
   <!-- mermaid.js -->
-  <script src="https://cdn.jsdelivr.net/npm/mermaid@9/dist/mermaid.js"></script>
-  <script src="//unpkg.com/docsify-mermaid@latest/dist/docsify-mermaid.js"></script>
-  <script>mermaid.initialize({ startOnLoad: true })</script>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@latest/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true });
+    window.mermaid = mermaid;
+  </script>
+  <script src="//unpkg.com/docsify-mermaid@2.0.0/dist/docsify-mermaid.js"></script>
+
+
+  
   <!-- highlighting -->
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-docker.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-hcl.min.js"></script>
+  
   <!-- other plugins -->
   <script src="//cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
 </body>
