@@ -30,6 +30,7 @@ class Provision(Shaper):
     allow_methods: List[str] = Field(default=["*"], description="CORS AllowMethods")
     allow_origins: List[str] = Field(default=["*"], description="CORS AllowOrigins")
     expose_headers: List[str] = Field(default=["*"], description="CORS ExposeHeaders")
+    log_retention: int = Field(default=7, description="log retention (days)")
 
     @validator("auth_type")
     def is_valid_auth_type(cls, v):

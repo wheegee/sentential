@@ -4,6 +4,7 @@ from sentential.lib.clients import clients
 from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.drivers.aws_ecr import AwsEcrDriver
+from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.template import Init
 from sentential.lib.shapes import Architecture, Runtimes
 from sentential.lib.ontology import Ontology
@@ -59,9 +60,13 @@ def ls(verbose: bool = typer.Option(False)):
 
 
 @root.command()
-def clean(remote: bool = typer.Option(False)):
-    """clean images"""
+def clean(remote: bool = typer.Option(False), remote_logs: bool = typer.Option(False)):
+    """clean images (and logs)"""
     ontology = Ontology()
     LocalImagesDriver(ontology).clean()
     if remote:
         AwsEcrDriver(ontology).clean()
+    if (
+        remote_logs
+    ):  # MAYBE: is it time to graduate to `clean local` and `clean remote`?
+        AwsLambdaDriver(ontology).clean()
