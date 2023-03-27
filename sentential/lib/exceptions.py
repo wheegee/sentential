@@ -47,3 +47,6 @@ class ApiGatewayResourceNotFound(SntlException):
 
 class ArchitectureDiscoveryError(SntlException):
     pass
+
+class AwsApiGatewayNotFound(Exception):
+    pass
