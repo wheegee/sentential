@@ -6,6 +6,7 @@ from sentential.lib.ontology import Ontology
 
 mount = typer.Typer()
 
+
 @mount.command()
 def schedule(
     schedule: str = typer.Argument(
@@ -16,7 +17,10 @@ def schedule(
     """mount lambda image to schedule"""
     print(AwsEventScheduleMount(Ontology()).mount(schedule, payload))
 
+
 @mount.command()
-def route(path: str = typer.Argument(None, autocompletion=AwsApiGatewayMount.autocomplete)):
+def route(
+    path: str = typer.Argument(None, autocompletion=AwsApiGatewayMount.autocomplete)
+):
     """mount lambda image to api gateway"""
     print(AwsApiGatewayMount(Ontology()).mount(path))

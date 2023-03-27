@@ -3,8 +3,15 @@ from typing import cast, Dict, List, Union, Tuple
 from sentential.lib.mounts.spec import MountDriver
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import Provision, ApiGatewayApi, ApiGatewayRoute, ApiGatewayIntegration, LambdaPermission
+from sentential.lib.shapes import (
+    Provision,
+    ApiGatewayApi,
+    ApiGatewayRoute,
+    ApiGatewayIntegration,
+    LambdaPermission,
+)
 from sentential.lib.exceptions import AwsApiGatewayNotFound
+
 
 class AwsApiGatewayMount(MountDriver):
     def __init__(self, ontology: Ontology) -> None:
@@ -22,29 +29,37 @@ class AwsApiGatewayMount(MountDriver):
         self.route: Union[None, ApiGatewayRoute]
         self.integration: Union[None, ApiGatewayIntegration]
         self.statement_id: str
-            
+
     @classmethod
     def autocomplete(cls) -> List[str]:
         completions = []
         for api in cls._apis():
-            host = api.ApiEndpoint.replace("https://", "") # https://github.com/pallets/click/issues/1515
+            host = api.ApiEndpoint.replace(
+                "https://", ""
+            )  # https://github.com/pallets/click/issues/1515
             completions.append(host)
             for route in cls._routes(api.ApiId):
                 path = route.RouteKey.split(" ")[-1]
                 completions.append(f"{host}{path}")
         return completions
-    
+
     @classmethod
     def _apis(cls) -> List[ApiGatewayApi]:
-        return [ ApiGatewayApi(**item) for item in clients.api_gw.get_apis()["Items"] ]
-    
+        return [ApiGatewayApi(**item) for item in clients.api_gw.get_apis()["Items"]]
+
     @classmethod
     def _routes(cls, api_id: str) -> List[ApiGatewayRoute]:
-        return [ ApiGatewayRoute(**item) for item in clients.api_gw.get_routes(ApiId=api_id)["Items"] ]
-    
+        return [
+            ApiGatewayRoute(**item)
+            for item in clients.api_gw.get_routes(ApiId=api_id)["Items"]
+        ]
+
     @classmethod
     def _integrations(cls, api_id: str) -> List[ApiGatewayIntegration]:
-        return [ ApiGatewayIntegration(**item) for item in clients.api_gw.get_integrations(ApiId=api_id)["Items"] ]
+        return [
+            ApiGatewayIntegration(**item)
+            for item in clients.api_gw.get_integrations(ApiId=api_id)["Items"]
+        ]
 
     def mount(self, path: str) -> str:
         self._fetch_state(path)
@@ -57,36 +72,38 @@ class AwsApiGatewayMount(MountDriver):
         mounts = self._mounts()
         umounted = []
         for api, route, integration in mounts:
-            clients.api_gw.delete_route(
-                ApiId=api.ApiId,
-                RouteId=route.RouteId
-            )
+            clients.api_gw.delete_route(ApiId=api.ApiId, RouteId=route.RouteId)
 
             clients.api_gw.delete_integration(
-                ApiId=api.ApiId,
-                IntegrationId=integration.IntegrationId
+                ApiId=api.ApiId, IntegrationId=integration.IntegrationId
             )
 
             try:
                 clients.lmb.remove_permission(
                     FunctionName=self.ontology.context.resource_name,
-                    StatementId=f"{self.ontology.context.resource_name}-{api.ApiId}"
+                    StatementId=f"{self.ontology.context.resource_name}-{api.ApiId}",
                 )
             except clients.lmb.exceptions.ResourceNotFoundException:
-                        pass
-            
-            umounted.append(f"umounted {self.ontology.context.resource_name} from {api.ApiId}")
+                pass
+
+            umounted.append(
+                f"umounted {self.ontology.context.resource_name} from {api.ApiId}"
+            )
         return umounted
 
     def mounts(self) -> List[str]:
         mounts = []
         for api, route, integration in self._mounts():
-            host = api.ApiEndpoint.replace("https://", "") # https://github.com/pallets/click/issues/1515
+            host = api.ApiEndpoint.replace(
+                "https://", ""
+            )  # https://github.com/pallets/click/issues/1515
             path = route.RouteKey.split(" ")[-1]
             mounts.append(f"{host}{path}")
         return mounts
 
-    def _mounts(self) -> List[Tuple[ApiGatewayApi, ApiGatewayRoute, ApiGatewayIntegration]]:
+    def _mounts(
+        self,
+    ) -> List[Tuple[ApiGatewayApi, ApiGatewayRoute, ApiGatewayIntegration]]:
         mounts = []
         for api in self.__class__._apis():
             routes = self.__class__._routes(api.ApiId)
@@ -112,32 +129,36 @@ class AwsApiGatewayMount(MountDriver):
         self.integration = self._get_integration()
         self.statement_id = f"{self.ontology.context.resource_name}-{self.api.ApiId}"
 
-
     def _get_api(self) -> ApiGatewayApi:
         for api in self.__class__._apis():
-            found_host = api.ApiEndpoint.replace("https://", "") # https://github.com/pallets/click/issues/1515
+            found_host = api.ApiEndpoint.replace(
+                "https://", ""
+            )  # https://github.com/pallets/click/issues/1515
             if found_host == self.given_host:
                 return api
         raise AwsApiGatewayNotFound
-            
+
     def _get_route(self) -> Union[None, ApiGatewayRoute]:
         for route in self.__class__._routes(self.api.ApiId):
             if route.RouteKey == self.route_key:
                 return route
         return None
-    
+
     def _get_integration(self) -> Union[None, ApiGatewayIntegration]:
         if self.route and self.route.Target:
-            return ApiGatewayIntegration(**clients.api_gw.get_integration(
-                ApiId=self.api.ApiId,
-                IntegrationId=self.route.Target.split("/")[-1]
-            ))
+            return ApiGatewayIntegration(
+                **clients.api_gw.get_integration(
+                    ApiId=self.api.ApiId, IntegrationId=self.route.Target.split("/")[-1]
+                )
+            )
         else:
             return None
 
     def _ensure_integration(self) -> ApiGatewayIntegration:
         # {proxy+} syntax is api gateway specific, when forwarding the mount prefix in the headers, strip it out.
-        forwarded_prefix = self.given_route.replace("{proxy+}", "").replace("{proxy}", "")
+        forwarded_prefix = self.given_route.replace("{proxy+}", "").replace(
+            "{proxy}", ""
+        )
         if forwarded_prefix.endswith("/"):
             forwarded_prefix = forwarded_prefix[:-1]
 
@@ -152,15 +173,19 @@ class AwsApiGatewayMount(MountDriver):
                 "overwrite:path": "/$request.path.proxy",
                 "overwrite:header.X-Forwarded-Prefix": forwarded_prefix,
                 "overwrite:header.X-Forwarded-Mapping": "$context.customDomain.basePathMatched",
-            }
+            },
         }
 
         if self.integration:
             integration["IntegrationId"] = self.integration.IntegrationId
-            return ApiGatewayIntegration(**clients.api_gw.update_integration(**integration))
+            return ApiGatewayIntegration(
+                **clients.api_gw.update_integration(**integration)
+            )
         else:
-            return ApiGatewayIntegration(**clients.api_gw.create_integration(**integration))
-    
+            return ApiGatewayIntegration(
+                **clients.api_gw.create_integration(**integration)
+            )
+
     def _ensure_route(self, integration: ApiGatewayIntegration) -> ApiGatewayRoute:
         route = {
             "ApiId": self.api.ApiId,
@@ -173,7 +198,7 @@ class AwsApiGatewayMount(MountDriver):
             return ApiGatewayRoute(**clients.api_gw.update_route(**route))
         else:
             return ApiGatewayRoute(**clients.api_gw.create_route(**route))
-        
+
     def _ensure_policy(self) -> LambdaPermission:
         account_id = self.ontology.context.account_id
         region = self.ontology.context.region
@@ -181,15 +206,17 @@ class AwsApiGatewayMount(MountDriver):
         try:
             clients.lmb.remove_permission(
                 FunctionName=self.ontology.context.resource_name,
-                StatementId=self.statement_id
+                StatementId=self.statement_id,
             )
         except clients.lmb.exceptions.ResourceNotFoundException:
             pass
 
-        return LambdaPermission(**clients.lmb.add_permission(
-            FunctionName=self.ontology.context.resource_arn,
-            StatementId=self.statement_id,
-            Action="lambda:InvokeFunction",
-            Principal="apigateway.amazonaws.com",
-            SourceArn=f"arn:aws:execute-api:{region}:{account_id}:{self.api.ApiId}/*/*/{{proxy+}}",
-        ))
+        return LambdaPermission(
+            **clients.lmb.add_permission(
+                FunctionName=self.ontology.context.resource_arn,
+                StatementId=self.statement_id,
+                Action="lambda:InvokeFunction",
+                Principal="apigateway.amazonaws.com",
+                SourceArn=f"arn:aws:execute-api:{region}:{account_id}:{self.api.ApiId}/*/*/{{proxy+}}",
+            )
+        )

@@ -351,6 +351,7 @@ def derive_paths(root: PosixPath = PosixPath(".")):
 # API Gateway
 #
 
+
 class ApiGatewayApi(BaseModel):
     ApiId: str
     ApiEndpoint: str
@@ -361,7 +362,7 @@ class ApiGatewayApi(BaseModel):
     ProtocolType: str
     RouteSelectionExpression: str
     Tags: Dict[str, str]
-    
+
 
 class ApiGatewayIntegration(BaseModel):
     IntegrationId: Optional[str]
@@ -379,7 +380,7 @@ class ApiGatewayRoute(BaseModel):
     ApiGatewayManaged: Optional[bool]
     ApiKeyRequired: bool
     AuthorizationScopes: Optional[List[str]]
-    AuthorizationType: Literal["NONE","AWS_IAM","CUSTOM","JWT"]
+    AuthorizationType: Literal["NONE", "AWS_IAM", "CUSTOM", "JWT"]
     AuthorizerId: Optional[str]
     ModelSelectionExpression: Optional[str]
     OperationName: Optional[str]

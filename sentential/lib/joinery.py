@@ -181,9 +181,11 @@ class Joinery:
             return AwsEventScheduleMount(Ontology()).mounts()[0]
         except:
             return None
-    
+
     @lru_cache()
-    def _deployed_routes(self) -> List[Tuple[ApiGatewayApi, ApiGatewayRoute, ApiGatewayIntegration]]:
+    def _deployed_routes(
+        self,
+    ) -> List[Tuple[ApiGatewayApi, ApiGatewayRoute, ApiGatewayIntegration]]:
         return AwsApiGatewayMount(Ontology())._mounts()
 
     def _public_url(self, url: str) -> str:
@@ -203,7 +205,7 @@ class Joinery:
             return f"[link={url}]{schedule}[/link]"
         except:
             return None
-    
+
     def _console_routes(self, routes: List[str]) -> str:
         region = self.ontology.context.region
         function = self.ontology.context.resource_name
