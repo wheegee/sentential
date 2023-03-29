@@ -6,6 +6,31 @@ from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Provision, ApiGatewayApi, ApiGatewayRoute, ApiGatewayIntegration, LambdaPermission
 from sentential.lib.exceptions import AwsApiGatewayNotFound
 
+def proxify(path: str) -> str:
+    # In theory all other edge cases are handled by the AWS api
+    greedy_proxy = "{proxy+}"
+    if path.endswith(f"/{greedy_proxy}"):
+        return path
+    elif path.endswith("/"):
+        return f"{path[:-1]}/{greedy_proxy}"
+    else:
+        return f"{path}/{greedy_proxy}"
+
+def deproxify(path: str) -> str:
+    # In theory all other edge cases are handled by the AWS api
+    proxy_strings = ["{proxy+}", "{proxy}"]
+    for proxy_string in proxy_strings:
+        if path.endswith(proxy_string):
+            path = path.replace(proxy_string, "")
+
+    if path == "/":
+        return path
+    
+    if path.endswith("/"):
+        path = path[:-1]
+
+    return path
+
 class AwsApiGatewayMount(MountDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology: Ontology = ontology
@@ -51,12 +76,18 @@ class AwsApiGatewayMount(MountDriver):
         integration = self._ensure_integration()
         route = self._ensure_route(integration)
         policy = self._ensure_policy()
-        return f"mounted {self.ontology.context.resource_name} to {self.api.ApiEndpoint}{self.given_route}"
+        resource = self.ontology.context.resource_name
+        location = deproxify(f"{self.api.ApiEndpoint}{self.given_route}")
+        return f"mounted {resource} to {location}"
 
     def umount(self, path: Union[None, str] = None) -> List[str]:
         mounts = self._mounts()
         umounted = []
+        resource = self.ontology.context.resource_name
+
         for api, route, integration in mounts:
+            location = deproxify(f"{api.ApiEndpoint}{route.RouteKey.split(' ')[-1]}")
+
             clients.api_gw.delete_route(
                 ApiId=api.ApiId,
                 RouteId=route.RouteId
@@ -75,14 +106,14 @@ class AwsApiGatewayMount(MountDriver):
             except clients.lmb.exceptions.ResourceNotFoundException:
                         pass
             
-            umounted.append(f"umounted {self.ontology.context.resource_name} from {api.ApiId}")
+            umounted.append(f"umounted {resource} from {location}")
         return umounted
 
     def mounts(self) -> List[str]:
         mounts = []
         for api, route, integration in self._mounts():
             host = api.ApiEndpoint.replace("https://", "") # https://github.com/pallets/click/issues/1515
-            path = route.RouteKey.split(" ")[-1]
+            path = deproxify(route.RouteKey.split(" ")[-1])
             mounts.append(f"{host}{path}")
         return mounts
 
@@ -137,9 +168,9 @@ class AwsApiGatewayMount(MountDriver):
 
     def _ensure_integration(self) -> ApiGatewayIntegration:
         # {proxy+} syntax is api gateway specific, when forwarding the mount prefix in the headers, strip it out.
-        forwarded_prefix = self.given_route.replace("{proxy+}", "").replace("{proxy}", "")
-        if forwarded_prefix.endswith("/"):
-            forwarded_prefix = forwarded_prefix[:-1]
+        # forwarded_prefix = self.given_route.replace("{proxy+}", "").replace("{proxy}", "")
+        # if forwarded_prefix.endswith("/"):
+        #     forwarded_prefix = forwarded_prefix[:-1]
 
         integration = {
             "ApiId": self.api.ApiId,
@@ -150,7 +181,7 @@ class AwsApiGatewayMount(MountDriver):
             "TimeoutInMillis": (self.provision.timeout * 1000),
             "RequestParameters": {
                 "overwrite:path": "/$request.path.proxy",
-                "overwrite:header.X-Forwarded-Prefix": forwarded_prefix,
+                "overwrite:header.X-Forwarded-Prefix": deproxify(self.given_route),
                 "overwrite:header.X-Forwarded-Mapping": "$context.customDomain.basePathMatched",
             }
         }
@@ -164,7 +195,7 @@ class AwsApiGatewayMount(MountDriver):
     def _ensure_route(self, integration: ApiGatewayIntegration) -> ApiGatewayRoute:
         route = {
             "ApiId": self.api.ApiId,
-            "RouteKey": f"ANY {self.given_route}",
+            "RouteKey": f"ANY {proxify(self.given_route)}",
             "Target": f"integrations/{integration.IntegrationId}",
         }
 

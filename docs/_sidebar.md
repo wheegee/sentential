@@ -10,4 +10,5 @@
     * [Shapes](examples/shapes.md)
     * [Function URL](examples/public_url.md)
     * [Schedule](examples/schedule.md)
+    * [API Gateway](examples/api_gateway.md)
     * [Custom Images](examples/custom_images.md)

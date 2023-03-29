@@ -124,8 +124,8 @@ class Joinery:
                         row["hrefs"].append(self._public_url(deployed_url.FunctionUrl))
                     if deployed_schedule is not None:
                         row["mounts"].append(self._console_schedule(deployed_schedule))
-                    if deployed_routes is not None:
-                        row["mounts"].append(self._console_routes(deployed_routes))
+                    if len(deployed_routes) > 0:
+                        row["mounts"].append(self._console_routes())
 
             rows.append(Row(**row))  # row yer boat
 
@@ -195,7 +195,7 @@ class Joinery:
         url = f"https://{region}.console.aws.amazon.com/lambda/home?region={region}#/functions/{function}"
         return f"[link={url}]console[/link]"
 
-    def _console_schedule(self, schedule: str):
+    def _console_schedule(self, schedule: str) -> Union[None, str]:
         region = self.ontology.context.region
         function = self.ontology.context.resource_name
         url = f"https://{region}.console.aws.amazon.com/events/home?region={region}#/eventbus/default/rules/{function}"
@@ -204,15 +204,17 @@ class Joinery:
         except:
             return None
     
-    def _console_routes(self, routes: List[str]) -> str:
+    def _console_routes(self) -> Union[None, str]:
         region = self.ontology.context.region
-        function = self.ontology.context.resource_name
         links = []
         for api, route, integration in self._deployed_routes():
             text = route.RouteKey.split(" ")[-1]
             url = f"https://{region}.console.aws.amazon.com/apigateway/main/develop/routes?api={api.ApiId}&integration={integration.IntegrationId}&region={region}&routes={route.RouteId}"
             links.append(f"[link={url}]{text}[/link]")
-        return ", ".join(links)
+        if links:
+            return ", ".join(links)
+        else:
+            return None
 
     def _extract_arch(self, manifest: AwsManifestList) -> str:
         return ", ".join([m.platform.architecture for m in manifest.manifests])
