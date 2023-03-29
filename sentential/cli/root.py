@@ -70,9 +70,3 @@ def clean(remote: bool = typer.Option(False), remote_logs: bool = typer.Option(F
         remote_logs
     ):  # MAYBE: is it time to graduate to `clean local` and `clean remote`?
         AwsLambdaDriver(ontology).clean()
-
-@root.command()
-def debug():
-    from sentential.lib.clients import clients
-    from IPython import embed
-    embed()

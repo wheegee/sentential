@@ -12,8 +12,11 @@ def schedule():
     """unmount lambda image from schedule"""
     AwsEventScheduleMount(Ontology()).umount()
 
+
 @umount.command()
-def route(path: str = typer.Argument(None, autocompletion=AwsApiGatewayMount.autocomplete)):
+def route(
+    path: str = typer.Argument(None, autocompletion=AwsApiGatewayMount.autocomplete)
+):
     """unmount lambda image from api gateway"""
     for msg in AwsApiGatewayMount(Ontology()).umount():
         print(msg)
