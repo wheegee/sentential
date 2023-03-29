@@ -12,6 +12,7 @@ from sentential.lib.shapes import (
 )
 from sentential.lib.exceptions import AwsApiGatewayNotFound
 
+
 def proxify(path: str) -> str:
     # In theory all other edge cases are handled by the AWS api
     greedy_proxy = "{proxy+}"
@@ -22,6 +23,7 @@ def proxify(path: str) -> str:
     else:
         return f"{path}/{greedy_proxy}"
 
+
 def deproxify(path: str) -> str:
     # In theory all other edge cases are handled by the AWS api
     proxy_strings = ["{proxy+}", "{proxy}"]
@@ -31,11 +33,12 @@ def deproxify(path: str) -> str:
 
     if path == "/":
         return path
-    
+
     if path.endswith("/"):
         path = path[:-1]
 
     return path
+
 
 class AwsApiGatewayMount(MountDriver):
     def __init__(self, ontology: Ontology) -> None:
@@ -102,10 +105,7 @@ class AwsApiGatewayMount(MountDriver):
         for api, route, integration in mounts:
             location = deproxify(f"{api.ApiEndpoint}{route.RouteKey.split(' ')[-1]}")
 
-            clients.api_gw.delete_route(
-                ApiId=api.ApiId,
-                RouteId=route.RouteId
-            )
+            clients.api_gw.delete_route(ApiId=api.ApiId, RouteId=route.RouteId)
 
             clients.api_gw.delete_integration(
                 ApiId=api.ApiId, IntegrationId=integration.IntegrationId
@@ -117,15 +117,17 @@ class AwsApiGatewayMount(MountDriver):
                     StatementId=f"{self.ontology.context.resource_name}-{api.ApiId}",
                 )
             except clients.lmb.exceptions.ResourceNotFoundException:
-                        pass
-            
+                pass
+
             umounted.append(f"umounted {resource} from {location}")
         return umounted
 
     def mounts(self) -> List[str]:
         mounts = []
         for api, route, integration in self._mounts():
-            host = api.ApiEndpoint.replace("https://", "") # https://github.com/pallets/click/issues/1515
+            host = api.ApiEndpoint.replace(
+                "https://", ""
+            )  # https://github.com/pallets/click/issues/1515
             path = deproxify(route.RouteKey.split(" ")[-1])
             mounts.append(f"{host}{path}")
         return mounts

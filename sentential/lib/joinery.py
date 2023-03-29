@@ -205,7 +205,7 @@ class Joinery:
             return f"[link={url}]{schedule}[/link]"
         except:
             return None
-    
+
     def _console_routes(self) -> Union[None, str]:
         region = self.ontology.context.region
         links = []
