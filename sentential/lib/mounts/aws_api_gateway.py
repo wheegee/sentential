@@ -34,9 +34,6 @@ def deproxify(path: str) -> str:
     if path == "/":
         return path
 
-    if path.endswith("/"):
-        path = path[:-1]
-
     return path
 
 
@@ -45,7 +42,7 @@ class AwsApiGatewayMount(MountDriver):
         self.ontology: Ontology = ontology
         self.resource_name: str = self.ontology.context.resource_name
         self.resource_arn: str = self.ontology.context.resource_arn
-        self.provision: Provision = cast(Provision, self.ontology.configs.parameters)
+        self.provision = cast(Provision, self.ontology.configs.parameters)
 
         # set by _fetch_state
         self.path: str
@@ -94,7 +91,7 @@ class AwsApiGatewayMount(MountDriver):
         route = self._ensure_route(integration)
         policy = self._ensure_policy()
         resource = self.ontology.context.resource_name
-        location = deproxify(f"{self.api.ApiEndpoint}{self.given_route}")
+        location = deproxify(f"{self.api.ApiEndpoint}{self.given_route}/")
         return f"mounted {resource} to {location}"
 
     def umount(self, path: Union[None, str] = None) -> List[str]:
@@ -196,7 +193,6 @@ class AwsApiGatewayMount(MountDriver):
             "RequestParameters": {
                 "overwrite:path": "/$request.path.proxy",
                 "overwrite:header.X-Forwarded-Prefix": deproxify(self.given_route),
-                "overwrite:header.X-Forwarded-Mapping": "$context.customDomain.basePathMatched",
             },
         }
 

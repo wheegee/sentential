@@ -19,7 +19,7 @@ from sentential.lib.drivers.local_images import LocalImagesDriver
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.mounts.aws_event_schedule import AwsEventScheduleMount
-from sentential.lib.mounts.aws_api_gateway import AwsApiGatewayMount
+from sentential.lib.mounts.aws_api_gateway import AwsApiGatewayMount, deproxify
 from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG
 from pydantic import BaseModel
 from python_on_whales.components.image.cli_wrapper import Image
@@ -210,7 +210,7 @@ class Joinery:
         region = self.ontology.context.region
         links = []
         for api, route, integration in self._deployed_routes():
-            text = route.RouteKey.split(" ")[-1]
+            text = deproxify(route.RouteKey.split(" ")[-1])
             url = f"https://{region}.console.aws.amazon.com/apigateway/main/develop/routes?api={api.ApiId}&integration={integration.IntegrationId}&region={region}&routes={route.RouteId}"
             links.append(f"[link={url}]{text}[/link]")
         if links:
