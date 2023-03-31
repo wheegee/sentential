@@ -15,8 +15,14 @@ def schedule():
 
 @umount.command()
 def route(
-    all: bool = typer.Option(False,"-a", "--all", help="unmount all routes integrated with lambda"),
-    path: str = typer.Argument(None, autocompletion=AwsApiGatewayMount.autocomplete, help="unmount lambda from given path")
+    all: bool = typer.Option(
+        False, "-a", "--all", help="unmount all routes integrated with lambda"
+    ),
+    path: str = typer.Argument(
+        None,
+        autocompletion=AwsApiGatewayMount.autocomplete,
+        help="unmount lambda from given path",
+    ),
 ):
     """unmount lambda image from api gateway"""
     if not all and path is None:
