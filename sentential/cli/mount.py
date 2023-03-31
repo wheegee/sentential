@@ -20,7 +20,7 @@ def schedule(
 
 @mount.command()
 def route(
-    path: str = typer.Argument(None, autocompletion=AwsApiGatewayMount.autocomplete)
+    path: str = typer.Argument(None, autocompletion=AwsApiGatewayMount.autocomplete, help="mount lambda to given path")
 ):
     """mount lambda image to api gateway"""
     print(AwsApiGatewayMount(Ontology()).mount(path))

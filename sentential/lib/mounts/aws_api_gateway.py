@@ -31,8 +31,8 @@ def deproxify(path: str) -> str:
         if path.endswith(proxy_string):
             path = path.replace(proxy_string, "")
 
-    if path == "/":
-        return path
+    if not path.endswith("/"):
+        path = f"{path}/"
 
     return path
 
@@ -63,7 +63,7 @@ class AwsApiGatewayMount(MountDriver):
             )  # https://github.com/pallets/click/issues/1515
             completions.append(host)
             for route in cls._routes(api.ApiId):
-                path = route.RouteKey.split(" ")[-1]
+                path = deproxify(route.RouteKey.split(" ")[-1])
                 completions.append(f"{host}{path}")
         return completions
 
@@ -91,7 +91,7 @@ class AwsApiGatewayMount(MountDriver):
         route = self._ensure_route(integration)
         policy = self._ensure_policy()
         resource = self.ontology.context.resource_name
-        location = deproxify(f"{self.api.ApiEndpoint}{self.given_route}/")
+        location = deproxify(f"{self.api.ApiEndpoint}{self.given_route}")
         return f"mounted {resource} to {location}"
 
     def umount(self, path: Union[None, str] = None) -> List[str]:
@@ -99,8 +99,16 @@ class AwsApiGatewayMount(MountDriver):
         umounted = []
         resource = self.ontology.context.resource_name
 
+        if path:
+            if not path.startswith("https://"):
+                path = f"https://{path}"
+            path = deproxify(path)
+
         for api, route, integration in mounts:
             location = deproxify(f"{api.ApiEndpoint}{route.RouteKey.split(' ')[-1]}")
+
+            if path and path != location:
+                continue
 
             clients.api_gw.delete_route(ApiId=api.ApiId, RouteId=route.RouteId)
 
