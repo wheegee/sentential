@@ -83,7 +83,7 @@ RUN pip install -r requirements.txt
 
 ### Mount Route
 
-This step assumes you already have at least one API Gateway launched in your AWS account.
+This step assumes you already have at least one [HTTP API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html) launched in your AWS account.
 
 ```shell
 > sntl mount route [tab][tab] # use tab to discover/autocomplete available gateway urls
