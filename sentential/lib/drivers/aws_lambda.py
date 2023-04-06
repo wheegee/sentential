@@ -35,7 +35,7 @@ class AwsLambdaDriver(LambdaDriver):
         self.ontology.envs.export_defaults()
         self.ontology.tags.export_defaults()
 
-        tags = self.ontology.tags.as_dict()
+        tags = self.ontology.tags.parameters.dict()
 
         clients.iam.attach_role_policy(
             RoleName=self._put_role(tags)["Role"]["RoleName"],
@@ -203,12 +203,12 @@ class AwsLambdaDriver(LambdaDriver):
             else image.platform.architecture
         )
         image_uri = f"{self.ontology.context.repository_url}@{image.digest}"
-        envs_path = self.ontology.envs.path
+        envs_path = str(self.ontology.envs.path)
 
         sleep(10)
         try:
             function = clients.lmb.create_function(
-                FunctionName=function_name,
+                FunctionName=self.function_name,
                 Role=role_arn,
                 PackageType="Image",
                 Code={"ImageUri": image_uri},

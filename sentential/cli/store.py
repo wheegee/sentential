@@ -12,18 +12,18 @@ def namespace(ctx: typer.Context):
 
 
 @store.command()
-def read(ctx: typer.Context) -> None:
+def read(ctx: typer.Context):
     print(getattr(ctx.obj, str(ctx.command.name))())
 
 
 @store.command()
-def write(ctx: typer.Context, key: str, value: List[str]):
-    getattr(ctx.obj, str(ctx.command.name))(key, value)
+def write(ctx: typer.Context, key: str, value: str):
+    print(getattr(ctx.obj, str(ctx.command.name))(key, value))
 
 
 @store.command()
 def delete(ctx: typer.Context, key: str):
-    getattr(ctx.obj, str(ctx.command.name))(key)
+    print(getattr(ctx.obj, str(ctx.command.name))(key))
 
 
 @store.command()

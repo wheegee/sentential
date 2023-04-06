@@ -1,12 +1,9 @@
 import os
 import sys
-from typing import Union
 from sentential.lib.context import Context
-from sentential.lib.store import GenericStore, ModeledStore
-from sentential.lib.shapes import Provision as Model
+from sentential.lib.store_v2 import StoreV2
 
-
-def reload_shapes():
+def load_user_defined_shapes():
     if os.getcwd() not in sys.path:
         sys.path.append(os.getcwd())
 
@@ -21,39 +18,46 @@ class Ontology:
         pass
 
     @property
-    def context(cls) -> Context:
+    def context(self) -> Context:
         return Context()
 
     @property
-    def args(cls) -> Union[GenericStore, ModeledStore]:
+    def args(self) -> StoreV2:
         try:
-            reload_shapes()
-            from shapes import Args as Model  # type: ignore
-
-            return ModeledStore(cls.context, "arg", Model)
+            load_user_defined_shapes()
+            from shapes import Args
         except ImportError:
-            return GenericStore(cls.context, "arg")
+            from sentential.lib.shapes import Args
+        return StoreV2(self.context, Args)
+        
+    @property
+    def envs(self) -> StoreV2:
+        try:
+            load_user_defined_shapes()
+            from shapes import Envs
+        except ImportError:
+            from sentential.lib.shapes import Envs
+        return StoreV2(self.context, Envs)
 
     @property
-    def envs(cls) -> Union[GenericStore, ModeledStore]:
+    def secrets(self) -> StoreV2:
         try:
-            reload_shapes()
-            from shapes import Envs as Model  # type: ignore
-
-            return ModeledStore(cls.context, "env", Model)
+            load_user_defined_shapes()
+            from shapes import Secrets
         except ImportError:
-            return GenericStore(cls.context, "env")
+            from sentential.lib.shapes import Secrets
+        return StoreV2(self.context, Secrets)
 
     @property
-    def tags(cls) -> Union[GenericStore, ModeledStore]:
+    def tags(self) -> StoreV2:
         try:
-            reload_shapes()
-            from shapes import Tags as Model  # type: ignore
-
-            return ModeledStore(cls.context, "tag", Model)
+            load_user_defined_shapes()
+            from shapes import Tags
         except ImportError:
-            return GenericStore(cls.context, "tag")
+            from sentential.lib.shapes import Tags
+        return StoreV2(self.context, Tags)
 
     @property
-    def configs(cls) -> ModeledStore:
-        return ModeledStore(cls.context, "provision", Model)
+    def configs(self) -> StoreV2:
+        from sentential.lib.shapes import Provision
+        return StoreV2(self.context, Provision)

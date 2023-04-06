@@ -13,7 +13,6 @@ from rich import print
 
 root = typer.Typer()
 
-
 @root.command()
 def init(repository_name: str, runtime: Runtimes):
     """initialize sentential project"""

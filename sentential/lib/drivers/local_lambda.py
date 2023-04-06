@@ -43,7 +43,7 @@ class LocalLambdaDriver(LambdaDriver):
 
         default_env = {
             "AWS_REGION": self.ontology.context.region,
-            "PARTITION": self.ontology.envs.path,
+            "PARTITION": str(self.ontology.envs.path),
         }
 
         clients.docker.run(

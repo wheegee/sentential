@@ -1,9 +1,9 @@
-import re
 from datetime import datetime
 from enum import Enum
 from pathlib import PosixPath
-from typing import Any, List, Union, Optional, Dict
-from pydantic import BaseModel, Field, validator, Json
+from typing import Any, List, Union, Optional, Dict, Literal
+from pydantic import Field, validator, Json, Extra
+from pydantic import BaseModel as PydanticBaseModel
 from sentential.support.shaper import Shaper
 from sentential.lib.exceptions import ShapeError
 from sentential.lib.clients import clients
@@ -15,30 +15,50 @@ from sentential.lib.clients import clients
 CURRENT_WORKING_IMAGE_TAG = "cwi"
 
 #
-# Internally Defined Shapes
+# Store
 #
 
+class BaseModel(PydanticBaseModel):
+    ...
+    class Config:
+        validate_all = True
+        extra = Extra.allow
 
-class Provision(Shaper):
+class BaseModelStrict(PydanticBaseModel):
+    ...
+    class Config:
+        validate_all = True
+        extra = Extra.forbid
+
+class Args(BaseModelStrict):
+    ...
+
+class Envs(BaseModel):
+    ...
+
+class Secrets(BaseModel):
+    ...
+
+class Tags(BaseModel):
+    ...
+
+class Provision(BaseModelStrict):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
     memory: int = Field(default=128, description="allocated memory (mb)")
     timeout: int = Field(default=3, description="timeout (s)")
-    subnet_ids: List[str] = Field(default=[], description="subnet ids")
-    security_group_ids: List[str] = Field(default=[], description="security group ids")
-    auth_type: str = Field(default="NONE", description="auth type")
-    allow_headers: List[str] = Field(default=["*"], description="CORS AllowHeaders")
-    allow_methods: List[str] = Field(default=["*"], description="CORS AllowMethods")
-    allow_origins: List[str] = Field(default=["*"], description="CORS AllowOrigins")
-    expose_headers: List[str] = Field(default=["*"], description="CORS ExposeHeaders")
+    subnet_ids: Json[List[str]] = Field(default="[]", description="subnet ids")
+    security_group_ids: Json[List[str]] = Field(default="[]", description="security group ids")
+    auth_type: Literal["NONE", "AWS_IAM"] = Field(default="NONE", description="auth type")
+    allow_headers: Json[List[str]] = Field(default='["*"]', description="CORS AllowHeaders")
+    allow_methods: Json[List[str]] = Field(default='["*"]', description="CORS AllowMethods")
+    allow_origins: Json[List[str]] = Field(default='["*"]', description="CORS AllowOrigins")
+    expose_headers: Json[List[str]] = Field(default='["*"]', description="CORS ExposeHeaders")
     log_retention: int = Field(default=7, description="log retention (days)")
 
-    @validator("auth_type")
-    def is_valid_auth_type(cls, v):
-        valid_auth_types = ["NONE", "AWS_IAM"]
-        if v not in valid_auth_types:
-            raise ValueError(f"auth_type must be one of {', '.join(valid_auth_types)}")
-        return v
 
+#
+# Architecture
+#
 
 # https://github.com/BretFisher/multi-platform-docker-build
 #   Value    Normalized
@@ -68,6 +88,21 @@ class Architecture(Enum):
             )
             print("defaulting to amd64")
             return cls.amd64
+
+#
+# SSM
+#
+
+class AwsSSMParam(BaseModel):
+    Name: str
+    Type: Literal["String", "StringList", "SecureString"]
+    Value: str
+    Version: int
+    Selector: Optional[str]
+    SourceResult: Optional[str]
+    LastModifiedDate: datetime
+    ARN: str
+    DataType: str
 
 
 #
