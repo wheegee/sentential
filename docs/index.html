@@ -13,6 +13,7 @@
   <div id="app"></div>
   <!-- edit-on-github -->
   <script src="//cdn.jsdelivr.net/npm/docsify-edit-on-github"></script> 
+
   <script>
     window.$docsify = {
       loadSidebar: true,
@@ -20,10 +21,19 @@
         'cache-control': 'max-age=0',
       },
       plugins: [
-        EditOnGithubPlugin.create('https://github.com/wheegee/sentential/tree/master/docs/', null, 'Edit On Github')
+        EditOnGithubPlugin.create('https://github.com/wheegee/sentential/tree/master/docs/', null, 'Edit On Github'),
+        function (hook) {
+          hook.doneEach(function () {
+            let mermaidConfig = {
+              querySelector: ".mermaid",
+            };
+            mermaid.run(mermaidConfig);
+          });
+        },
       ]
     }
   </script>
+
   <!-- docsify -->
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
 
@@ -34,8 +44,6 @@
     window.mermaid = mermaid;
   </script>
   <script src="//unpkg.com/docsify-mermaid@2.0.0/dist/docsify-mermaid.js"></script>
-
-
   
   <!-- highlighting -->
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
