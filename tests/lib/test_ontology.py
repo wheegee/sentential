@@ -87,11 +87,14 @@ class TestContext(object):
         with pytest.raises(ContextError):
             ontology.context.repository_name
 
+
 @pytest.mark.usefixtures("moto", "init", "ontology")
 class TestStore:
     def test_default_shapes(self, ontology: Ontology):
         os.remove("shapes.py")
-        assert str(type(ontology.envs._read())) == "<class 'sentential.lib.shapes.Envs'>"
+        assert (
+            str(type(ontology.envs._read())) == "<class 'sentential.lib.shapes.Envs'>"
+        )
 
     def test_store_read(self, ontology: Ontology):
         table = ontology.envs.read()
@@ -116,6 +119,7 @@ class TestStore:
         body = table_body(ontology.envs.clear())
         assert len(body) == 0
 
+
 @pytest.mark.usefixtures("moto", "init", "ontology")
 class TestStoreShapes:
     def test_user_defined_shapes(self, ontology: Ontology):
@@ -124,12 +128,22 @@ class TestStoreShapes:
 
     def test_read(self, ontology: Ontology):
         table = table_body(ontology.envs.read())
-        assert ["required_env", "None", "required", "[red]field required[/red]"] in table
+        assert [
+            "required_env",
+            "None",
+            "required",
+            "[red]field required[/red]",
+        ] in table
         assert ["optional_env", "default_value", "optional", "None"] in table
 
     def test_validation(self, ontology: Ontology):
         table = table_body(ontology.envs.write("required_env", "non-integer"))
-        assert ["required_env", "non-integer", "required", "[red]value is not a valid integer[/red]"] in table
+        assert [
+            "required_env",
+            "non-integer",
+            "required",
+            "[red]value is not a valid integer[/red]",
+        ] in table
         assert ["optional_env", "default_value", "optional", "None"] in table
 
     def test_extra_property(self, ontology: Ontology):
@@ -139,12 +153,13 @@ class TestStoreShapes:
     def test_parameters_raises_when_failing(self, ontology: Ontology):
         with pytest.raises(ValidationError):
             ontology.envs.parameters
-    
+
     def test_parameters_returns_when_passing(self, ontology: Ontology):
         ontology.envs.write("required_env", "123")
         assert ontology.envs.parameters.required_env == 123
         assert ontology.envs.parameters.optional_env == "default_value"
-    
+
+
 @pytest.mark.usefixtures("moto", "init", "ontology")
 class TestStoreStrictShapes:
     def test_strict_user_defined_shapes(self, ontology: Ontology):
@@ -153,32 +168,51 @@ class TestStoreStrictShapes:
 
     def test_read(self, ontology: Ontology):
         table = table_body(ontology.envs.read())
-        assert ["required_env", "None", "required", "[red]field required[/red]"] in table
+        assert [
+            "required_env",
+            "None",
+            "required",
+            "[red]field required[/red]",
+        ] in table
         assert ["optional_env", "default_value", "optional", "None"] in table
 
     def test_validation(self, ontology: Ontology):
         table = table_body(ontology.envs.write("required_env", "non-integer"))
-        assert ["required_env", "non-integer", "required", "[red]value is not a valid integer[/red]"] in table
+        assert [
+            "required_env",
+            "non-integer",
+            "required",
+            "[red]value is not a valid integer[/red]",
+        ] in table
         assert ["optional_env", "default_value", "optional", "None"] in table
 
     def test_extra_property(self, ontology: Ontology):
         table = table_body(ontology.envs.write("undefined_env", "undefined"))
-        assert ["undefined_env", "undefined", "None", "[red]extra fields not permitted[/red]"] in table
+        assert [
+            "undefined_env",
+            "undefined",
+            "None",
+            "[red]extra fields not permitted[/red]",
+        ] in table
 
     def test_parameters_raises_when_failing(self, ontology: Ontology):
         with pytest.raises(ValidationError):
             ontology.envs.parameters
-    
+
     def test_parameters_returns_when_passing(self, ontology: Ontology):
         ontology.envs.delete("undefined_env")
         ontology.envs.write("required_env", "123")
         assert ontology.envs.parameters.required_env == 123
         assert ontology.envs.parameters.optional_env == "default_value"
 
+
 @pytest.mark.usefixtures("moto", "init", "ontology")
 class TestStoreProvision:
     def test_configs_type(self, ontology: Ontology):
-        assert str(type(ontology.configs._read())) == "<class 'sentential.lib.shapes.Provision'>"
+        assert (
+            str(type(ontology.configs._read()))
+            == "<class 'sentential.lib.shapes.Provision'>"
+        )
 
     def test_configs_read(self, ontology: Ontology):
         table = ontology.configs.read()
@@ -206,4 +240,3 @@ class TestStoreProvision:
         ontology.configs.write("memory", "lots")
         with pytest.raises(ValidationError):
             ontology.configs.parameters
-

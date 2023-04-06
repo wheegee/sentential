@@ -7,7 +7,9 @@ from sentential.lib.clients import clients
 from sentential.lib.context import Context
 from sentential.lib.shapes import AwsSSMParam, Args, Envs, Secrets, Tags, Provision
 
-VALID_MODEL_TYPES=Union[Type[Args], Type[Envs], Type[Secrets], Type[Tags], Type[Provision]]
+VALID_MODEL_TYPES = Union[
+    Type[Args], Type[Envs], Type[Secrets], Type[Tags], Type[Provision]
+]
 VALID_MODELS = Union[Args, Envs, Secrets, Tags, Provision]
 
 
@@ -17,11 +19,13 @@ class ValidationErrorInfo(BaseModel):
     msg: str
     type: str
 
+
 class StoreTableRow(BaseModel):
     key: Any
     value: Optional[Any]
     description: Optional[Any]
     validation: Optional[Any]
+
 
 class StoreV2:
     def __init__(self, context: Context, model: VALID_MODEL_TYPES) -> None:
@@ -37,8 +41,7 @@ class StoreV2:
     def state(self) -> Dict:
         try:
             resp = clients.ssm.get_parameter(
-                Name=str(self.path),
-                WithDecryption=self.encrypted
+                Name=str(self.path), WithDecryption=self.encrypted
             )
             return json.loads(AwsSSMParam(**resp["Parameter"]).Value)
         except clients.ssm.exceptions.ParameterNotFound:
@@ -63,18 +66,18 @@ class StoreV2:
 
     def _read(self) -> VALID_MODELS:
         return self.model.construct(**self.state)
-        
+
     def write(self, key: str, value: str) -> Table:
-        merged = self.state | { key: value }
+        merged = self.state | {key: value}
         self._write_parameters(merged)
         return self.read()
-    
+
     def delete(self, key: str) -> Table:
         mutated = self.state.copy()
         del mutated[key]
         self._write_parameters(mutated)
         return self.read()
-    
+
     def export_defaults(self) -> None:
         self._write_parameters(self.parameters.dict())
 
@@ -90,10 +93,7 @@ class StoreV2:
             errors = []
             for error in e.errors():
                 error = cast(Dict, error)
-                errors.append(ValidationErrorInfo(
-                    key=error["loc"][0],
-                    **error
-                ))
+                errors.append(ValidationErrorInfo(key=error["loc"][0], **error))
             return errors
 
     def read(self) -> Table:
@@ -108,13 +108,10 @@ class StoreV2:
         # add rows found in schema
         for key, meta in properties.items():
             desc = meta["description"] if "description" in meta else None
-            rows.append(StoreTableRow(
-                key=key,
-                value=None,
-                description=desc,
-                validation=None
-            ))
-        
+            rows.append(
+                StoreTableRow(key=key, value=None, description=desc, validation=None)
+            )
+
         # populate existent values for properties defined in schema
         for row in rows:
             for key, value in data.dict().items():
@@ -123,13 +120,12 @@ class StoreV2:
 
         # add rows for data _not_ in schema
         for key, value in data.dict().items():
-            if not any([ row.key == key for row in rows]):
-                rows.append(StoreTableRow(
-                    key=key,
-                    value=value,
-                    description=None,
-                    validation=None
-                ))
+            if not any([row.key == key for row in rows]):
+                rows.append(
+                    StoreTableRow(
+                        key=key, value=value, description=None, validation=None
+                    )
+                )
 
         # populate validation information for each row
         for row in rows:
@@ -140,9 +136,7 @@ class StoreV2:
         # dump it into a renderable table object
         for row in rows:
             values = list(row.dict().values())
-            values = [ str(v) for v in values ]
+            values = [str(v) for v in values]
             table.add_row(*values)
 
         return table
-    
-

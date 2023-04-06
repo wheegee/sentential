@@ -10,6 +10,7 @@ from typing import cast
 
 PACKAGE_PATH = PosixPath(dirname(abspath(__file__))).parent
 
+
 class Init:
     def __init__(self, repository_name: str, runtime: str) -> None:
         self.repository_name = repository_name
@@ -48,6 +49,5 @@ class Policy:
     def render(self) -> str:
         template = self.jinja.get_template("policy.json")
         return template.render(
-            context=self.ontology.context, 
-            env=cast(Envs, self.ontology.envs.parameters)
+            context=self.ontology.context, env=cast(Envs, self.ontology.envs.parameters)
         )

@@ -3,6 +3,7 @@ import sys
 from sentential.lib.context import Context
 from sentential.lib.store_v2 import StoreV2
 
+
 def load_user_defined_shapes():
     if os.getcwd() not in sys.path:
         sys.path.append(os.getcwd())
@@ -29,7 +30,7 @@ class Ontology:
         except ImportError:
             from sentential.lib.shapes import Args
         return StoreV2(self.context, Args)
-        
+
     @property
     def envs(self) -> StoreV2:
         try:
@@ -60,4 +61,5 @@ class Ontology:
     @property
     def configs(self) -> StoreV2:
         from sentential.lib.shapes import Provision
+
         return StoreV2(self.context, Provision)

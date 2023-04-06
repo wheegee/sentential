@@ -18,41 +18,62 @@ CURRENT_WORKING_IMAGE_TAG = "cwi"
 # Store
 #
 
+
 class BaseModel(PydanticBaseModel):
     ...
+
     class Config:
         validate_all = True
         extra = Extra.allow
 
+
 class BaseModelStrict(PydanticBaseModel):
     ...
+
     class Config:
         validate_all = True
         extra = Extra.forbid
 
+
 class Args(BaseModelStrict):
     ...
+
 
 class Envs(BaseModel):
     ...
 
+
 class Secrets(BaseModel):
     ...
 
+
 class Tags(BaseModel):
     ...
+
 
 class Provision(BaseModelStrict):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
     memory: int = Field(default=128, description="allocated memory (mb)")
     timeout: int = Field(default=3, description="timeout (s)")
     subnet_ids: Json[List[str]] = Field(default="[]", description="subnet ids")
-    security_group_ids: Json[List[str]] = Field(default="[]", description="security group ids")
-    auth_type: Literal["NONE", "AWS_IAM"] = Field(default="NONE", description="auth type")
-    allow_headers: Json[List[str]] = Field(default='["*"]', description="CORS AllowHeaders")
-    allow_methods: Json[List[str]] = Field(default='["*"]', description="CORS AllowMethods")
-    allow_origins: Json[List[str]] = Field(default='["*"]', description="CORS AllowOrigins")
-    expose_headers: Json[List[str]] = Field(default='["*"]', description="CORS ExposeHeaders")
+    security_group_ids: Json[List[str]] = Field(
+        default="[]", description="security group ids"
+    )
+    auth_type: Literal["NONE", "AWS_IAM"] = Field(
+        default="NONE", description="auth type"
+    )
+    allow_headers: Json[List[str]] = Field(
+        default='["*"]', description="CORS AllowHeaders"
+    )
+    allow_methods: Json[List[str]] = Field(
+        default='["*"]', description="CORS AllowMethods"
+    )
+    allow_origins: Json[List[str]] = Field(
+        default='["*"]', description="CORS AllowOrigins"
+    )
+    expose_headers: Json[List[str]] = Field(
+        default='["*"]', description="CORS ExposeHeaders"
+    )
     log_retention: int = Field(default=7, description="log retention (days)")
 
 
@@ -89,9 +110,11 @@ class Architecture(Enum):
             print("defaulting to amd64")
             return cls.amd64
 
+
 #
 # SSM
 #
+
 
 class AwsSSMParam(BaseModel):
     Name: str
