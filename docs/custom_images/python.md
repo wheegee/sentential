@@ -29,46 +29,49 @@ if [ $# -ne 1 ]; then
 fi
 
 if [ -z "${AWS_LAMBDA_RUNTIME_API}" ]; then
-    exec /usr/local/bin/aws-lambda-rie /usr/local/bin/python -m awslambdaric $1
+    exec /usr/bin/aws-lambda-rie /usr/bin/python3 -m awslambdaric $1
 else
-    exec /usr/local/bin/python -m awslambdaric $1
+    exec /usr/bin/python3 -m awslambdaric $1
 fi
 ```
 
 #### **./Dockerfile**
 
 ```dockerfile
-# We will extract sentential requirements from this image
-FROM ghcr.io/wheegee/entry:latest as entry
-
-# We will extract AWS Lambda runtime interface emulator from this image
-FROM public.ecr.aws/lambda/provided:latest AS aws
+FROM alpine:3.16 AS python
+# Install python
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    python3-dev
+# Install native build dependencies
+RUN apk add --no-cache \
+    libstdc++ \
+    build-base \
+    libtool \
+    autoconf \
+    automake \
+    libexecinfo-dev \
+    make \
+    cmake \
+    libcurl
 
 FROM python AS runtime
-# Standard AWS Lambda image configuration
 ENV LAMBDA_RUNTIME_DIR=/var/runtime
 ENV LAMBDA_TASK_ROOT=/var/task
 WORKDIR ${LAMBDA_TASK_ROOT}
-
-# Install sentential requirements
-ENV AWS_LAMBDA_EXEC_WRAPPER=/bin/wrapper.sh
-COPY --chmod=755 --from=entry / /bin/
-
+# Install python lambda runtime interface client
+RUN pip install awslambdaric
 # Install runtime interface emulator
-COPY --from=aws --chmod=755 /usr/local/bin/aws-lambda-rie /usr/local/bin/aws-lambda-rie
-
-# Install python runtime interface client
-RUN pip install awslambdaric 
-
-# Setup entrypoint
+COPY --from=public.ecr.aws/lambda/provided:latest --chmod=755 /usr/local/bin/aws-lambda-rie /usr/bin/aws-lambda-rie
+# Install sentential requirements
+COPY --chmod=755 --from=ghcr.io/wheegee/entry:latest / /bin/
 COPY --chmod=755 lambda-entrypoint.sh /lambda-entrypoint.sh
+# Set up entrypoint
 ENTRYPOINT [ "/lambda-entrypoint.sh" ]
 
 FROM runtime AS explore
 COPY src/ ${LAMBDA_TASK_ROOT}
-
-# insert application specific build steps here
-
 CMD ["app.handler"]
 ```
 
