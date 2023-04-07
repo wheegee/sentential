@@ -1,12 +1,12 @@
-from ast import List
 from typing import cast
 import pytest
 import json
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.drivers.local_images import LocalImagesDriver
-from sentential.lib.shapes import AwsImageDetail, Architecture
+from sentential.lib.shapes import AwsImageDetail, Architecture, ApiGatewayApi
 from tests.helpers import generate_image_manifest, generate_image_manifest_list
+
 
 #
 # Current Working Image
@@ -55,3 +55,15 @@ def mock_repo(ontology: Ontology):
     repo_name = ontology.context.repository_name
     clients.ecr.create_repository(repositoryName=repo_name)
     popluate_mock_images(repo_name)
+
+
+@pytest.fixture(scope="class")
+def mock_api_gateway():
+    api = clients.api_gw.create_api(
+        Name="testing",
+        ProtocolType="HTTP",
+    )
+
+    yield api
+
+    clients.api_gw.delete_api(ApiId=api["ApiId"])

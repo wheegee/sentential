@@ -1,4 +1,4 @@
-### Schedule
+### Mount Schedule
 
 [EventBridge Rules](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-rules.html), along with [schedule expressions](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html), can be used to run AWS Lambda functions on a schedule.
 

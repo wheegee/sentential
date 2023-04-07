@@ -1,10 +1,11 @@
 from typing import Dict, List, cast
+from sentential.lib.mounts.spec import MountDriver
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Provision, EbrDescribeRuleResponse, EbrPutRuleResponse
 
 
-class AwsEventScheduleMount:
+class AwsEventScheduleMount(MountDriver):
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.resource_name = self.ontology.context.resource_name
