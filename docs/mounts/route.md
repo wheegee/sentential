@@ -1,4 +1,4 @@
-### Route
+# Route
 
 [API Gateway](https://docs.aws.amazon.com/apigateway/index.html) can be used to create publicly accessible https routes by which to invoke your http based lambdas.
 
