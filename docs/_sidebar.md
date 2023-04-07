@@ -16,7 +16,7 @@
     * [ElastiCache](services/elasticache.md)
     * [RDS](services/rds.md)
     * [OpenSearch](services/opensearch.md)
-* [Custom Images](custom_images/requirements.md)
+* [Custom Images](custom_images/description.md)
     * [Python](custom_images/python.md)
     * [Ruby](custom_images/ruby.md)
     * [Go](custom_images/go.md)

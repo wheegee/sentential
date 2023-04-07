@@ -20,7 +20,7 @@ def handler(event:, context:)
 end
 ```
 
-#### **./src/ruby_3_patch.rb
+#### **./src/ruby_3_patch.rb**
 The ruby ric is a bit behind the times. As of this documentation, this [issue](https://github.com/aws/aws-lambda-ruby-runtime-interface-client/issues/14) requires a monkeypatch.
 
 It is possible that by the time you are reading this the problem has been resolved, and perhaps this monkeypatch is now breaking.
