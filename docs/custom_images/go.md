@@ -120,9 +120,3 @@ CMD ["app"]
   "Payload": "\"Hello, explore!\""
 }
 ```
-
-### Further reading
-
-- [custom runtime docs](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-walkthrough.html)
-- [runtime interface clients](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-images.html#runtimes-api-client)
-- [runtime interface emulator](https://github.com/aws/aws-lambda-runtime-interface-emulator)

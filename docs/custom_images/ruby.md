@@ -1,4 +1,4 @@
-# Python
+# Ruby
 
 ### Prerequisites
 
@@ -10,12 +10,43 @@ Create or modify...
 
 <!-- tabs:start -->
 
-#### **./src/app.py**
+#### **./src/app.rb**
 
-```python
-import sys
-def handler(event, context): 
-    return f"echo: {event}"
+```ruby
+require_relative 'ruby_3_patch'
+
+def handler(event:, context:)
+    "echo: #{event}"
+end
+```
+
+#### **./src/ruby_3_patch.rb
+The ruby ric is a bit behind the times. As of this documentation, this [issue](https://github.com/aws/aws-lambda-ruby-runtime-interface-client/issues/14) requires a monkeypatch.
+
+It is possible that by the time you are reading this the problem has been resolved, and perhaps this monkeypatch is now breaking.
+
+If this is the case please submit an Issue or PR!
+
+```ruby
+require 'aws_lambda_ric'
+require 'io/console'
+require 'stringio'
+
+module AwsLambdaRuntimeInterfaceClient
+  class LambdaRunner
+    def send_error_response(lambda_invocation, err, exit_code = nil, runtime_loop_active = true)
+      error_object = err.to_lambda_response
+      @lambda_server.send_error_response(
+        request_id: lambda_invocation.request_id,
+        error_object: error_object,
+        error: err,
+        xray_cause: XRayCause.new(error_object).as_json
+      )
+      @exit_code = exit_code unless exit_code.nil?
+      @runtime_loop_active = runtime_loop_active
+    end
+  end
+end
 ```
 
 #### **./lambda-entrypoint.sh**
@@ -29,39 +60,27 @@ if [ $# -ne 1 ]; then
 fi
 
 if [ -z "${AWS_LAMBDA_RUNTIME_API}" ]; then
-    exec /usr/bin/aws-lambda-rie /usr/bin/python3 -m awslambdaric $1
+    exec /usr/bin/aws-lambda-rie /usr/bin/aws_lambda_ric $1
 else
-    exec /usr/bin/python3 -m awslambdaric $1
+    exec /usr/bin/aws_lambda_ric $1
 fi
 ```
 
 #### **./Dockerfile**
 
 ```dockerfile
-FROM alpine:3.16 AS python
-# Install python
+FROM alpine:3.16 AS ruby
+# Install Ruby
 RUN apk add --no-cache \
-    python3 \
-    py3-pip \
-    python3-dev
-# Install native build dependencies
-RUN apk add --no-cache \
-    libstdc++ \
-    build-base \
-    libtool \
-    autoconf \
-    automake \
-    libexecinfo-dev \
-    make \
-    cmake \
-    libcurl
+    ruby \
+    ruby-dev
 
-FROM python AS runtime
+FROM ruby AS runtime
 ENV LAMBDA_RUNTIME_DIR=/var/runtime
 ENV LAMBDA_TASK_ROOT=/var/task
 WORKDIR ${LAMBDA_TASK_ROOT}
 # Install python lambda runtime interface client
-RUN pip install awslambdaric
+RUN gem install bundler aws_lambda_ric
 # Install runtime interface emulator
 COPY --from=public.ecr.aws/lambda/provided:latest --chmod=755 /usr/local/bin/aws-lambda-rie /usr/bin/aws-lambda-rie
 # Install sentential requirements
