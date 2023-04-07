@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v0.10.0 (2023-04-07)
+### Feature
+* Api Gateway Mount ([#239](https://github.com/wheegee/sentential/issues/239)) ([`735f4a2`](https://github.com/wheegee/sentential/commit/735f4a2f4226f78bad4dfd418dfcc6d5065dd072))
+
+## v0.9.1 (2023-03-23)
+### Fix
+* Log management ([#237](https://github.com/wheegee/sentential/issues/237)) ([`668fbc3`](https://github.com/wheegee/sentential/commit/668fbc37bec789c5344a89785cd357998d5681a9))
+
 ## v0.9.0 (2023-03-12)
 ### Feature
 * Add schedule mount ([#232](https://github.com/wheegee/sentential/issues/232)) ([`10ed4d0`](https://github.com/wheegee/sentential/commit/10ed4d06a23508703188af652629d6c0fdfa823d))
