@@ -1,4 +1,4 @@
-import re
+import os
 from datetime import datetime
 from enum import Enum
 from pathlib import PosixPath
@@ -8,11 +8,13 @@ from sentential.support.shaper import Shaper
 from sentential.lib.exceptions import ShapeError
 from sentential.lib.clients import clients
 
+
 #
 # Global Constants
 #
 
-CURRENT_WORKING_IMAGE_TAG = "cwi"
+SNTL_WORKING_IMAGE_TAG = os.getenv("SNTL_WORKING_IMAGE_TAG", default=("cwi"))
+SNTL_ENTRY_VERSION = os.getenv("SNTL_ENTRY_VERSION", default=("latest"))
 
 #
 # Internally Defined Shapes
