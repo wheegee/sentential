@@ -4,7 +4,6 @@ from python_on_whales.components.image.cli_wrapper import Image
 from sentential.lib.drivers.spec import ImagesDriver
 from sentential.lib.shapes import (
     SNTL_WORKING_IMAGE_TAG,
-    SNTL_ENTRY_VERSION,
     Architecture,
 )
 from sentential.lib.ontology import Ontology
@@ -52,12 +51,11 @@ class LocalImagesDriver(ImagesDriver):
 
     def _build(self, tag: str, platform: str) -> Image:
         self.ontology.args.export_defaults()
-        entry_version = {"SNTL_ENTRY_VERSION": SNTL_ENTRY_VERSION}
         cmd = {
             "tags": [tag],
             "platforms": [platform],
             "load": True,
-            "build_args": self.ontology.args.as_dict() | entry_version,
+            "build_args": self.ontology.args.as_dict(),
         }
 
         image = clients.docker.build(self.ontology.context.path.root, **cmd)
