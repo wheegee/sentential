@@ -2,7 +2,11 @@ from time import sleep
 from typing import List, Union
 from python_on_whales.components.image.cli_wrapper import Image
 from sentential.lib.drivers.spec import ImagesDriver
-from sentential.lib.shapes import SNTL_WORKING_IMAGE_TAG, SNTL_ENTRY_VERSION, Architecture
+from sentential.lib.shapes import (
+    SNTL_WORKING_IMAGE_TAG,
+    SNTL_ENTRY_VERSION,
+    Architecture,
+)
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
 from sentential.lib.exceptions import LocalDriverError
@@ -48,9 +52,7 @@ class LocalImagesDriver(ImagesDriver):
 
     def _build(self, tag: str, platform: str) -> Image:
         self.ontology.args.export_defaults()
-        entry_version = {
-            "SNTL_ENTRY_VERSION": SNTL_ENTRY_VERSION
-        } 
+        entry_version = {"SNTL_ENTRY_VERSION": SNTL_ENTRY_VERSION}
         cmd = {
             "tags": [tag],
             "platforms": [platform],
