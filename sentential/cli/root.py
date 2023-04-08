@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 import typer
 from sentential.lib.clients import clients
 from sentential.lib.drivers.local_images import LocalImagesDriver

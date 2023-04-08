@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from enum import Enum
 from pathlib import PosixPath
@@ -8,11 +9,13 @@ from sentential.support.shaper import Shaper
 from sentential.lib.exceptions import ShapeError
 from sentential.lib.clients import clients
 
+
 #
 # Global Constants
 #
 
-CURRENT_WORKING_IMAGE_TAG = "cwi"
+SNTL_WORKING_IMAGE_TAG = os.getenv("SNTL_WORKING_IMAGE_TAG", default=("cwi"))
+SNTL_ENTRY_VERSION = os.getenv("SNTL_ENTRY_VERSION", default=("0.3.0"))
 
 #
 # Store
@@ -410,65 +413,48 @@ def derive_paths(root: PosixPath = PosixPath(".")):
 #
 
 
+class ApiGatewayApi(BaseModel):
+    ApiId: str
+    ApiEndpoint: str
+    ApiKeySelectionExpression: str
+    CreatedDate: datetime
+    DisableExecuteApiEndpoint: bool
+    Name: str
+    ProtocolType: str
+    RouteSelectionExpression: str
+    Tags: Dict[str, str]
+
+
 class ApiGatewayIntegration(BaseModel):
+    IntegrationId: Optional[str]
+    IntegrationUri: str
     ConnectionType: str = "INTERNET"
     Description: str = "managed by sentential"
-    IntegrationId: Optional[str] = None
     IntegrationMethod: str = "ANY"
     IntegrationType: str = "AWS_PROXY"
-    IntegrationUri: str
     PayloadFormatVersion: str = "2.0"
     TimeoutInMillis: int = 30000
     RequestParameters: Optional[Dict[str, str]] = {}
 
 
 class ApiGatewayRoute(BaseModel):
+    ApiGatewayManaged: Optional[bool]
     ApiKeyRequired: bool
-    AuthorizationType: str
+    AuthorizationScopes: Optional[List[str]]
+    AuthorizationType: Literal["NONE", "AWS_IAM", "CUSTOM", "JWT"]
+    AuthorizerId: Optional[str]
+    ModelSelectionExpression: Optional[str]
+    OperationName: Optional[str]
+    RequestModels: Optional[Dict[str, str]]
+    RequestParameters: Optional[Dict[str, Dict[Literal["Required"], bool]]]
     RouteId: str
     RouteKey: str
+    RouteResponseSelectionExpression: Optional[str]
     Target: Optional[str]
-    Integration: Optional[ApiGatewayIntegration]
-
-
-class ApiGatewayMapping(BaseModel):
-    ApiId: str
-    ApiMappingId: str
-    ApiMappingKey: str
-    Stage: str
-    Routes: List[ApiGatewayRoute] = []
-
-
-class ApiGatewayDomain(BaseModel):
-    DomainName: str
-    DomainNameConfigurations: Optional[List[Dict]]
-    Tags: Dict[str, str] = {}
-    Mappings: List[ApiGatewayMapping] = []
-
-
-class ApiGatewayParsedUrl(BaseModel):
-    ApiId: str
-    ApiMappingId: str
-    ApiMappingKey: str
-    RouteKey: str
-    RouteId: Optional[str]
-    Verb: str = "Any"
-    Route: str
-    FullPath: str
 
 
 class LambdaPermission(BaseModel):
-    FunctionName: str
-    StatementId: str
-    Action: str
-    Principal: str
-    SourceArn: str
-    SourceAccount: str
-    EventSourceToken: str
-    Qualifier: str
-    RevisionId: str
-    PrincipalOrgID: str
-    FunctionUrlAuthType: str = "None"
+    Statement: Json[AWSPolicyStatement]
 
 
 class LambdaInvokeResponse(BaseModel):
