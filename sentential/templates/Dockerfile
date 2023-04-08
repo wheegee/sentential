@@ -1,4 +1,4 @@
-ARG SNTL_ENTRY_VERSION=latest
+ARG SNTL_ENTRY_VERSION
 
 FROM ghcr.io/wheegee/entry:${SNTL_ENTRY_VERSION} as entry
 FROM {{ runtime }} AS runtime

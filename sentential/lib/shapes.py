@@ -14,7 +14,7 @@ from sentential.lib.clients import clients
 #
 
 SNTL_WORKING_IMAGE_TAG = os.getenv("SNTL_WORKING_IMAGE_TAG", default=("cwi"))
-SNTL_ENTRY_VERSION = os.getenv("SNTL_ENTRY_VERSION", default=("latest"))
+SNTL_ENTRY_VERSION = os.getenv("SNTL_ENTRY_VERSION", default=("0.3.0"))
 
 #
 # Internally Defined Shapes
