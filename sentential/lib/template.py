@@ -3,7 +3,7 @@ from os import makedirs
 from pathlib import PosixPath
 from os.path import dirname, abspath, exists
 from jinja2 import Environment, FileSystemLoader, Template
-from sentential.lib.shapes import derive_paths
+from sentential.lib.shapes import SNTL_ENTRY_VERSION, derive_paths
 from sentential.lib.ontology import Ontology
 
 PACKAGE_PATH = PosixPath(dirname(abspath(__file__))).parent
@@ -13,6 +13,7 @@ class Init:
     def __init__(self, repository_name: str, runtime: str) -> None:
         self.repository_name = repository_name
         self.runtime = runtime
+        self.entry_version = SNTL_ENTRY_VERSION
         self.path = derive_paths()
         self.jinja = Environment(loader=FileSystemLoader(f"{PACKAGE_PATH}/templates"))
 
@@ -34,6 +35,7 @@ class Init:
                     template.render(
                         repository_name=self.repository_name,
                         runtime=self.runtime,
+                        entry_version=self.entry_version,
                         paths=self.path,
                     )
                 )
