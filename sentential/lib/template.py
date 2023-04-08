@@ -3,10 +3,7 @@ from os import makedirs
 from pathlib import PosixPath
 from os.path import dirname, abspath, exists
 from jinja2 import Environment, FileSystemLoader, Template
-from sentential.lib.shapes import (
-    SNTL_ENTRY_VERSION,
-    derive_paths
-)
+from sentential.lib.shapes import SNTL_ENTRY_VERSION, derive_paths
 from sentential.lib.ontology import Ontology
 
 PACKAGE_PATH = PosixPath(dirname(abspath(__file__))).parent
