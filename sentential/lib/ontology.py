@@ -61,4 +61,5 @@ class Ontology:
     @property
     def configs(self) -> Store:
         from sentential.lib.shapes import Configs
+
         return Store(self.context, Configs)
