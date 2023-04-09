@@ -74,15 +74,21 @@ class StoreV2:
 
     def delete(self, key: str) -> Table:
         mutated = self.state.copy()
-        del mutated[key]
-        self._write_parameters(mutated)
+        try:
+            del mutated[key]
+            self._write_parameters(mutated)
+        except KeyError:
+            pass
         return self.read()
 
     def export_defaults(self) -> None:
         self._write_parameters(self.parameters.dict())
 
     def clear(self) -> Table:
-        clients.ssm.delete_parameter(Name=str(self.path))
+        try:
+            clients.ssm.delete_parameter(Name=str(self.path))
+        except clients.ssm.exceptions.ParameterNotFound:
+            pass
         return self.read()
 
     def validate(self) -> List[ValidationErrorInfo]:

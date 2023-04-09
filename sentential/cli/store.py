@@ -28,4 +28,4 @@ def delete(ctx: typer.Context, key: str):
 
 @store.command()
 def clear(ctx: typer.Context):
-    getattr(ctx.obj, str(ctx.command.name))()
+    print(getattr(ctx.obj, str(ctx.command.name))())

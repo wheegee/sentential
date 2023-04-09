@@ -4,8 +4,7 @@ from enum import Enum
 from pathlib import PosixPath
 from typing import Any, List, Union, Optional, Dict, Literal
 from pydantic import Field, validator, Json, Extra
-from pydantic import BaseModel as PydanticBaseModel
-from sentential.support.shaper import Shaper
+from pydantic import BaseModel as BaseModel
 from sentential.lib.exceptions import ShapeError
 from sentential.lib.clients import clients
 
@@ -22,7 +21,7 @@ SNTL_ENTRY_VERSION = os.getenv("SNTL_ENTRY_VERSION", default=("0.4.0"))
 #
 
 
-class BaseModel(PydanticBaseModel):
+class UndefinedStoreModel(BaseModel):
     ...
 
     class Config:
@@ -30,7 +29,7 @@ class BaseModel(PydanticBaseModel):
         extra = Extra.allow
 
 
-class BaseModelStrict(PydanticBaseModel):
+class StoreModel(BaseModel):
     ...
 
     class Config:
@@ -38,23 +37,23 @@ class BaseModelStrict(PydanticBaseModel):
         extra = Extra.forbid
 
 
-class Args(BaseModelStrict):
+class Args(UndefinedStoreModel):
     ...
 
 
-class Envs(BaseModel):
+class Envs(UndefinedStoreModel):
     ...
 
 
-class Secrets(BaseModel):
+class Secrets(UndefinedStoreModel):
     ...
 
 
-class Tags(BaseModel):
+class Tags(UndefinedStoreModel):
     ...
 
 
-class Provision(BaseModelStrict):
+class Provision(StoreModel):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
     memory: int = Field(default=128, description="allocated memory (mb)")
     timeout: int = Field(default=3, description="timeout (s)")
@@ -384,7 +383,6 @@ class AwsFunction(BaseModel):
 
 class Paths(BaseModel):
     root: PosixPath
-    sntl: PosixPath
     src: PosixPath
     bake: PosixPath
     runtime: PosixPath
@@ -397,7 +395,6 @@ class Paths(BaseModel):
 def derive_paths(root: PosixPath = PosixPath(".")):
     return Paths(
         root=root,
-        sntl=PosixPath(f"{root}/.sntl"),
         src=PosixPath(f"{root}/src"),
         bake=PosixPath(f"{root}/.sntl/docker-bake.hcl"),
         runtime=PosixPath(f"{root}/.sntl/Dockerfile"),

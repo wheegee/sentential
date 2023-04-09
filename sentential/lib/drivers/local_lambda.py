@@ -36,19 +36,21 @@ class LocalLambdaDriver(LambdaDriver):
         if credentials.SessionToken:
             credentials_env["AWS_SESSION_TOKEN"] = credentials.SessionToken
 
-        hosts = []
-        # required to properly resolve `host.docker.internal` in Linux
-        if platform == "linux":
-            hosts = [("host.docker.internal", "host-gateway")]
+        # TODO: remove if possible, now using docker desktop across platforms
+        # hosts = []
+        # # required to properly resolve `host.docker.internal` in Linux
+        # if platform == "linux":
+        #     hosts = [("host.docker.internal", "host-gateway")]
+
+        export_paths = ",".join([str(self.ontology.envs.path), str(self.ontology.secrets.path)])
 
         default_env = {
             "AWS_REGION": self.ontology.context.region,
-            "PARTITION": str(self.ontology.envs.path),
+            "PARTITION": export_paths,
         }
 
         clients.docker.run(
             image.id,
-            add_hosts=hosts,
             name=LocalBridge.config.lambda_name,
             hostname=LocalBridge.config.lambda_name,
             networks=[LocalBridge.config.bridge_name],

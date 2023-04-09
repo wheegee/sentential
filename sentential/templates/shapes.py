@@ -1,17 +1,18 @@
-from sentential.lib.shapes import BaseModel, BaseModelStrict
+from sentential.lib.shapes import StoreModel
+
+# Uncomment a class to strictly define parameter schemas
+
+# class Args(StoreModel):
+#     ...
 
 
-class Args(BaseModel):
-    ...
+# class Envs(StoreModel):
+#     ...
 
 
-class Envs(BaseModel):
-    ...
+# class Secrets(StoreModel):
+#     ...
 
 
-class Secrets(BaseModel):
-    ...
-
-
-class Tags(BaseModel):
-    ...
+# class Tags(StoreModel):
+#     ...

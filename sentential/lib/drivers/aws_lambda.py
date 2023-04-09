@@ -203,7 +203,7 @@ class AwsLambdaDriver(LambdaDriver):
             else image.platform.architecture
         )
         image_uri = f"{self.ontology.context.repository_url}@{image.digest}"
-        envs_path = str(self.ontology.envs.path)
+        export_paths = ",".join([str(self.ontology.envs.path), str(self.ontology.secrets.path)])
 
         sleep(10)
         try:
@@ -213,7 +213,7 @@ class AwsLambdaDriver(LambdaDriver):
                 PackageType="Image",
                 Code={"ImageUri": image_uri},
                 Description=f"sententially deployed {image_uri}",
-                Environment={"Variables": {"PARTITION": envs_path}},
+                Environment={"Variables": {"PARTITION": export_paths}},
                 Architectures=[image_arch],
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
@@ -229,7 +229,7 @@ class AwsLambdaDriver(LambdaDriver):
                 FunctionName=function_name,
                 Role=role_arn,
                 Description=f"sententially deployed {image_uri}",
-                Environment={"Variables": {"PARTITION": envs_path}},
+                Environment={"Variables": {"PARTITION": export_paths}},
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
                 Timeout=self.provision.timeout,

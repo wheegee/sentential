@@ -91,7 +91,6 @@ class TestContext(object):
 @pytest.mark.usefixtures("moto", "init", "ontology")
 class TestStore:
     def test_default_shapes(self, ontology: Ontology):
-        os.remove("shapes.py")
         assert (
             str(type(ontology.envs._read())) == "<class 'sentential.lib.shapes.Envs'>"
         )
@@ -121,49 +120,9 @@ class TestStore:
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
-class TestStoreShapes:
-    def test_user_defined_shapes(self, ontology: Ontology):
-        copyfile("./fixtures/shapes.py", "shapes.py")
-        assert str(type(ontology.envs._read())) == "<class 'shapes.Envs'>"
-
-    def test_read(self, ontology: Ontology):
-        table = table_body(ontology.envs.read())
-        assert [
-            "required_env",
-            "None",
-            "required",
-            "[red]field required[/red]",
-        ] in table
-        assert ["optional_env", "default_value", "optional", "None"] in table
-
-    def test_validation(self, ontology: Ontology):
-        table = table_body(ontology.envs.write("required_env", "non-integer"))
-        assert [
-            "required_env",
-            "non-integer",
-            "required",
-            "[red]value is not a valid integer[/red]",
-        ] in table
-        assert ["optional_env", "default_value", "optional", "None"] in table
-
-    def test_extra_property(self, ontology: Ontology):
-        table = table_body(ontology.envs.write("undefined_env", "undefined"))
-        assert ["undefined_env", "undefined", "None", "None"] in table
-
-    def test_parameters_raises_when_failing(self, ontology: Ontology):
-        with pytest.raises(ValidationError):
-            ontology.envs.parameters
-
-    def test_parameters_returns_when_passing(self, ontology: Ontology):
-        ontology.envs.write("required_env", "123")
-        assert ontology.envs.parameters.required_env == 123
-        assert ontology.envs.parameters.optional_env == "default_value"
-
-
-@pytest.mark.usefixtures("moto", "init", "ontology")
 class TestStoreStrictShapes:
     def test_strict_user_defined_shapes(self, ontology: Ontology):
-        copyfile("./fixtures/shapes_strict.py", "shapes.py")
+        copyfile("./fixtures/shapes.py", "shapes.py")
         assert str(type(ontology.envs._read())) == "<class 'shapes.Envs'>"
 
     def test_read(self, ontology: Ontology):
@@ -204,6 +163,12 @@ class TestStoreStrictShapes:
         ontology.envs.write("required_env", "123")
         assert ontology.envs.parameters.required_env == 123
         assert ontology.envs.parameters.optional_env == "default_value"
+
+    def test_clear(self, ontology: Ontology):
+        table = table_body(ontology.envs.clear())
+        assert len(table) == 2
+        assert ['required_env', 'None', 'required', '[red]field required[/red]'] in table
+        assert ['optional_env', 'default_value', 'optional', 'None'] in table
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
