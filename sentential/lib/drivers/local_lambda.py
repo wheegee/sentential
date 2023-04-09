@@ -42,7 +42,9 @@ class LocalLambdaDriver(LambdaDriver):
         if platform == "linux":
             hosts = [("host.docker.internal", "host-gateway")]
 
-        export_paths = ",".join([str(self.ontology.envs.path), str(self.ontology.secrets.path)])
+        export_paths = ",".join(
+            [str(self.ontology.envs.path), str(self.ontology.secrets.path)]
+        )
 
         default_env = {
             "AWS_REGION": self.ontology.context.region,
