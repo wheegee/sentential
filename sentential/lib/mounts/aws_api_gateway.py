@@ -4,7 +4,7 @@ from sentential.lib.mounts.spec import MountDriver
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import (
-    Provision,
+    Configs,
     ApiGatewayApi,
     ApiGatewayRoute,
     ApiGatewayIntegration,
@@ -42,7 +42,7 @@ class AwsApiGatewayMount(MountDriver):
         self.ontology: Ontology = ontology
         self.resource_name: str = self.ontology.context.resource_name
         self.resource_arn: str = self.ontology.context.resource_arn
-        self.provision = cast(Provision, self.ontology.configs.parameters)
+        self.provision = cast(Configs, self.ontology.configs.parameters)
 
         # set by _fetch_state
         self.path: str

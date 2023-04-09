@@ -1,6 +1,6 @@
 import pytest
 from typing import cast
-from sentential.lib.shapes import Provision, Architecture
+from sentential.lib.shapes import Configs, Architecture
 from sentential.lib.clients import clients
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.aws_ecr import AwsEcrDriver
@@ -68,7 +68,7 @@ class TestAwsLambdaDriver:
 
         lambda_config = self.get_lambda_config(function_name)
         log_policy = self.get_log_policy(aws_lambda_driver.log_group)
-        ssm_config = cast(Provision, configs.parameters)
+        ssm_config = cast(Configs, configs.parameters)
 
         assert lambda_config["MemorySize"] == ssm_config.memory
         assert lambda_config["Timeout"] == ssm_config.timeout

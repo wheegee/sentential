@@ -1,6 +1,6 @@
 from sentential.lib.shapes import StoreModel
 
-# Uncomment a class to strictly define parameter schemas
+# Uncomment a class to strictly define its parameter schemas
 
 # class Args(StoreModel):
 #     ...

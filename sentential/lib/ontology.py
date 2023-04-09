@@ -1,7 +1,7 @@
 import os
 import sys
 from sentential.lib.context import Context
-from sentential.lib.store_v2 import StoreV2
+from sentential.lib.store import Store
 
 
 def load_user_defined_shapes():
@@ -23,43 +23,42 @@ class Ontology:
         return Context()
 
     @property
-    def args(self) -> StoreV2:
+    def args(self) -> Store:
         try:
             load_user_defined_shapes()
             from shapes import Args
         except ImportError:
             from sentential.lib.shapes import Args
-        return StoreV2(self.context, Args)
+        return Store(self.context, Args)
 
     @property
-    def envs(self) -> StoreV2:
+    def envs(self) -> Store:
         try:
             load_user_defined_shapes()
             from shapes import Envs
         except ImportError:
             from sentential.lib.shapes import Envs
-        return StoreV2(self.context, Envs)
+        return Store(self.context, Envs)
 
     @property
-    def secrets(self) -> StoreV2:
+    def secrets(self) -> Store:
         try:
             load_user_defined_shapes()
             from shapes import Secrets
         except ImportError:
             from sentential.lib.shapes import Secrets
-        return StoreV2(self.context, Secrets)
+        return Store(self.context, Secrets)
 
     @property
-    def tags(self) -> StoreV2:
+    def tags(self) -> Store:
         try:
             load_user_defined_shapes()
             from shapes import Tags
         except ImportError:
             from sentential.lib.shapes import Tags
-        return StoreV2(self.context, Tags)
+        return Store(self.context, Tags)
 
     @property
-    def configs(self) -> StoreV2:
-        from sentential.lib.shapes import Provision
-
-        return StoreV2(self.context, Provision)
+    def configs(self) -> Store:
+        from sentential.lib.shapes import Configs
+        return Store(self.context, Configs)

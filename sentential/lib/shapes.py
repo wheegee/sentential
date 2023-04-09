@@ -14,7 +14,7 @@ from sentential.lib.clients import clients
 #
 
 SNTL_WORKING_IMAGE_TAG = os.getenv("SNTL_WORKING_IMAGE_TAG", default=("cwi"))
-SNTL_ENTRY_VERSION = os.getenv("SNTL_ENTRY_VERSION", default=("0.4.0"))
+SNTL_ENTRY_VERSION = os.getenv("SNTL_ENTRY_VERSION", default=("0.4.1"))
 
 #
 # Store
@@ -53,7 +53,7 @@ class Tags(UndefinedStoreModel):
     ...
 
 
-class Provision(StoreModel):
+class Configs(StoreModel):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
     memory: int = Field(default=128, description="allocated memory (mb)")
     timeout: int = Field(default=3, description="timeout (s)")

@@ -7,7 +7,7 @@ from sentential.cli.umount import umount
 from sentential.cli.invoke import invoke
 from sentential.cli.logs import logs
 
-from sentential.lib.exceptions import SntlException, DockerException, AWS_EXCEPTIONS
+from sentential.lib.exceptions import SntlException, DockerException, AWS_EXCEPTIONS, ValidationError
 
 root.add_typer(store, name="args", help="build arguments")
 root.add_typer(store, name="envs", help="environment variables")
@@ -25,7 +25,7 @@ root.add_typer(logs, name="logs", help="logging")
 def main():
     try:
         root()
-    except SntlException as e:
+    except (SntlException, ValidationError) as e:
         print(f"SENTENTIAL: {e}")
         exit(1)
     except AWS_EXCEPTIONS as e:

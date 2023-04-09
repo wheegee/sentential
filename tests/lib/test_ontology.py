@@ -7,7 +7,7 @@ from helpers import table_headers, table_body, rewrite
 from pydantic import ValidationError
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import AWSCallerIdentity, Paths
-from sentential.lib.exceptions import ContextError, StoreError
+from sentential.lib.exceptions import ContextError, ValidationError
 
 # We should figure out how to clear these for all tests...
 if "PARTITION" in environ:
@@ -95,14 +95,14 @@ class TestStore:
             str(type(ontology.envs._read())) == "<class 'sentential.lib.shapes.Envs'>"
         )
 
-    def test_store_read(self, ontology: Ontology):
+    def test_read(self, ontology: Ontology):
         table = ontology.envs.read()
         headers = table_headers(table)
         body = table_body(table)
         assert ["key", "value", "description", "validation"] == headers
         assert len(body) == 0
 
-    def test_store_write(self, ontology: Ontology):
+    def test_write(self, ontology: Ontology):
         ontology.envs.write("key_1", "value_1")
         ontology.envs.write("key_2", "value_2")
         table = table_body(ontology.envs.write("key_3", "value_3"))
@@ -176,7 +176,7 @@ class TestStoreProvision:
     def test_configs_type(self, ontology: Ontology):
         assert (
             str(type(ontology.configs._read()))
-            == "<class 'sentential.lib.shapes.Provision'>"
+            == "<class 'sentential.lib.shapes.Configs'>"
         )
 
     def test_configs_read(self, ontology: Ontology):

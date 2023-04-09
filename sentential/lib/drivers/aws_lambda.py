@@ -10,7 +10,7 @@ from sentential.lib.shapes import (
     AwsImageDetail,
     AwsManifestList,
     LambdaInvokeResponse,
-    Provision,
+    Configs,
     AwsManifestListDistribution,
 )
 from sentential.lib.clients import clients
@@ -25,9 +25,9 @@ class AwsLambdaDriver(LambdaDriver):
         self.log_group = f"/aws/lambda/{self.function_name}"
 
     @property
-    def provision(self) -> Provision:
+    def provision(self) -> Configs:
         # there must be a better way to do polymorphic type stuff...
-        return cast(Provision, self.ontology.configs.parameters)
+        return cast(Configs, self.ontology.configs.parameters)
 
     def deploy(self, image: AwsImageDetail, arch: Union[Architecture, None]) -> str:
         chosen_dist = self._choose_dist(image, arch)

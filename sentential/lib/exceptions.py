@@ -1,5 +1,6 @@
 import botocore.exceptions
 from python_on_whales.exceptions import DockerException
+from pydantic import ValidationError
 
 
 def gather_aws_exceptions() -> tuple:
@@ -30,10 +31,6 @@ class LocalDriverError(SntlException):
 
 
 class ContextError(SntlException):
-    pass
-
-
-class StoreError(SntlException):
     pass
 
 

@@ -42,6 +42,7 @@ class TestLocalLambdaDriver:
     ):
         cwi = local_images_driver.get_image()
         local_lambda_driver.ontology.envs.write("ENVVAR", "present")
+        local_lambda_driver.ontology.envs.write("SECRET", "present")
         message = local_lambda_driver.deploy(
             cwi,
             {"AWS_ENDPOINT": "http://host.docker.internal:5000"},
@@ -58,6 +59,8 @@ class TestLocalLambdaDriver:
         assert lambda_env["BUILDARG"] == "present"
         assert "ENVVAR" in lambda_env.keys()
         assert lambda_env["ENVVAR"] == "present"
+        assert "SECRET" in lambda_env.keys()
+        assert lambda_env["SECRET"] == "present"
 
     def test_destroy(self, local_lambda_driver: LocalLambdaDriver):
         local_lambda_driver.destroy()
