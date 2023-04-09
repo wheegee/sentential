@@ -203,7 +203,9 @@ class AwsLambdaDriver(LambdaDriver):
             else image.platform.architecture
         )
         image_uri = f"{self.ontology.context.repository_url}@{image.digest}"
-        export_paths = ",".join([str(self.ontology.envs.path), str(self.ontology.secrets.path)])
+        export_paths = ",".join(
+            [str(self.ontology.envs.path), str(self.ontology.secrets.path)]
+        )
 
         sleep(10)
         try:

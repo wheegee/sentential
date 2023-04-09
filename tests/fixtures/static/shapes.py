@@ -1,6 +1,7 @@
 from sentential.lib.shapes import StoreModel
 from pydantic import Field
 
+
 class Args(StoreModel):
     required_arg: int = Field(description="required")
     optional_arg: str = Field(default="default_value", description="optional")

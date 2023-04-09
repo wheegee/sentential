@@ -167,8 +167,13 @@ class TestStoreStrictShapes:
     def test_clear(self, ontology: Ontology):
         table = table_body(ontology.envs.clear())
         assert len(table) == 2
-        assert ['required_env', 'None', 'required', '[red]field required[/red]'] in table
-        assert ['optional_env', 'default_value', 'optional', 'None'] in table
+        assert [
+            "required_env",
+            "None",
+            "required",
+            "[red]field required[/red]",
+        ] in table
+        assert ["optional_env", "default_value", "optional", "None"] in table
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
