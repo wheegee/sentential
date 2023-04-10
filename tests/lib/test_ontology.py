@@ -89,29 +89,29 @@ class TestContext(object):
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
-class TestStore:
-    def test_default_shapes(self, ontology: Ontology):
+class TestStoreUndefined:
+    def test_undefined(self, ontology: Ontology):
         assert (
             str(type(ontology.envs._read())) == "<class 'sentential.lib.shapes.Envs'>"
         )
 
-    def test_read(self, ontology: Ontology):
-        table = ontology.envs.read()
+    def test_ls(self, ontology: Ontology):
+        table = ontology.envs.ls()
         headers = table_headers(table)
         body = table_body(table)
         assert ["key", "value", "description", "validation"] == headers
         assert len(body) == 0
 
-    def test_write(self, ontology: Ontology):
-        ontology.envs.write("key_1", "value_1")
-        ontology.envs.write("key_2", "value_2")
-        table = table_body(ontology.envs.write("key_3", "value_3"))
+    def test_set(self, ontology: Ontology):
+        ontology.envs.set("key_1", "value_1")
+        ontology.envs.set("key_2", "value_2")
+        table = table_body(ontology.envs.set("key_3", "value_3"))
         assert ["key_1", "value_1", "None", "None"] in table
         assert ["key_2", "value_2", "None", "None"] in table
         assert ["key_3", "value_3", "None", "None"] in table
 
-    def test_delete(self, ontology: Ontology):
-        table = table_body(ontology.envs.delete("key_2"))
+    def test_rm(self, ontology: Ontology):
+        table = table_body(ontology.envs.rm("key_2"))
         assert ["key_2", "value_2", "None", "None"] not in table
 
     def test_clear(self, ontology: Ontology):
@@ -120,13 +120,13 @@ class TestStore:
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
-class TestStoreStrictShapes:
-    def test_strict_user_defined_shapes(self, ontology: Ontology):
+class TestStoreDefined:
+    def test_defined(self, ontology: Ontology):
         copyfile("./fixtures/shapes.py", "shapes.py")
         assert str(type(ontology.envs._read())) == "<class 'shapes.Envs'>"
 
     def test_read(self, ontology: Ontology):
-        table = table_body(ontology.envs.read())
+        table = table_body(ontology.envs.ls())
         assert [
             "required_env",
             "None",
@@ -136,7 +136,7 @@ class TestStoreStrictShapes:
         assert ["optional_env", "default_value", "optional", "None"] in table
 
     def test_validation(self, ontology: Ontology):
-        table = table_body(ontology.envs.write("required_env", "non-integer"))
+        table = table_body(ontology.envs.set("required_env", "non-integer"))
         assert [
             "required_env",
             "non-integer",
@@ -146,7 +146,7 @@ class TestStoreStrictShapes:
         assert ["optional_env", "default_value", "optional", "None"] in table
 
     def test_extra_property(self, ontology: Ontology):
-        table = table_body(ontology.envs.write("undefined_env", "undefined"))
+        table = table_body(ontology.envs.set("undefined_env", "undefined"))
         assert [
             "undefined_env",
             "undefined",
@@ -159,8 +159,8 @@ class TestStoreStrictShapes:
             ontology.envs.parameters
 
     def test_parameters_returns_when_passing(self, ontology: Ontology):
-        ontology.envs.delete("undefined_env")
-        ontology.envs.write("required_env", "123")
+        ontology.envs.rm("undefined_env")
+        ontology.envs.set("required_env", "123")
         assert ontology.envs.parameters.required_env == 123
         assert ontology.envs.parameters.optional_env == "default_value"
 
@@ -185,28 +185,28 @@ class TestStoreProvision:
         )
 
     def test_configs_read(self, ontology: Ontology):
-        table = ontology.configs.read()
+        table = ontology.configs.ls()
         headers = table_headers(table)
         body = table_body(table)
         assert ["key", "value", "description", "validation"] == headers
         assert ["storage", "512", "ephemeral storage (mb)", "None"] in body
 
     def test_configs_write(self, ontology: Ontology):
-        table = ontology.configs.write("storage", "1024")
-        table = table_body(ontology.configs.read())
+        table = ontology.configs.set("storage", "1024")
+        table = table_body(ontology.configs.ls())
         assert ["storage", "1024", "ephemeral storage (mb)", "None"] in table
 
     def test_configs_clear(self, ontology: Ontology):
         ontology.configs.clear()
-        table = table_body(ontology.configs.read())
+        table = table_body(ontology.configs.ls())
         assert ["storage", "512", "ephemeral storage (mb)", "None"] in table
 
     def test_configs_write_bad_key(self, ontology: Ontology):
-        ontology.configs.write("ram", "1024")
+        ontology.configs.set("ram", "1024")
         with pytest.raises(ValidationError):
             ontology.configs.parameters
 
     def test_configs_write_bad_value(self, ontology: Ontology):
-        ontology.configs.write("memory", "lots")
+        ontology.configs.set("memory", "lots")
         with pytest.raises(ValidationError):
             ontology.configs.parameters

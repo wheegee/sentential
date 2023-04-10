@@ -67,19 +67,19 @@ class Store:
     def _read(self) -> VALID_MODELS:
         return self.model.construct(**self.state)
 
-    def write(self, key: str, value: str) -> Table:
+    def set(self, key: str, value: str) -> Table:
         merged = self.state | {key: value}
         self._write_parameters(merged)
-        return self.read()
+        return self.ls()
 
-    def delete(self, key: str) -> Table:
+    def rm(self, key: str) -> Table:
         mutated = self.state.copy()
         try:
             del mutated[key]
             self._write_parameters(mutated)
         except KeyError:
             pass
-        return self.read()
+        return self.ls()
 
     def export_defaults(self) -> None:
         self._write_parameters(self.parameters.dict())
@@ -89,7 +89,7 @@ class Store:
             clients.ssm.delete_parameter(Name=str(self.path))
         except clients.ssm.exceptions.ParameterNotFound:
             pass
-        return self.read()
+        return self.ls()
 
     def validate(self) -> List[ValidationErrorInfo]:
         try:
@@ -102,7 +102,7 @@ class Store:
                 errors.append(ValidationErrorInfo(key=error["loc"][0], **error))
             return errors
 
-    def read(self) -> Table:
+    def ls(self) -> Table:
         data = self._read()
         schema = data.schema()
         properties = schema["properties"]

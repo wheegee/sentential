@@ -12,20 +12,24 @@ def namespace(ctx: typer.Context):
 
 
 @store.command()
-def read(ctx: typer.Context):
+def ls(ctx: typer.Context):
+    """list store"""
     print(getattr(ctx.obj, str(ctx.command.name))())
 
 
 @store.command()
-def write(ctx: typer.Context, key: str, value: str):
+def set(ctx: typer.Context, key: str, value: str):
+    """set KEY VALUE in store"""
     print(getattr(ctx.obj, str(ctx.command.name))(key, value))
 
 
 @store.command()
-def delete(ctx: typer.Context, key: str):
+def rm(ctx: typer.Context, key: str):
+    """delete KEY in store"""
     print(getattr(ctx.obj, str(ctx.command.name))(key))
 
 
 @store.command()
 def clear(ctx: typer.Context):
+    """delete all in store"""
     print(getattr(ctx.obj, str(ctx.command.name))())
