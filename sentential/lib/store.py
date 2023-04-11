@@ -2,7 +2,7 @@ import json
 from pathlib import PosixPath
 from rich.table import Table, box
 from typing import Any, Dict, List, Optional, Tuple, cast, Type, Union
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Json, ValidationError
 from sentential.lib.clients import clients
 from sentential.lib.context import Context
 from sentential.lib.shapes import AwsSSMParam, Args, Envs, Secrets, Tags, Configs
@@ -67,8 +67,13 @@ class Store:
     def _read(self) -> VALID_MODELS:
         return self.model.construct(**self.state)
 
-    def set(self, key: str, value: str) -> Table:
-        merged = self.state | {key: value}
+    def set(self, key: str, value: Union[Json, str]) -> Table:
+        try: 
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            parsed = value
+
+        merged = self.state | {key: parsed}
         self._write_parameters(merged)
         return self.ls()
 

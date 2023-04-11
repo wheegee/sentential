@@ -57,24 +57,24 @@ class Configs(StoreModel):
     storage: int = Field(default=512, description="ephemeral storage (mb)")
     memory: int = Field(default=128, description="allocated memory (mb)")
     timeout: int = Field(default=3, description="timeout (s)")
-    subnet_ids: Json[List[str]] = Field(default="[]", description="subnet ids")
-    security_group_ids: Json[List[str]] = Field(
-        default="[]", description="security group ids"
+    subnet_ids: List[str] = Field(default=[], description="subnet ids")
+    security_group_ids: List[str] = Field(
+        default=[], description="security group ids"
     )
     auth_type: Literal["NONE", "AWS_IAM"] = Field(
         default="NONE", description="auth type"
     )
-    allow_headers: Json[List[str]] = Field(
-        default='["*"]', description="CORS AllowHeaders"
+    allow_headers: List[str] = Field(
+        default=["*"], description="CORS AllowHeaders"
     )
-    allow_methods: Json[List[str]] = Field(
-        default='["*"]', description="CORS AllowMethods"
+    allow_methods: List[str] = Field(
+        default=["*"], description="CORS AllowMethods"
     )
-    allow_origins: Json[List[str]] = Field(
-        default='["*"]', description="CORS AllowOrigins"
+    allow_origins: List[str] = Field(
+        default=["*"], description="CORS AllowOrigins"
     )
-    expose_headers: Json[List[str]] = Field(
-        default='["*"]', description="CORS ExposeHeaders"
+    expose_headers: List[str] = Field(
+        default=["*"], description="CORS ExposeHeaders"
     )
     log_retention: int = Field(default=7, description="log retention (days)")
 

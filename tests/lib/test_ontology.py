@@ -157,7 +157,7 @@ class TestStoreDefined:
     def test_parameters_raises_when_failing(self, ontology: Ontology):
         with pytest.raises(ValidationError):
             ontology.envs.parameters
-
+    
     def test_parameters_returns_when_passing(self, ontology: Ontology):
         ontology.envs.rm("undefined_env")
         ontology.envs.set("required_env", "123")
@@ -205,8 +205,10 @@ class TestStoreProvision:
         ontology.configs.set("ram", "1024")
         with pytest.raises(ValidationError):
             ontology.configs.parameters
+        ontology.configs.clear()
 
     def test_configs_write_bad_value(self, ontology: Ontology):
         ontology.configs.set("memory", "lots")
         with pytest.raises(ValidationError):
             ontology.configs.parameters
+        ontology.configs.clear()
