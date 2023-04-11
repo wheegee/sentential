@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.11.1 (2023-04-11)
+### Fix
+* SSM export fix ([#248](https://github.com/wheegee/sentential/issues/248)) ([`311db15`](https://github.com/wheegee/sentential/commit/311db15c8258f70b57036319113d36dae0fd3e8a))
+
 ## v0.11.0 (2023-04-11)
 ### Feature
 * Refactor ssm approach ([#241](https://github.com/wheegee/sentential/issues/241)) ([`0593cc7`](https://github.com/wheegee/sentential/commit/0593cc77f84594a054a4543cebc24ebcad5a8133))
