@@ -1,10 +1,12 @@
 import os
+from pathlib import PosixPath
 import pytest
 import re
 from os import environ, remove
 from shutil import copyfile
 from helpers import table_headers, table_body, rewrite
 from pydantic import ValidationError
+from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import AWSCallerIdentity, Paths
 from sentential.lib.exceptions import ContextError, ValidationError
@@ -89,7 +91,7 @@ class TestContext(object):
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
-class TestStoreUndefined:
+class TestStoreUndefined:                
     def test_undefined(self, ontology: Ontology):
         assert (
             str(type(ontology.envs._read())) == "<class 'sentential.lib.shapes.Envs'>"
@@ -157,13 +159,13 @@ class TestStoreDefined:
     def test_parameters_raises_when_failing(self, ontology: Ontology):
         with pytest.raises(ValidationError):
             ontology.envs.parameters
-    
+
     def test_parameters_returns_when_passing(self, ontology: Ontology):
         ontology.envs.rm("undefined_env")
         ontology.envs.set("required_env", "123")
         assert ontology.envs.parameters.required_env == 123
         assert ontology.envs.parameters.optional_env == "default_value"
-
+        
     def test_clear(self, ontology: Ontology):
         table = table_body(ontology.envs.clear())
         assert len(table) == 2
@@ -174,7 +176,6 @@ class TestStoreDefined:
             "[red]field required[/red]",
         ] in table
         assert ["optional_env", "default_value", "optional", "None"] in table
-
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
 class TestStoreProvision:
@@ -212,3 +213,51 @@ class TestStoreProvision:
         with pytest.raises(ValidationError):
             ontology.configs.parameters
         ontology.configs.clear()
+
+
+# TODO: this further implies the need for an epistemology seperate from ontology.
+@pytest.mark.usefixtures("moto", "init", "ontology")
+class TestStoreGlobalOps:
+    def parameter_exists(self, prefix: PosixPath):
+        resp = clients.ssm.describe_parameters(ParameterFilters=[
+            {
+                'Key': 'Name',
+                'Values': [
+                    str(prefix)
+                ]
+            },
+        ])
+        return len(resp["Parameters"]) == 1
+    
+    def test_undefined_export(self, ontology: Ontology):
+        ontology.export_store_defaults()
+
+        assert self.parameter_exists(ontology.args.path)
+        assert self.parameter_exists(ontology.envs.path)
+        assert self.parameter_exists(ontology.secrets.path)
+        assert self.parameter_exists(ontology.tags.path)
+        assert self.parameter_exists(ontology.configs.path)
+    
+    def test_defined_export_store_defaults_fails(self, ontology: Ontology):
+        copyfile("./fixtures/shapes.py", "shapes.py")
+        with pytest.raises(ValidationError):
+            ontology.export_store_defaults()
+
+    def test_defined_export_store_defaults_passes(self, ontology: Ontology):
+        ontology.args.set("required_arg", "0")
+        ontology.envs.set("required_env", "0")
+        ontology.secrets.set("required_secret", "0")
+        ontology.tags.set("required_tag", "0")
+        ontology.export_store_defaults()
+        assert ontology.args.parameters.required_arg == 0
+        assert ontology.envs.parameters.required_env == 0
+        assert ontology.secrets.parameters.required_secret == 0
+        assert ontology.tags.parameters.required_tag == 0
+
+    def test_clear_stores(self, ontology: Ontology):
+        ontology.clear_stores()
+        assert not self.parameter_exists(ontology.args.path)
+        assert not self.parameter_exists(ontology.envs.path)
+        assert not self.parameter_exists(ontology.secrets.path)
+        assert not self.parameter_exists(ontology.tags.path)
+        assert not self.parameter_exists(ontology.configs.path)

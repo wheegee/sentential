@@ -28,6 +28,8 @@ class StoreTableRow(BaseModel):
 
 
 class Store:
+    # TODO: the fact that this must take Context instead of Ontology, is because this belongs in an Epistemology.
+    # The conflation of the two logically leads to a circular import. A part of our Epistemology is our Ontology (prior knowledge).
     def __init__(self, context: Context, model: VALID_MODEL_TYPES) -> None:
         self.kms_key_id = context.kms_key_id
         self.partition: str = context.partition
