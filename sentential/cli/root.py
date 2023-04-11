@@ -60,7 +60,7 @@ def ls(verbose: bool = typer.Option(False)):
 
 
 @root.command()
-def clean(remote: bool = typer.Option(False), remote_logs: bool = typer.Option(False)):
+def clean(remote: bool = typer.Option(False), remote_logs: bool = typer.Option(False), stores: bool = typer.Option(False)):
     """clean images (and logs)"""
     ontology = Ontology()
     LocalImagesDriver(ontology).clean()
@@ -70,12 +70,5 @@ def clean(remote: bool = typer.Option(False), remote_logs: bool = typer.Option(F
         remote_logs
     ):  # MAYBE: is it time to graduate to `clean local` and `clean remote`?
         AwsLambdaDriver(ontology).clean()
-
-@root.command()
-def debug():
-    from IPython import embed
-    from sentential.lib.ontology import Ontology
-    from sentential.lib.shapes import Configs
-    from sentential.lib.store import Store
-    store = Store(Ontology().context, Configs)
-    embed()
+    if stores:
+        Ontology().clear_stores()

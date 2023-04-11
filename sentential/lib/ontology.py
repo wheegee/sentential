@@ -69,3 +69,9 @@ class Ontology:
         for store in stores:
             store.export_defaults()
         return stores
+
+    def clear_stores(self) -> List[Store]:
+        stores = [self.args, self.envs, self.secrets, self.tags, self.configs]
+        for store in stores:
+            store.clear()
+        return stores
