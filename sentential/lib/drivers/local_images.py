@@ -55,7 +55,7 @@ class LocalImagesDriver(ImagesDriver):
             "tags": [tag],
             "platforms": [platform],
             "load": True,
-            "build_args": self.ontology.args.as_dict(),
+            "build_args": self.ontology.args.parameters.dict(),
         }
 
         image = clients.docker.build(self.ontology.context.path.root, **cmd)

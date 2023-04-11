@@ -2,7 +2,7 @@ from typing import Dict, List, cast
 from sentential.lib.mounts.spec import MountDriver
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import Provision, EbrDescribeRuleResponse, EbrPutRuleResponse
+from sentential.lib.shapes import Configs, EbrDescribeRuleResponse, EbrPutRuleResponse
 
 
 class AwsEventScheduleMount(MountDriver):
@@ -10,7 +10,7 @@ class AwsEventScheduleMount(MountDriver):
         self.ontology = ontology
         self.resource_name = self.ontology.context.resource_name
         self.resource_arn = self.ontology.context.resource_arn
-        self.provision = cast(Provision, self.ontology.configs.parameters)
+        self.provision = cast(Configs, self.ontology.configs.parameters)
 
     def autocomplete(self) -> None:
         pass

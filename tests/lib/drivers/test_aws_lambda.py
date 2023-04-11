@@ -1,6 +1,6 @@
 import pytest
 from typing import cast
-from sentential.lib.shapes import Provision, Architecture
+from sentential.lib.shapes import Configs, Architecture
 from sentential.lib.clients import clients
 from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.aws_ecr import AwsEcrDriver
@@ -51,13 +51,14 @@ class TestAwsLambdaDriver:
         self, aws_lambda_driver: AwsLambdaDriver, aws_ecr_driver: AwsEcrDriver
     ):
         # TODO: StorageSize seems to be missing from moto mock response...
-        # ontology.configs.write("storage", [storage])
+        # ontology.configs.set("storage", [storage])
         function_name = aws_lambda_driver.ontology.context.resource_name
         configs = aws_lambda_driver.ontology.configs
-        configs.write("memory", ["2048"])
-        configs.write("timeout", ["25"])
-        configs.write("subnet_ids", ["sn-123", "sn-456"])
-        configs.write("security_group_ids", ["sg-123", "sg-456"])
+
+        configs.set("memory", "2048")
+        configs.set("timeout", "25")
+        configs.set("subnet_ids", '["sn-123", "sn-456"]')
+        configs.set("security_group_ids", '["sg-123", "sg-456"]')
 
         image = aws_ecr_driver.get_image("0.0.1")
         aws_lambda_driver.deploy(image, Architecture.system())
@@ -67,7 +68,7 @@ class TestAwsLambdaDriver:
 
         lambda_config = self.get_lambda_config(function_name)
         log_policy = self.get_log_policy(aws_lambda_driver.log_group)
-        ssm_config = cast(Provision, configs.parameters)
+        ssm_config = cast(Configs, configs.parameters)
 
         assert lambda_config["MemorySize"] == ssm_config.memory
         assert lambda_config["Timeout"] == ssm_config.timeout

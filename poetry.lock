@@ -989,38 +989,6 @@ dev = ["pre-commit", "tox"]
 testing = ["pytest", "pytest-benchmark"]
 
 [[package]]
-name = "polars"
-version = "0.16.12"
-description = "Blazingly fast DataFrame library"
-category = "main"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "polars-0.16.12-cp37-abi3-macosx_10_7_x86_64.whl", hash = "sha256:efb1405101dd1774abc9425f3fc36afea076980680f20461f1a1d77c835968a1"},
-    {file = "polars-0.16.12-cp37-abi3-macosx_11_0_arm64.whl", hash = "sha256:ebb5a6f34af17c0c9aa5c9c187e560e8b32900dfceda9da04206ce0ce3e625e1"},
-    {file = "polars-0.16.12-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:3e0f2c4b72ac4e07fb176752390f580b2661b711282b5cd593396dfe0b5b2746"},
-    {file = "polars-0.16.12-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:91396c4f9e69af8430bf321c965250d521baab6868391163beb90380f795d7f5"},
-    {file = "polars-0.16.12-cp37-abi3-win_amd64.whl", hash = "sha256:24794c308cfd10429fa157aae827988e0c2a48888c443fb8c372b0372337123d"},
-    {file = "polars-0.16.12.tar.gz", hash = "sha256:ef01082193b54a8da4118c6bcc2e2a915f07847a07213d8764f63ba965974a07"},
-]
-
-[package.dependencies]
-typing_extensions = {version = ">=4.0.1", markers = "python_version < \"3.11\""}
-
-[package.extras]
-all = ["polars[connectorx,deltalake,fsspec,matplotlib,numpy,pandas,pyarrow,sqlalchemy,timezone,xlsx2csv]"]
-connectorx = ["connectorx"]
-deltalake = ["deltalake (>=0.6.2)"]
-fsspec = ["fsspec"]
-matplotlib = ["matplotlib"]
-numpy = ["numpy (>=1.16.0)"]
-pandas = ["pandas", "pyarrow (>=4.0.0)"]
-pyarrow = ["pyarrow (>=4.0.0)"]
-sqlalchemy = ["pandas", "sqlalchemy"]
-timezone = ["backports.zoneinfo", "tzdata"]
-xlsx2csv = ["xlsx2csv (>=0.8.0)"]
-
-[[package]]
 name = "pycparser"
 version = "2.21"
 description = "C parser in Python"
@@ -1824,4 +1792,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.8"
-content-hash = "ec1588814449b89c4a749f2191e59d66b0ce9c43234188f57f7c1eada33630b0"
+content-hash = "5418d67781b4f3c71bb5549a320347826616ed46c7dd183b576e806a87fe21eb"

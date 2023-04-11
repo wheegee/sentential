@@ -25,13 +25,6 @@ def table_headers(table: Table) -> List[str]:
 def table_body(table: Table) -> List[List[Any]]:
     cells = [column._cells for column in table.columns]
     body = [list(row) for row in zip(*cells)]
-    for i, row in enumerate(body):
-        for j, column in enumerate(row):
-            if str(column).startswith("[") and str(column).endswith("]"):
-                body[i][j] = literal_eval(str(column))
-            if str(column) == "None":
-                body[i][j] = literal_eval(str(column))
-
     return body
 
 
