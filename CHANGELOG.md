@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.11.0 (2023-04-11)
+### Feature
+* Refactor ssm approach ([#241](https://github.com/wheegee/sentential/issues/241)) ([`0593cc7`](https://github.com/wheegee/sentential/commit/0593cc77f84594a054a4543cebc24ebcad5a8133))
+
 ## v0.10.1 (2023-04-08)
 ### Fix
 * Adding entry version lock ([#246](https://github.com/wheegee/sentential/issues/246)) ([`b2c31b6`](https://github.com/wheegee/sentential/commit/b2c31b6e600864798b8ae5049303dc9b5faeb88f))
