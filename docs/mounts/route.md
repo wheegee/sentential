@@ -109,3 +109,9 @@ Visit the gateway url in your browser.
 > sntl destroy local
 > sntl destroy aws
 ```
+
+### Further reading
+
+- [mangum](https://mangum.io/)
+- [lamby](https://lamby.custominktech.com/)
+- [serverless-express](https://github.com/vendia/serverless-express)

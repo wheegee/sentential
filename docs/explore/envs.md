@@ -1,8 +1,10 @@
 # Envs & Secrets
 
-When running an application we generally want secrets and configurations in our environment. Sentential makes this easy through the `sntl envs` command.
+When running an application we generally want secrets and configurations in our environment. Sentential makes this easy through the `sntl envs` & `sntl secrets` commands.
 
-> :lock: Currently all key/values stored via Sentential are encrypted in SSM. By default `aws/ssm` KMS key is used, this can be modified via the `AWS_KMS_KEY_ALIAS` environment variable.
+The only difference between the `envs` store and the `secrets` store is that the `secrets` values are encryped with kms.
+
+> :lock: By default `aws/ssm` KMS key is used to encrypt `secrets`, this can be modified via the `AWS_KMS_KEY_ALIAS` environment variable.
 
 ### Prerequisites
 
@@ -13,12 +15,19 @@ You have initialized the [explore project](/explore/project) and are operating i
 Let's write an environment variable to the env store and read it back...
 
 ```bash
-> sntl envs write MY_SECRET superdoopersecret
-> sntl envs read
+> sntl envs set USERNAME non-root
+> sntl secrets set PASSWORD is-encrypted
+> sntl envs ls
 
   field       value              
  ─────────────────────────────── 
-  MY_SECRET   superdoopersecret
+  USERNAME   non-root
+
+> sntl secrets ls
+
+  field       value              
+ ─────────────────────────────── 
+  PASSWORD    ****
 ```
 
 This is the most basic usage of a larger concept, for more see [Stores & Shapes](/examples/shapes).
@@ -35,7 +44,10 @@ Create or modify...
 from os import environ
 
 def handler(event, context):
-     return environ["MY_SECRET"]
+    return {
+      "username": environ["USERNAME"],
+      "password": "PASSWORD" in environ
+    }
 ```
 
 <!-- tabs:end -->
@@ -63,7 +75,7 @@ def handler(event, context):
     "RetryAttempts": 0
   },
   "StatusCode": 200,
-  "Payload": "\"superdoopersecret\""
+  "Payload": "{ \"username\": \"non-root\", \"password\": true }"
 }
 ```
 
@@ -93,7 +105,7 @@ def handler(event, context):
     "RetryAttempts": 0
   },
   "StatusCode": 200,
-  "Payload": "\"superdoopersecret\""
+  "Payload": "{ \"username\": \"non-root\", \"password\": true }"
 }
 
 ```
@@ -103,4 +115,5 @@ def handler(event, context):
 ```bash
 > sntl destroy aws
 > sntl envs clear
+> sntl secrets clear
 ```

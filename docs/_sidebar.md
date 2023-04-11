@@ -7,10 +7,10 @@
     * [Policy](explore/policy.json.md)
     * [Partition](explore/partition.md)
     * [Shapes](explore/shapes.md)
-    * [Function URL](explore/public_url.md)
 
 * [Mounts](mounts/description.md)
     * [Schedule](mounts/schedule.md)
+    * [Function URL](mounts/public_url.md)
     * [Route](mounts/route.md)
 
 * [Custom Images](custom_images/description.md)
