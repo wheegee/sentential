@@ -62,8 +62,9 @@ class Ontology:
     @property
     def configs(self) -> Store:
         from sentential.lib.shapes import Configs
+
         return Store(self.context, Configs)
-    
+
     def export_store_defaults(self) -> List[Store]:
         stores = [self.args, self.envs, self.secrets, self.tags, self.configs]
         for store in stores:

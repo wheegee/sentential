@@ -58,24 +58,14 @@ class Configs(StoreModel):
     memory: int = Field(default=128, description="allocated memory (mb)")
     timeout: int = Field(default=3, description="timeout (s)")
     subnet_ids: List[str] = Field(default=[], description="subnet ids")
-    security_group_ids: List[str] = Field(
-        default=[], description="security group ids"
-    )
+    security_group_ids: List[str] = Field(default=[], description="security group ids")
     auth_type: Literal["NONE", "AWS_IAM"] = Field(
         default="NONE", description="auth type"
     )
-    allow_headers: List[str] = Field(
-        default=["*"], description="CORS AllowHeaders"
-    )
-    allow_methods: List[str] = Field(
-        default=["*"], description="CORS AllowMethods"
-    )
-    allow_origins: List[str] = Field(
-        default=["*"], description="CORS AllowOrigins"
-    )
-    expose_headers: List[str] = Field(
-        default=["*"], description="CORS ExposeHeaders"
-    )
+    allow_headers: List[str] = Field(default=["*"], description="CORS AllowHeaders")
+    allow_methods: List[str] = Field(default=["*"], description="CORS AllowMethods")
+    allow_origins: List[str] = Field(default=["*"], description="CORS AllowOrigins")
+    expose_headers: List[str] = Field(default=["*"], description="CORS ExposeHeaders")
     log_retention: int = Field(default=7, description="log retention (days)")
 
 

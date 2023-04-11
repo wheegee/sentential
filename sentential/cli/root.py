@@ -60,7 +60,11 @@ def ls(verbose: bool = typer.Option(False)):
 
 
 @root.command()
-def clean(remote: bool = typer.Option(False), remote_logs: bool = typer.Option(False), stores: bool = typer.Option(False)):
+def clean(
+    remote: bool = typer.Option(False),
+    remote_logs: bool = typer.Option(False),
+    stores: bool = typer.Option(False),
+):
     """clean images (and logs)"""
     ontology = Ontology()
     LocalImagesDriver(ontology).clean()

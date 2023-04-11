@@ -70,7 +70,7 @@ class Store:
         return self.model.construct(**self.state)
 
     def set(self, key: str, value: Union[Json, str]) -> Table:
-        try: 
+        try:
             parsed = json.loads(value)
         except json.JSONDecodeError:
             parsed = value
