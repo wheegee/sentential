@@ -91,7 +91,7 @@ class TestContext(object):
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
-class TestStoreUndefined:                
+class TestStoreUndefined:
     def test_undefined(self, ontology: Ontology):
         assert (
             str(type(ontology.envs._read())) == "<class 'sentential.lib.shapes.Envs'>"
@@ -165,7 +165,7 @@ class TestStoreDefined:
         ontology.envs.set("required_env", "123")
         assert ontology.envs.parameters.required_env == 123
         assert ontology.envs.parameters.optional_env == "default_value"
-        
+
     def test_clear(self, ontology: Ontology):
         table = table_body(ontology.envs.clear())
         assert len(table) == 2
@@ -176,6 +176,7 @@ class TestStoreDefined:
             "[red]field required[/red]",
         ] in table
         assert ["optional_env", "default_value", "optional", "None"] in table
+
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
 class TestStoreProvision:
@@ -219,16 +220,13 @@ class TestStoreProvision:
 @pytest.mark.usefixtures("moto", "init", "ontology")
 class TestStoreGlobalOps:
     def parameter_exists(self, prefix: PosixPath):
-        resp = clients.ssm.describe_parameters(ParameterFilters=[
-            {
-                'Key': 'Name',
-                'Values': [
-                    str(prefix)
-                ]
-            },
-        ])
+        resp = clients.ssm.describe_parameters(
+            ParameterFilters=[
+                {"Key": "Name", "Values": [str(prefix)]},
+            ]
+        )
         return len(resp["Parameters"]) == 1
-    
+
     def test_undefined_export(self, ontology: Ontology):
         ontology.export_store_defaults()
 
@@ -237,7 +235,7 @@ class TestStoreGlobalOps:
         assert self.parameter_exists(ontology.secrets.path)
         assert self.parameter_exists(ontology.tags.path)
         assert self.parameter_exists(ontology.configs.path)
-    
+
     def test_defined_export_store_defaults_fails(self, ontology: Ontology):
         copyfile("./fixtures/shapes.py", "shapes.py")
         with pytest.raises(ValidationError):
