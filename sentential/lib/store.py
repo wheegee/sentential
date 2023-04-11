@@ -2,7 +2,7 @@ import json
 from pathlib import PosixPath
 from rich.table import Table, box
 from typing import Any, Dict, List, Optional, Tuple, cast, Type, Union
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Json, ValidationError
 from sentential.lib.clients import clients
 from sentential.lib.context import Context
 from sentential.lib.shapes import AwsSSMParam, Args, Envs, Secrets, Tags, Configs
@@ -28,6 +28,8 @@ class StoreTableRow(BaseModel):
 
 
 class Store:
+    # TODO: the fact that this must take Context instead of Ontology, is because this belongs in an Epistemology.
+    # The conflation of the two logically leads to a circular import. A part of our Epistemology is our Ontology (prior knowledge).
     def __init__(self, context: Context, model: VALID_MODEL_TYPES) -> None:
         self.kms_key_id = context.kms_key_id
         self.partition: str = context.partition
@@ -67,8 +69,13 @@ class Store:
     def _read(self) -> VALID_MODELS:
         return self.model.construct(**self.state)
 
-    def set(self, key: str, value: str) -> Table:
-        merged = self.state | {key: value}
+    def set(self, key: str, value: Union[Json, str]) -> Table:
+        try:
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            parsed = value
+
+        merged = self.state | {key: parsed}
         self._write_parameters(merged)
         return self.ls()
 

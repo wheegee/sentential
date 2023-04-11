@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import List
 from sentential.lib.context import Context
 from sentential.lib.store import Store
 
@@ -63,3 +64,15 @@ class Ontology:
         from sentential.lib.shapes import Configs
 
         return Store(self.context, Configs)
+
+    def export_store_defaults(self) -> List[Store]:
+        stores = [self.args, self.envs, self.secrets, self.tags, self.configs]
+        for store in stores:
+            store.export_defaults()
+        return stores
+
+    def clear_stores(self) -> List[Store]:
+        stores = [self.args, self.envs, self.secrets, self.tags, self.configs]
+        for store in stores:
+            store.clear()
+        return stores

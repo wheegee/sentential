@@ -32,8 +32,7 @@ class AwsLambdaDriver(LambdaDriver):
     def deploy(self, image: AwsImageDetail, arch: Union[Architecture, None]) -> str:
         chosen_dist = self._choose_dist(image, arch)
 
-        self.ontology.envs.export_defaults()
-        self.ontology.tags.export_defaults()
+        self.ontology.export_store_defaults()
 
         tags = self.ontology.tags.parameters.dict()
 

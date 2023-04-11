@@ -25,7 +25,9 @@ class LocalLambdaDriver(LambdaDriver):
     def deploy(self, image: Image, inject_env: Dict[str, str] = {}) -> str:
         LocalBridge.setup()  # hoist to cli callback when things are more generalized
         self.destroy()
-        self.ontology.envs.export_defaults()
+
+        self.ontology.export_store_defaults()
+
         credentials = self._get_credentials()
         credentials_env = {
             "AWS_LAMBDA_FUNCTION_NAME": self.ontology.context.resource_name,
