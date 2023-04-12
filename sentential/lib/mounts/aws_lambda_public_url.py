@@ -1,14 +1,14 @@
 from typing import Dict, List, cast
 from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
-from sentential.lib.shapes import Provision
+from sentential.lib.shapes import Configs
 
 
 class AwsLambdaPublicUrlMount:
     def __init__(self, ontology: Ontology) -> None:
         self.ontology = ontology
         self.resource_name = self.ontology.context.resource_name
-        self.provision = cast(Provision, self.ontology.configs.parameters)
+        self.provision = cast(Configs, self.ontology.configs.parameters)
 
     def autocomplete(self) -> None:
         pass

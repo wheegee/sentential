@@ -1,14 +1,15 @@
+import os
+from pathlib import PosixPath
 import pytest
 import re
 from os import environ, remove
 from shutil import copyfile
-
 from helpers import table_headers, table_body, rewrite
-
+from pydantic import ValidationError
+from sentential.lib.clients import clients
 from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import AWSCallerIdentity, Paths
-from sentential.lib.store import ModeledStore, GenericStore
-from sentential.lib.exceptions import StoreError, ContextError
+from sentential.lib.exceptions import ContextError, ValidationError
 
 # We should figure out how to clear these for all tests...
 if "PARTITION" in environ:
@@ -90,76 +91,171 @@ class TestContext(object):
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
-class TestGenericStore:
-    def test_envs_store_type(self, ontology: Ontology):
-        assert isinstance(ontology.envs, GenericStore)
+class TestStoreUndefined:
+    def test_undefined(self, ontology: Ontology):
+        assert (
+            str(type(ontology.envs._read())) == "<class 'sentential.lib.shapes.Envs'>"
+        )
 
-    def test_envs_read(self, ontology):
-        table = ontology.envs.read()
-        assert table.row_count == 0
+    def test_ls(self, ontology: Ontology):
+        table = ontology.envs.ls()
+        headers = table_headers(table)
+        body = table_body(table)
+        assert ["key", "value", "description", "validation"] == headers
+        assert len(body) == 0
 
-    def test_envs_write(self, ontology: Ontology):
-        ontology.envs.write("test_1", ["value_1"])
-        ontology.envs.write("test_2", ["value_2"])
-        table = ontology.envs.read()
-        assert ["field", "value"] == table_headers(table)
-        assert ["test_1", "value_1"] in table_body(table)
-        assert ["test_2", "value_2"] in table_body(table)
+    def test_set(self, ontology: Ontology):
+        ontology.envs.set("key_1", "value_1")
+        ontology.envs.set("key_2", "value_2")
+        table = table_body(ontology.envs.set("key_3", "value_3"))
+        assert ["key_1", "value_1", "None", "None"] in table
+        assert ["key_2", "value_2", "None", "None"] in table
+        assert ["key_3", "value_3", "None", "None"] in table
 
-    def test_envs_clear(self, ontology: Ontology):
-        ontology.envs.clear()
-        table = ontology.envs.read()
-        assert [] == table_body(table)
+    def test_rm(self, ontology: Ontology):
+        table = table_body(ontology.envs.rm("key_2"))
+        assert ["key_2", "value_2", "None", "None"] not in table
+
+    def test_clear(self, ontology: Ontology):
+        body = table_body(ontology.envs.clear())
+        assert len(body) == 0
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
-class TestModeledStore:
-    def test_envs_store_type(self, ontology: Ontology):
+class TestStoreDefined:
+    def test_defined(self, ontology: Ontology):
         copyfile("./fixtures/shapes.py", "shapes.py")
-        assert isinstance(ontology.envs, ModeledStore)
+        assert str(type(ontology.envs._read())) == "<class 'shapes.Envs'>"
 
-    def test_envs_write_bad_key(self, ontology: Ontology):
-        with pytest.raises(StoreError):
-            ontology.envs.write("bad_env", ["value"])
+    def test_read(self, ontology: Ontology):
+        table = table_body(ontology.envs.ls())
+        assert [
+            "required_env",
+            "None",
+            "required",
+            "[red]field required[/red]",
+        ] in table
+        assert ["optional_env", "default_value", "optional", "None"] in table
 
-    def test_envs_write_good_key(self, ontology: Ontology):
-        ontology.envs.write("required_env", ["123"])
-        table = ontology.envs.read()
-        assert ["field", "value", "validation", "description"] == table_headers(table)
-        assert ["required_env", "123", None, "required"] in table_body(table)
-        assert ["optional_env", "default_value", None, "optional"] in table_body(table)
+    def test_validation(self, ontology: Ontology):
+        table = table_body(ontology.envs.set("required_env", "non-integer"))
+        assert [
+            "required_env",
+            "non-integer",
+            "required",
+            "[red]value is not a valid integer[/red]",
+        ] in table
+        assert ["optional_env", "default_value", "optional", "None"] in table
 
-    def test_envs_clear(self, ontology: Ontology):
-        ontology.envs.clear()
-        table = ontology.envs.read()
-        assert ["required_env", None, "field required", "required"] in table_body(table)
-        assert ["optional_env", "default_value", None, "optional"] in table_body(table)
+    def test_extra_property(self, ontology: Ontology):
+        table = table_body(ontology.envs.set("undefined_env", "undefined"))
+        assert [
+            "undefined_env",
+            "undefined",
+            "None",
+            "[red]extra fields not permitted[/red]",
+        ] in table
+
+    def test_parameters_raises_when_failing(self, ontology: Ontology):
+        with pytest.raises(ValidationError):
+            ontology.envs.parameters
+
+    def test_parameters_returns_when_passing(self, ontology: Ontology):
+        ontology.envs.rm("undefined_env")
+        ontology.envs.set("required_env", "123")
+        assert ontology.envs.parameters.required_env == 123
+        assert ontology.envs.parameters.optional_env == "default_value"
+
+    def test_clear(self, ontology: Ontology):
+        table = table_body(ontology.envs.clear())
+        assert len(table) == 2
+        assert [
+            "required_env",
+            "None",
+            "required",
+            "[red]field required[/red]",
+        ] in table
+        assert ["optional_env", "default_value", "optional", "None"] in table
 
 
 @pytest.mark.usefixtures("moto", "init", "ontology")
-class TestInternalStore:
+class TestStoreProvision:
     def test_configs_type(self, ontology: Ontology):
-        assert isinstance(ontology.configs, ModeledStore)
+        assert (
+            str(type(ontology.configs._read()))
+            == "<class 'sentential.lib.shapes.Configs'>"
+        )
 
     def test_configs_read(self, ontology: Ontology):
-        table = ontology.configs.read()
-        assert ["field", "value", "validation", "description"] == table_headers(table)
-        assert ["storage", "512", None, "ephemeral storage (mb)"] in table_body(table)
-
-    def test_configs_write_bad_key(self, ontology: Ontology):
-        with pytest.raises(StoreError):
-            ontology.configs.write("ram", ["1024"])
-
-    def test_configs_write_bad_value(self, ontology: Ontology):
-        with pytest.raises(StoreError):
-            ontology.configs.write("memory", ["lots"])
+        table = ontology.configs.ls()
+        headers = table_headers(table)
+        body = table_body(table)
+        assert ["key", "value", "description", "validation"] == headers
+        assert ["storage", "512", "ephemeral storage (mb)", "None"] in body
 
     def test_configs_write(self, ontology: Ontology):
-        ontology.configs.write("storage", ["1024"])
-        table = ontology.configs.read()
-        assert ["storage", "1024", None, "ephemeral storage (mb)"] in table_body(table)
+        table = ontology.configs.set("storage", "1024")
+        table = table_body(ontology.configs.ls())
+        assert ["storage", "1024", "ephemeral storage (mb)", "None"] in table
 
     def test_configs_clear(self, ontology: Ontology):
         ontology.configs.clear()
-        table = ontology.configs.read()
-        assert ["storage", "512", None, "ephemeral storage (mb)"] in table_body(table)
+        table = table_body(ontology.configs.ls())
+        assert ["storage", "512", "ephemeral storage (mb)", "None"] in table
+
+    def test_configs_write_bad_key(self, ontology: Ontology):
+        ontology.configs.set("ram", "1024")
+        with pytest.raises(ValidationError):
+            ontology.configs.parameters
+        ontology.configs.clear()
+
+    def test_configs_write_bad_value(self, ontology: Ontology):
+        ontology.configs.set("memory", "lots")
+        with pytest.raises(ValidationError):
+            ontology.configs.parameters
+        ontology.configs.clear()
+
+
+# TODO: this further implies the need for an epistemology seperate from ontology.
+@pytest.mark.usefixtures("moto", "init", "ontology")
+class TestStoreGlobalOps:
+    def parameter_exists(self, prefix: PosixPath):
+        resp = clients.ssm.describe_parameters(
+            ParameterFilters=[
+                {"Key": "Name", "Values": [str(prefix)]},
+            ]
+        )
+        return len(resp["Parameters"]) == 1
+
+    def test_undefined_export(self, ontology: Ontology):
+        ontology.export_store_defaults()
+
+        assert self.parameter_exists(ontology.args.path)
+        assert self.parameter_exists(ontology.envs.path)
+        assert self.parameter_exists(ontology.secrets.path)
+        assert self.parameter_exists(ontology.tags.path)
+        assert self.parameter_exists(ontology.configs.path)
+
+    def test_defined_export_store_defaults_fails(self, ontology: Ontology):
+        copyfile("./fixtures/shapes.py", "shapes.py")
+        with pytest.raises(ValidationError):
+            ontology.export_store_defaults()
+
+    def test_defined_export_store_defaults_passes(self, ontology: Ontology):
+        ontology.args.set("required_arg", "0")
+        ontology.envs.set("required_env", "0")
+        ontology.secrets.set("required_secret", "0")
+        ontology.tags.set("required_tag", "0")
+        ontology.export_store_defaults()
+        assert ontology.args.parameters.required_arg == 0
+        assert ontology.envs.parameters.required_env == 0
+        assert ontology.secrets.parameters.required_secret == 0
+        assert ontology.tags.parameters.required_tag == 0
+
+    def test_clear_stores(self, ontology: Ontology):
+        ontology.clear_stores()
+        assert not self.parameter_exists(ontology.args.path)
+        assert not self.parameter_exists(ontology.envs.path)
+        assert not self.parameter_exists(ontology.secrets.path)
+        assert not self.parameter_exists(ontology.tags.path)
+        assert not self.parameter_exists(ontology.configs.path)

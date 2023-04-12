@@ -10,7 +10,7 @@ from sentential.lib.shapes import (
     AwsImageDetail,
     AwsManifestList,
     LambdaInvokeResponse,
-    Provision,
+    Configs,
     AwsManifestListDistribution,
 )
 from sentential.lib.clients import clients
@@ -25,17 +25,16 @@ class AwsLambdaDriver(LambdaDriver):
         self.log_group = f"/aws/lambda/{self.function_name}"
 
     @property
-    def provision(self) -> Provision:
+    def provision(self) -> Configs:
         # there must be a better way to do polymorphic type stuff...
-        return cast(Provision, self.ontology.configs.parameters)
+        return cast(Configs, self.ontology.configs.parameters)
 
     def deploy(self, image: AwsImageDetail, arch: Union[Architecture, None]) -> str:
         chosen_dist = self._choose_dist(image, arch)
 
-        self.ontology.envs.export_defaults()
-        self.ontology.tags.export_defaults()
+        self.ontology.export_store_defaults()
 
-        tags = self.ontology.tags.as_dict()
+        tags = self.ontology.tags.parameters.dict()
 
         clients.iam.attach_role_policy(
             RoleName=self._put_role(tags)["Role"]["RoleName"],
@@ -203,17 +202,19 @@ class AwsLambdaDriver(LambdaDriver):
             else image.platform.architecture
         )
         image_uri = f"{self.ontology.context.repository_url}@{image.digest}"
-        envs_path = self.ontology.envs.path
+        export_paths = ",".join(
+            [str(self.ontology.envs.path), str(self.ontology.secrets.path)]
+        )
 
         sleep(10)
         try:
             function = clients.lmb.create_function(
-                FunctionName=function_name,
+                FunctionName=self.function_name,
                 Role=role_arn,
                 PackageType="Image",
                 Code={"ImageUri": image_uri},
                 Description=f"sententially deployed {image_uri}",
-                Environment={"Variables": {"PARTITION": envs_path}},
+                Environment={"Variables": {"PARTITION": export_paths}},
                 Architectures=[image_arch],
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
@@ -229,7 +230,7 @@ class AwsLambdaDriver(LambdaDriver):
                 FunctionName=function_name,
                 Role=role_arn,
                 Description=f"sententially deployed {image_uri}",
-                Environment={"Variables": {"PARTITION": envs_path}},
+                Environment={"Variables": {"PARTITION": export_paths}},
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
                 Timeout=self.provision.timeout,

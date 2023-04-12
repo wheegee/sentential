@@ -25,7 +25,9 @@ class LocalLambdaDriver(LambdaDriver):
     def deploy(self, image: Image, inject_env: Dict[str, str] = {}) -> str:
         LocalBridge.setup()  # hoist to cli callback when things are more generalized
         self.destroy()
-        self.ontology.envs.export_defaults()
+
+        self.ontology.export_store_defaults()
+
         credentials = self._get_credentials()
         credentials_env = {
             "AWS_LAMBDA_FUNCTION_NAME": self.ontology.context.resource_name,
@@ -36,20 +38,25 @@ class LocalLambdaDriver(LambdaDriver):
         if credentials.SessionToken:
             credentials_env["AWS_SESSION_TOKEN"] = credentials.SessionToken
 
+        # required to properly resolve `host.docker.internal` when not using docker desktop.
+        # this isn't necessarily supported, but it does solve the problem.
         hosts = []
-        # required to properly resolve `host.docker.internal` in Linux
         if platform == "linux":
             hosts = [("host.docker.internal", "host-gateway")]
 
+        export_paths = ",".join(
+            [str(self.ontology.envs.path), str(self.ontology.secrets.path)]
+        )
+
         default_env = {
             "AWS_REGION": self.ontology.context.region,
-            "PARTITION": self.ontology.envs.path,
+            "PARTITION": export_paths,
         }
 
         clients.docker.run(
             image.id,
-            add_hosts=hosts,
             name=LocalBridge.config.lambda_name,
+            add_hosts=hosts,
             hostname=LocalBridge.config.lambda_name,
             networks=[LocalBridge.config.bridge_name],
             detach=True,

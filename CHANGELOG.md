@@ -2,6 +2,18 @@
 
 <!--next-version-placeholder-->
 
+## v0.11.1 (2023-04-11)
+### Fix
+* SSM export fix ([#248](https://github.com/wheegee/sentential/issues/248)) ([`311db15`](https://github.com/wheegee/sentential/commit/311db15c8258f70b57036319113d36dae0fd3e8a))
+
+## v0.11.0 (2023-04-11)
+### Feature
+* Refactor ssm approach ([#241](https://github.com/wheegee/sentential/issues/241)) ([`0593cc7`](https://github.com/wheegee/sentential/commit/0593cc77f84594a054a4543cebc24ebcad5a8133))
+
+## v0.10.1 (2023-04-08)
+### Fix
+* Adding entry version lock ([#246](https://github.com/wheegee/sentential/issues/246)) ([`b2c31b6`](https://github.com/wheegee/sentential/commit/b2c31b6e600864798b8ae5049303dc9b5faeb88f))
+
 ## v0.10.0 (2023-04-07)
 ### Feature
 * Api Gateway Mount ([#239](https://github.com/wheegee/sentential/issues/239)) ([`735f4a2`](https://github.com/wheegee/sentential/commit/735f4a2f4226f78bad4dfd418dfcc6d5065dd072))

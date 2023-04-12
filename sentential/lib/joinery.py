@@ -20,7 +20,7 @@ from sentential.lib.drivers.aws_lambda import AwsLambdaDriver
 from sentential.lib.drivers.local_lambda import LocalLambdaDriver
 from sentential.lib.mounts.aws_event_schedule import AwsEventScheduleMount
 from sentential.lib.mounts.aws_api_gateway import AwsApiGatewayMount, deproxify
-from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG
+from sentential.lib.shapes import SNTL_WORKING_IMAGE_TAG
 from pydantic import BaseModel
 from python_on_whales.components.image.cli_wrapper import Image
 
@@ -67,7 +67,7 @@ class Joinery:
     def _cwi(self) -> Union[Row, None]:
         try:
             row = {}
-            cwi = self.local_images.get_image(CURRENT_WORKING_IMAGE_TAG)
+            cwi = self.local_images.get_image(SNTL_WORKING_IMAGE_TAG)
             row["build"] = "local"
             row["arch"] = cwi.architecture
             row["digest"] = self._humanize_digest(self._extract_digest(cwi))

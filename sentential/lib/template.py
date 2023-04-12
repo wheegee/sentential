@@ -3,8 +3,10 @@ from os import makedirs
 from pathlib import PosixPath
 from os.path import dirname, abspath, exists
 from jinja2 import Environment, FileSystemLoader, Template
-from sentential.lib.shapes import derive_paths
+from sentential.lib.shapes import SNTL_ENTRY_VERSION, derive_paths
 from sentential.lib.ontology import Ontology
+from sentential.lib.shapes import Envs
+from typing import cast
 
 PACKAGE_PATH = PosixPath(dirname(abspath(__file__))).parent
 
@@ -13,14 +15,13 @@ class Init:
     def __init__(self, repository_name: str, runtime: str) -> None:
         self.repository_name = repository_name
         self.runtime = runtime
+        self.entry_version = SNTL_ENTRY_VERSION
         self.path = derive_paths()
         self.jinja = Environment(loader=FileSystemLoader(f"{PACKAGE_PATH}/templates"))
 
     def scaffold(self) -> None:
         if not exists(self.path.src):
             makedirs(self.path.src)
-        if not exists(self.path.sntl):
-            makedirs(self.path.sntl)
 
         self._write(self.jinja.get_template("Dockerfile"), self.path.dockerfile)
 
@@ -34,6 +35,7 @@ class Init:
                     template.render(
                         repository_name=self.repository_name,
                         runtime=self.runtime,
+                        entry_version=self.entry_version,
                         paths=self.path,
                     )
                 )
@@ -49,5 +51,5 @@ class Policy:
     def render(self) -> str:
         template = self.jinja.get_template("policy.json")
         return template.render(
-            context=self.ontology.context, env=self.ontology.envs.parameters
+            context=self.ontology.context, env=cast(Envs, self.ontology.envs.parameters)
         )

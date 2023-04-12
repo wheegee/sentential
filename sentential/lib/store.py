@@ -1,153 +1,155 @@
-import polars as pl
-from typing import List, Type
-from types import SimpleNamespace
-from pydantic import ValidationError
+import json
+from pathlib import PosixPath
 from rich.table import Table, box
-from builtins import ValueError
-from sentential.lib.exceptions import StoreError
+from typing import Any, Dict, List, Optional, Tuple, cast, Type, Union
+from pydantic import BaseModel, Json, ValidationError
 from sentential.lib.clients import clients
 from sentential.lib.context import Context
-from sentential.support.shaper import Shaper, ShaperError
+from sentential.lib.shapes import AwsSSMParam, Args, Envs, Secrets, Tags, Configs
+
+VALID_MODEL_TYPES = Union[
+    Type[Args], Type[Envs], Type[Secrets], Type[Tags], Type[Configs]
+]
+VALID_MODELS = Union[Args, Envs, Secrets, Tags, Configs]
 
 
-class Common:
-    path: str
-    context: Context
+class ValidationErrorInfo(BaseModel):
+    key: str
+    loc: Tuple
+    msg: str
+    type: str
 
-    def _fetch(self):
-        return clients.ssm.get_parameters_by_path(
-            Path=self.path,
-            Recursive=True,
-            WithDecryption=True,
-        )["Parameters"]
 
-    def _unsafe_dict(self):
-        return {p["Name"].replace(self.path, ""): p["Value"] for p in self._fetch()}
+class StoreTableRow(BaseModel):
+    key: Any
+    value: Optional[Any]
+    description: Optional[Any]
+    validation: Optional[Any]
 
-    def _unsafe_df(self):
-        data = self._unsafe_dict()
-        data = {"field": list(data.keys()), "value": list(data.values())}
-        return pl.DataFrame(data, schema=[("field", pl.Utf8), ("value", pl.Utf8)])
 
-    def delete(self, key: str):
+class Store:
+    # TODO: the fact that this must take Context instead of Ontology, is because this belongs in an Epistemology.
+    # The conflation of the two logically leads to a circular import. A part of our Epistemology is our Ontology (prior knowledge).
+    def __init__(self, context: Context, model: VALID_MODEL_TYPES) -> None:
+        self.kms_key_id = context.kms_key_id
+        self.partition: str = context.partition
+        self.repo: str = context.repository_name
+        self.root: PosixPath = PosixPath(f"/{self.partition}/{self.repo}")
+        self.model: VALID_MODEL_TYPES = model
+        self.path: PosixPath = self.root.joinpath(PosixPath(model.__name__))
+        self.encrypted: bool = "secret" in model.__name__.lower()
+
+    @property
+    def state(self) -> Dict:
         try:
-            return clients.ssm.delete_parameter(Name=f"{self.path}{key}")
+            resp = clients.ssm.get_parameter(
+                Name=str(self.path), WithDecryption=self.encrypted
+            )
+            return json.loads(AwsSSMParam(**resp["Parameter"]).Value)
         except clients.ssm.exceptions.ParameterNotFound:
-            raise StoreError(f"no key '{key}' persisted")
+            return json.loads("{}")
 
-    def clear(self):
-        for key, value in self._unsafe_dict().items():
-            self.delete(key)
-
-
-class GenericStore(Common):
-    def __init__(self, context: Context, prefix: str) -> None:
-        super().__init__()
-        self.context = context
-        self.path = (
-            f"/{self.context.partition}/{self.context.repository_name}/{prefix}/"
-        )
-
+    # TODO: this probably could use a rename
     @property
-    def parameters(self) -> SimpleNamespace:
-        return SimpleNamespace(**self._unsafe_dict())
+    def parameters(self) -> VALID_MODELS:
+        return self.model(**self.state)
 
-    def as_dict(self):
-        return vars(self.parameters)
+    def _write_parameters(self, dict: Dict) -> VALID_MODELS:
+        params = {}
+        params["Name"] = str(self.path)
+        params["Value"] = self.model.construct(**dict).json()
+        params["Overwrite"] = True
+        params["Tier"] = "Standard"
+        params["Type"] = "SecureString" if self.encrypted else "String"
+        if params["Type"] == "SecureString":
+            params["KeyId"] = self.kms_key_id
+        clients.ssm.put_parameter(**params)
+        return self._read()
 
-    def read(self) -> Table:
-        data = self._unsafe_dict()
-        table = Table("field", "value", box=box.SIMPLE)
-        for key, value in data.items():
-            table.add_row(key, value)
-        return table
+    def _read(self) -> VALID_MODELS:
+        return self.model.construct(**self.state)
 
-    def write(self, key: str, value: List[str]):
-        # Typer doesn't support Union[str, List[str]], understandably
-        # So desired behavior is implemented here, to the insult of typing
-
-        delimiter = ","
-        value = delimiter.join(value)  # type: ignore
-
-        return clients.ssm.put_parameter(
-            Name=f"{self.path}{key}",
-            Value=str(value),
-            Type="SecureString",
-            Overwrite=True,
-            Tier="Standard",
-            KeyId=self.context.kms_key_id,
-        )
-
-    def export_defaults(self) -> None:
-        return None
-
-
-class ModeledStore(Common):
-    def __init__(self, context: Context, prefix: str, model: Type[Shaper]) -> None:
-        super().__init__()
-        self.context = context
-        self.model = model
-        self.path = (
-            f"/{self.context.partition}/{self.context.repository_name}/{prefix}/"
-        )
-
-    def export_defaults(self) -> None:
-        if self.model:
-            current_state = self._unsafe_dict()
-            for name, field in self.model.__fields__.items():
-                if field.name not in current_state.keys():
-                    if hasattr(field, "default") and field.default != None:
-                        self.write(field.name, field.default)
-
-    @property
-    def parameters(self) -> Shaper:
+    def set(self, key: str, value: Union[Json, str]) -> Table:
         try:
-            return self.model.constrained_parse_obj(self._unsafe_dict())
+            parsed = json.loads(value)
+        except json.JSONDecodeError:
+            parsed = value
+
+        merged = self.state | {key: parsed}
+        self._write_parameters(merged)
+        return self.ls()
+
+    def rm(self, key: str) -> Table:
+        mutated = self.state.copy()
+        try:
+            del mutated[key]
+            self._write_parameters(mutated)
+        except KeyError:
+            pass
+        return self.ls()
+
+    def export_defaults(self) -> None:
+        self._write_parameters(self.parameters.dict())
+
+    def clear(self) -> Table:
+        try:
+            clients.ssm.delete_parameter(Name=str(self.path))
+        except clients.ssm.exceptions.ParameterNotFound:
+            pass
+        return self.ls()
+
+    def validate(self) -> List[ValidationErrorInfo]:
+        try:
+            self.parameters
+            return []
         except ValidationError as e:
-            raise StoreError(e)
+            errors = []
+            for error in e.errors():
+                error = cast(Dict, error)
+                errors.append(ValidationErrorInfo(key=error["loc"][0], **error))
+            return errors
 
-    def as_dict(self) -> dict:
-        return self.parameters.dict()
+    def ls(self) -> Table:
+        data = self._read()
+        schema = data.schema()
+        properties = schema["properties"]
+        validations = self.validate()
+        columns = list(StoreTableRow.schema()["properties"].keys())
+        table = Table(*columns, box=box.SIMPLE)
+        rows: List[StoreTableRow] = []
 
-    def read(self) -> Table:
-        data = self._unsafe_df()
-        opts = {"on": "field", "how": "outer"}
-        schema = self.model.schema_df()
-        validation = self.model.constrained_validation_df(self._unsafe_dict())
-        df = schema.join(data, **opts).join(validation, **opts)
-        df = df.with_columns([(pl.col("value").fill_null(pl.col("default")))])
-        df = df.select(
-            [
-                pl.col("field"),
-                pl.col("value"),
-                pl.col("validation"),
-                pl.col("description"),
-            ]
-        )
+        # add rows found in schema
+        for key, meta in properties.items():
+            desc = meta["description"] if "description" in meta else None
+            rows.append(
+                StoreTableRow(key=key, value=None, description=desc, validation=None)
+            )
 
-        table = Table(*df.columns, box=box.SIMPLE)
-        for row in df.rows():
-            table.add_row(*[str(value) for value in row])
+        # populate existent values for properties defined in schema
+        for row in rows:
+            for key, value in data.dict().items():
+                if row.key == key:
+                    row.value = value
+
+        # add rows for data _not_ in schema
+        for key, value in data.dict().items():
+            if not any([row.key == key for row in rows]):
+                rows.append(
+                    StoreTableRow(
+                        key=key, value=value, description=None, validation=None
+                    )
+                )
+
+        # populate validation information for each row
+        for row in rows:
+            for validation in validations:
+                if row.key == validation.key:
+                    row.validation = f"[red]{validation.msg}[/red]"
+
+        # dump it into a renderable table object
+        for row in rows:
+            values = list(row.dict().values())
+            values = [str(v) for v in values]
+            table.add_row(*values)
+
         return table
-
-    def write(self, key: str, value: List[str]):
-        # Typer doesn't support Union[str, List[str]], understandably
-        # So desired behavior is implemented here, to the insult of typing
-        if len(value) == 1:
-            value = value[0]  # type: ignore
-
-        try:
-            self.model.validate_field_value(key, value)
-        except ValueError as e:
-            raise StoreError(e)
-        except ShaperError as e:
-            raise StoreError(e)
-
-        return clients.ssm.put_parameter(
-            Name=f"{self.path}{key}",
-            Value=str(value),
-            Type="SecureString",
-            Overwrite=True,
-            Tier="Standard",
-            KeyId=self.context.kms_key_id,
-        )

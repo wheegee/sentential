@@ -2,7 +2,10 @@ from time import sleep
 from typing import List, Union
 from python_on_whales.components.image.cli_wrapper import Image
 from sentential.lib.drivers.spec import ImagesDriver
-from sentential.lib.shapes import CURRENT_WORKING_IMAGE_TAG, Architecture
+from sentential.lib.shapes import (
+    SNTL_WORKING_IMAGE_TAG,
+    Architecture,
+)
 from sentential.lib.ontology import Ontology
 from sentential.lib.clients import clients
 from sentential.lib.exceptions import LocalDriverError
@@ -16,7 +19,7 @@ class LocalImagesDriver(ImagesDriver):
 
     def build(self, arch: Architecture) -> Image:
         platform = f"linux/{arch.value}"
-        manifest_uri = f"{self.repo_name}:{CURRENT_WORKING_IMAGE_TAG}"
+        manifest_uri = f"{self.repo_name}:{SNTL_WORKING_IMAGE_TAG}"
         self._build(manifest_uri, platform)
         return self.get_image()
 
@@ -48,12 +51,11 @@ class LocalImagesDriver(ImagesDriver):
 
     def _build(self, tag: str, platform: str) -> Image:
         self.ontology.args.export_defaults()
-
         cmd = {
             "tags": [tag],
             "platforms": [platform],
             "load": True,
-            "build_args": self.ontology.args.as_dict(),
+            "build_args": self.ontology.args.parameters.dict(),
         }
 
         image = clients.docker.build(self.ontology.context.path.root, **cmd)
@@ -65,16 +67,16 @@ class LocalImagesDriver(ImagesDriver):
 
     def get_image(self, tag: Union[str, None] = None) -> Image:
         if tag is None:
-            tag = CURRENT_WORKING_IMAGE_TAG
+            tag = SNTL_WORKING_IMAGE_TAG
 
         for image in clients.docker.images():
             if f"{self.repo_name}:{tag}" in image.repo_tags:
                 return image
 
-        if tag is not CURRENT_WORKING_IMAGE_TAG:
+        if tag is not SNTL_WORKING_IMAGE_TAG:
             pulled_image = clients.docker.pull(f"{self.repo_url}:{tag}")
             if isinstance(pulled_image, Image):
-                pulled_image.tag(f"{self.repo_name}:{CURRENT_WORKING_IMAGE_TAG}")
+                pulled_image.tag(f"{self.repo_name}:{SNTL_WORKING_IMAGE_TAG}")
                 return pulled_image
 
         raise LocalDriverError(f"no image with {tag} tag found")
