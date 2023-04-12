@@ -7,6 +7,7 @@ from sentential.lib.template import Policy
 from sentential.lib.ontology import Ontology
 from sentential.lib.exceptions import LocalDriverError
 from sentential.lib.drivers.spec import LambdaDriver
+from sentential.lib.shapes import SNTL_ENTRY_PATHS
 from python_on_whales.components.image.cli_wrapper import Image
 from python_on_whales.components.container.cli_wrapper import Container
 
@@ -51,6 +52,7 @@ class LocalLambdaDriver(LambdaDriver):
         default_env = {
             "AWS_REGION": self.ontology.context.region,
             "PARTITION": export_paths,
+            "SSM_PATHS": SNTL_ENTRY_PATHS,
         }
 
         clients.docker.run(

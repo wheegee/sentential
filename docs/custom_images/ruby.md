@@ -78,6 +78,7 @@ RUN apk add --no-cache \
 FROM ruby AS runtime
 ENV LAMBDA_RUNTIME_DIR=/var/runtime
 ENV LAMBDA_TASK_ROOT=/var/task
+ENV AWS_LAMBDA_EXEC_WRAPPER=/bin/wrapper.sh
 WORKDIR ${LAMBDA_TASK_ROOT}
 # Install python lambda runtime interface client
 RUN gem install bundler aws_lambda_ric

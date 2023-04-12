@@ -45,9 +45,9 @@ if [ $# -ne 1 ]; then
 fi
 
 if [ -z "${AWS_LAMBDA_RUNTIME_API}" ]; then
-    exec /usr/local/bin/aws-lambda-rie entry "${PARTITION}" -- "${LAMBDA_TASK_ROOT}/$1"
+    exec /usr/local/bin/aws-lambda-rie entry "${SSM_PATHS}" -- "${LAMBDA_TASK_ROOT}/$1"
 else
-    exec entry "${PARTITION}" -- "${LAMBDA_TASK_ROOT}/$1"
+    exec entry "${SSM_PATHS}" -- "${LAMBDA_TASK_ROOT}/$1"
 fi
 ```
 
