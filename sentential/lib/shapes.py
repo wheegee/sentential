@@ -15,7 +15,9 @@ from sentential.lib.clients import clients
 
 SNTL_WORKING_IMAGE_TAG = os.getenv("SNTL_WORKING_IMAGE_TAG", default=("cwi"))
 SNTL_ENTRY_VERSION = os.getenv("SNTL_ENTRY_VERSION", default=("0.4.2"))
-SNTL_ENTRY_PATHS = os.getenv("SNTL_ENTRY_PATHS", default=("${PARTITION}/Envs,${PARTITION}/Secrets"))
+SNTL_ENTRY_PATHS = os.getenv(
+    "SNTL_ENTRY_PATHS", default=("${PARTITION}/Envs,${PARTITION}/Secrets")
+)
 
 #
 # Store
