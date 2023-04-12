@@ -147,13 +147,10 @@ In order for our Lambda to be able to reach our OpenSearch instance in our priva
 Note that this information is output by our Terraform.
 
 ```bash
-> sntl configs write security_group_ids '["<tf_output_1>", ..., "<tf_output_n>"]'
-> sntl configs write subnet_ids '["<tf_output_1>", ..., "<tf_output_n>"]' # note: this will be the opensearch_subnet_id in the terraform output.
-> sntl envs write OPENSEARCH_HOST <tf_output>
+> sntl configs set security_group_ids '["sg-...", "sg-..."]'
+> sntl configs set subnet_ids '["sn-...", "sn-..."]'
+> sntl envs set OPENSEARCH_HOST <hostname>
 ```
-
-> :people_hugging: The interface for passing arrays to the `configs` store is cludgy and tempermental. Follow the exact formatting as above, improvements will be made.
-
 
 ### Validate
 

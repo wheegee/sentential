@@ -123,9 +123,9 @@ In order for our Lambda to be able to reach our ElastiCache instance in our priv
 Note that this information is output by our Terraform.
 
 ```bash
-> sntl configs write security_group_ids '["<tf_output_1>", ..., "<tf_output_n>"]'
-> sntl configs write subnet_ids '["<tf_output_1>", ..., "<tf_output_n>"]'
-> sntl envs write REDIS_HOST <tf_output>
+> sntl configs set security_group_ids '["sg-...", "sg-..."]'
+> sntl configs set subnet_ids '["sn-...", "sn-..."]'
+> sntl envs set REDIS_HOST <tf_output>
 ```
 
 > :people_hugging: The interface for passing arrays to the `configs` store is cludgy and tempermental. Follow the exact formatting as above, improvements will be made.
