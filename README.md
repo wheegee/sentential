@@ -16,13 +16,6 @@ sntl --help
 
 See the [docs](https://wheegee.github.io/sentential/).
 
-### Local serving
-
-```bash
-npm i docsify-cli -g
-docsify serve docs/
-```
-
 ## Develop
 
 ### Virtual environment
@@ -41,4 +34,9 @@ poetry install
 
 ```bash
 poetry run pytest
+```
+
+### Docs
+```bash
+docsify serve docs/
 ```
