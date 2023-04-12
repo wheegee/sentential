@@ -1,11 +1,12 @@
-### Permissions
-Lambdas allow for granting granular permissions to your function via AWS IAM [actions and conditions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html). Sententinal implements this via the `policy.json` of your project. To exercise this, let's create a lambda which returns a list of all S3 buckets in our current AWS account.
+# Permissions
+
+Lambdas allow for granting granular permissions to your function via AWS IAM [actions and conditions](https://docs.aws.amazon.com/service-authorization/latest/reference/reference_policies_actions-resources-contextkeys.html). Sententinal implements this via the `policy.json` of your project. To exercise this, let's create a Lambda which returns a list of all S3 buckets in our current AWS account.
 
 ### Prerequisites
-you have initialized the [explore project](/examples/project) and are operating in said directory.
 
+You have initialized the [explore project](/explore/project) and are operating in said directory.
 
-### develop
+### Develop
 
 Create or modify...
 
@@ -58,14 +59,14 @@ Inject this new policy statement along with the others.
 
 <!-- tabs:end -->
 
-### build
+### Build
 
-```shell
+```bash
 > sntl build
 ```
 
-### verify
-```shell
+### Verify
+```bash
 > sntl deploy local
 > sntl invoke local '{}'
 
@@ -86,12 +87,13 @@ Inject this new policy statement along with the others.
 
 It's possible you may be running into errors at this point, perhaps surrounding region configuration. And maybe the invoke output isn't verbose enough?
 
-Try out `sntl logs local` to dump the lambda logs directly.
+Try out `sntl logs local` to dump the Lambda logs directly.
 
-### publish & deploy
+### Publish & deploy
+
 Publishing and deploying to AWS can be an exercise for the reader at this point.
 
 ### cleanup
-```shell
+```bash
 > sntl destroy local
 ```

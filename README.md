@@ -2,13 +2,13 @@
 
 ## Install
 
-```sh
+```bash
 pip install sentential
 ```
 
 ## Usage
 
-```sh
+```bash
 sntl --help
 ```
 
@@ -16,29 +16,27 @@ sntl --help
 
 See the [docs](https://wheegee.github.io/sentential/).
 
-### Local serving
-
-```sh
-npm i docsify-cli -g
-docsify serve docs/
-```
-
 ## Develop
 
 ### Virtual environment
 
-```sh
+```bash
 poetry shell
 ```
 
 ### Dependencies
 
-```sh
+```bash
 poetry install
 ```
 
 ### Test
 
-```sh
+```bash
 poetry run pytest
+```
+
+### Docs
+```bash
+docsify serve docs/
 ```

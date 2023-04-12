@@ -1,4 +1,4 @@
-### API Gateway
+# Route
 
 [API Gateway](https://docs.aws.amazon.com/apigateway/index.html) can be used to create publicly accessible https routes by which to invoke your http based lambdas.
 
@@ -109,3 +109,9 @@ Visit the gateway url in your browser.
 > sntl destroy local
 > sntl destroy aws
 ```
+
+### Further reading
+
+- [mangum](https://mangum.io/)
+- [lamby](https://lamby.custominktech.com/)
+- [serverless-express](https://github.com/vendia/serverless-express)

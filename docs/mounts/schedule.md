@@ -1,4 +1,4 @@
-### Mount Schedule
+# Schedule
 
 [EventBridge Rules](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-rules.html), along with [schedule expressions](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-rule-schedule.html), can be used to run AWS Lambda functions on a schedule.
 
@@ -73,13 +73,13 @@ RUN pip install -r requirements.txt
 
 ### Build
 
-```shell
+```bash
 > sntl build
 ```
 
 ### Verify
 
-```shell
+```bash
 > sntl deploy local
 > sntl invoke local '{}'
 
@@ -104,7 +104,7 @@ Try out `sntl logs local` to dump the lambda logs directly.
 
 ### Publish & deploy
 
-```shell
+```bash
 > sntl publish
 > sntl deploy aws
 > sntl ls
@@ -124,7 +124,7 @@ Let's schedule our function to run once every 6 hours using either of the follow
 
 **Note:** Single or double quotes are required around scheduling expressions.
 
-```shell
+```bash
 > sntl mount schedule "rate(6 hours)"
 > sntl ls
 
@@ -139,7 +139,7 @@ You will now see that one of the non-local builds has a mount of `rate(6 hours)`
 
 ### Cleanup
 
-```shell
+```bash
 > sntl destroy local
 > sntl destroy aws
 ```
