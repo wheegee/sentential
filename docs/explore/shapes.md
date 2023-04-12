@@ -22,9 +22,9 @@ Key/Value pairs stored under `sntl args` will be made available to `docker build
 > sntl args set githubtoken d13ab86a-a406-11ed-918e-0fb3af2a1540
 > sntl args ls
 
-  field         value                     
- ──────────────────────────────────────── 
-  githubtoken   d13ab86a-a406-11ed-918e-0fb3af2a1540
+  key           value       description   validation  
+ ───────────────────────────────────────────────── 
+  githubtoken   d13ab...    None          None        
 ```
 
 #### **Envs**
@@ -35,9 +35,9 @@ Key/Value pairs stored under `sntl envs` will be made available in the deployed 
 > sntl envs set db_hostname somegreatdb.hostname.net
 > sntl envs ls
 
-  field         value                     
- ──────────────────────────────────────── 
-  db_hostname   somegreatdb.hostname.net 
+  key           value         description   validation  
+ ───────────────────────────────────────────────── 
+  db_hostname   somegre...    None          None        
 ```
 
 #### **Tags**
@@ -48,9 +48,9 @@ Key/Value pairs stored under `sntl tags` will be used to tag all resources gener
 > sntl tags set deployed today
 > sntl tags ls
 
-  field      value  
- ────────────────── 
-  deployed   today  
+  key        value    description   validation  
+ ───────────────────────────────────────────────── 
+  deployed   today    None          None        
 ```
 
 <!-- tabs:end -->
@@ -91,11 +91,11 @@ Key/Value pairs stored under `sntl args` will be made available to `docker build
 ```bash
 > sntl args ls
 
- field          value   validation       description  
- ───────────────────────────────────────────────────── 
-  github_token   None    field required   None         
-  git_commit     None    field required   None         
-  git_user       None    field required   None 
+  key            value       description   validation  
+ ─────────────────────────────────────────────────────────
+  github_token   None        None          field required 
+  git_commit     None        None          field required          
+  git_user       None        None          field required  
 ```
 
 #### **Envs**
@@ -105,12 +105,23 @@ Key/Value pairs stored under `sntl envs` will be made available in the deployed 
 ```bash
 > sntl envs ls
 
-  field         value   validation       description  
- ──────────────────────────────────────────────────── 
-  db_hostname   None    field required   None         
-  db_port       None    field required   None         
-  db_username   None    field required   None         
-  db_password   None    field required   None         
+  key           value    description   validation  
+ ─────────────────────────────────────────────────────────
+  db_hostname   None     None          field required         
+  db_port       None     None          field required         
+  db_username   None     None          field required         
+```
+
+#### **Secrets**
+
+Key/Value pairs stored under `sntl secrets` will be made available in the deployed Lambda environment variables.
+
+```bash
+> sntl secrets ls
+
+  key           value    description   validation  
+ ─────────────────────────────────────────────────────────
+  db_password   None     None          field required         
 ```
 
 #### **Tags**
@@ -120,10 +131,10 @@ Key/Value pairs stored under `sntl tags` will be used to tag all resources gener
 ```bash
 > sntl tags ls
 
-  field         value   validation       description  
- ──────────────────────────────────────────────────── 
-  deployed_by   None    field required   None         
-  department    None    field required   None         
+  key           value   description   validation  
+ ─────────────────────────────────────────────────────────
+  deployed_by   None    None          field required         
+  department    None    None          field required
 ```
 
 <!-- tabs:end -->
@@ -135,6 +146,7 @@ Adding descriptions is currently left as an [exercise for the reader](https://do
 ```bash
 > sntl args clear
 > sntl envs clear
+> sntl secrets clear
 > sntl tags clear
 ```
 

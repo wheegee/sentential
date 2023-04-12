@@ -84,6 +84,8 @@ RUN gem install bundler aws_lambda_ric
 # Install runtime interface emulator
 COPY --from=public.ecr.aws/lambda/provided:latest --chmod=755 /usr/local/bin/aws-lambda-rie /usr/bin/aws-lambda-rie
 # Install sentential requirements
+# Note: if you have problems, check that this entry semver is up to date
+# https://github.com/wheegee/entry
 COPY --chmod=755 --from=ghcr.io/wheegee/entry:0.4.1 / /bin/
 COPY --chmod=755 lambda-entrypoint.sh /lambda-entrypoint.sh
 # Set up entrypoint

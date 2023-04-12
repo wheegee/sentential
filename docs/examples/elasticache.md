@@ -125,10 +125,8 @@ Note that this information is output by our Terraform.
 ```bash
 > sntl configs set security_group_ids '["sg-...", "sg-..."]'
 > sntl configs set subnet_ids '["sn-...", "sn-..."]'
-> sntl envs set REDIS_HOST <tf_output>
+> sntl envs set REDIS_HOST <hostname>
 ```
-
-> :people_hugging: The interface for passing arrays to the `configs` store is cludgy and tempermental. Follow the exact formatting as above, improvements will be made.
 
 ### Validate
 

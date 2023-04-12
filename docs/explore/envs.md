@@ -19,15 +19,16 @@ Let's write an environment variable to the env store and read it back...
 > sntl secrets set PASSWORD is-encrypted
 > sntl envs ls
 
-  field       value              
- ─────────────────────────────── 
-  USERNAME   non-root
+  key        value       description   validation  
+ ───────────────────────────────────────────────── 
+  USERNAME   non-root    None          None        
+
 
 > sntl secrets ls
 
-  field       value              
- ─────────────────────────────── 
-  PASSWORD    ****
+  key        value          description   validation  
+ ───────────────────────────────────────────────── 
+  PASSWORD   is-encrypted   None          None        
 ```
 
 This is the most basic usage of a larger concept, for more see [Stores & Shapes](/examples/shapes).
