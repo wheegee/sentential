@@ -1,4 +1,4 @@
-FROM ghcr.io/wheegee/entry:latest as entry
+FROM ghcr.io/linecard/entry:latest as entry
 FROM public.ecr.aws/lambda/python:latest AS runtime
 ENV AWS_LAMBDA_EXEC_WRAPPER=/bin/wrapper.sh
 COPY --chmod=755 --from=entry / /bin/

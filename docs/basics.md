@@ -32,7 +32,7 @@ See `sntl build --help`
 Sentential uses container images as the deliverable artifact for Lambda functions. So the `Dockerfile` created is *the* build definition for the project.
 
 ```dockerfile
-FROM ghcr.io/wheegee/entry:latest AS entry
+FROM ghcr.io/linecard/entry:latest AS entry
 FROM public.ecr.aws/lambda/<language>:latest AS runtime
 ENV AWS_LAMBDA_EXEC_WRAPPER=/bin/wrapper.sh
 COPY --chmod=755 --from=entry / /bin/
@@ -46,7 +46,7 @@ CMD ["app.handler"]
 ```
 
 You will will notice this is a [multistage build](https://docs.docker.com/build/building/multi-stage/).
-- `...AS entry` delivers a lambda [runtime exec wrapper](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-modify.html) called [sentential-entry](https://github.com/wheegee/sentential-entry).
+- `...AS entry` delivers a lambda [runtime exec wrapper](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-modify.html) called [entry](https://github.com/linecard/entry).
 - `...AS runtime` will be an AWS maintained base image for the language you chose during `init`.
 - `...AS <ecr_repo_name>` is the step in which you build your application.
 
