@@ -59,6 +59,7 @@ RUN apk add --no-cache \
 FROM python AS runtime
 ENV LAMBDA_RUNTIME_DIR=/var/runtime
 ENV LAMBDA_TASK_ROOT=/var/task
+ENV AWS_LAMBDA_EXEC_WRAPPER=/bin/wrapper.sh
 WORKDIR ${LAMBDA_TASK_ROOT}
 # Install python lambda runtime interface client
 RUN pip install awslambdaric
@@ -66,8 +67,8 @@ RUN pip install awslambdaric
 COPY --from=public.ecr.aws/lambda/provided:latest --chmod=755 /usr/local/bin/aws-lambda-rie /usr/bin/aws-lambda-rie
 # Install sentential requirements
 # Note: if you have problems, check that this entry semver is up to date
-# https://github.com/wheegee/entry
-COPY --chmod=755 --from=ghcr.io/wheegee/entry:0.4.1 / /bin/
+# https://github.com/linecard/entry
+COPY --chmod=755 --from=ghcr.io/linecard/entry:0.4.1 / /bin/
 COPY --chmod=755 lambda-entrypoint.sh /lambda-entrypoint.sh
 # Set up entrypoint
 ENTRYPOINT [ "/lambda-entrypoint.sh" ]

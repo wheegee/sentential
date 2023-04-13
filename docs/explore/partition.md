@@ -6,7 +6,7 @@ Enter `PARTITION`.
 
 Everything you have been constructing using Sentential thus far has been using a default `PARTITION` equal to your AWS User ID. This convention is handy, because it automatically gives you a unique namespace for you to operate within. In general this namespace can be thought of as `/${PARTITION}/${PROJECT}/*`. This changes a bit depending on the type of resource you are creating and the naming patterns they allow. For example a Lambda would be created with `${PARTITION}-${PROJECT}` because Lambdas cannot have `/` in their names.
 
-In this document we are going to briefly explore the behavior of `PARTITION`; you can read more in the [core docs](https://github.com/wheegee/sentential/wiki/Core).
+In this document we are going to briefly explore the behavior of `PARTITION`; you can read more in the [core docs](https://github.com/linecard/sentential/wiki/Core).
 
 > :warning: This document describes a key configuration for Sentential which is camping on the environment variable `PARTITION`. I say "camping" because `PARTITION` is a really useful environment variable for a lot of different applications. We will be changing this in the near future to something more wise like `SNTL_ENV`.
 

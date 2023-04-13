@@ -214,7 +214,11 @@ class AwsLambdaDriver(LambdaDriver):
                 PackageType="Image",
                 Code={"ImageUri": image_uri},
                 Description=f"sententially deployed {image_uri}",
-                Environment={"Variables": {"PARTITION": export_paths}},
+                Environment={
+                    "Variables": {
+                        "SSM_PATHS": export_paths,
+                    }
+                },
                 Architectures=[image_arch],
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
@@ -230,7 +234,11 @@ class AwsLambdaDriver(LambdaDriver):
                 FunctionName=function_name,
                 Role=role_arn,
                 Description=f"sententially deployed {image_uri}",
-                Environment={"Variables": {"PARTITION": export_paths}},
+                Environment={
+                    "Variables": {
+                        "SSM_PATHS": export_paths,
+                    }
+                },
                 EphemeralStorage={"Size": self.provision.storage},
                 MemorySize=self.provision.memory,
                 Timeout=self.provision.timeout,

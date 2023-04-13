@@ -45,9 +45,9 @@ if [ $# -ne 1 ]; then
 fi
 
 if [ -z "${AWS_LAMBDA_RUNTIME_API}" ]; then
-    exec /usr/local/bin/aws-lambda-rie entry "${PARTITION}" -- "${LAMBDA_TASK_ROOT}/$1"
+    exec /usr/local/bin/aws-lambda-rie entry "${SSM_PATHS}" -- "${LAMBDA_TASK_ROOT}/$1"
 else
-    exec entry "${PARTITION}" -- "${LAMBDA_TASK_ROOT}/$1"
+    exec entry "${SSM_PATHS}" -- "${LAMBDA_TASK_ROOT}/$1"
 fi
 ```
 
@@ -63,8 +63,8 @@ WORKDIR ${LAMBDA_TASK_ROOT}
 COPY --from=public.ecr.aws/lambda/provided:latest --chmod=755 /usr/local/bin/aws-lambda-rie /usr/local/bin/aws-lambda-rie
 # Install sentential requirements
 # Note: if you have problems, check that this entry semver is up to date
-# https://github.com/wheegee/entry
-COPY --chmod=755 --from=ghcr.io/wheegee/entry:0.4.1 / /bin/
+# https://github.com/linecard/entry
+COPY --chmod=755 --from=ghcr.io/linecard/entry:0.4.1 / /bin/
 COPY --chmod=755 lambda-entrypoint.sh /lambda-entrypoint.sh
 
 # Set up entrypoint

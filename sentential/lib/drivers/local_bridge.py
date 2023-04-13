@@ -7,7 +7,7 @@ class LocalBridge:
     config: SimpleNamespace = SimpleNamespace(
         **{
             "bridge_name": "sentential-bridge",
-            "gw_image": "ghcr.io/wheegee/sentential-gw:latest",
+            "gw_image": "ghcr.io/linecard/sentential-gw:latest",
             "gw_name": "sentential-gw",
             "gw_internal_port": "8081",
             "gw_port": "8999",

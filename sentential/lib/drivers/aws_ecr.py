@@ -145,8 +145,9 @@ class AwsEcrDriver(ImagesDriver):
 
     def _clean_manifests(self) -> None:
         dir = os.path.expanduser("~/.docker/manifests/")
-        for manifest in os.listdir(dir):
-            if re.search(self.manifest_list_ref, manifest):
-                for file in os.listdir(os.path.join(dir, manifest)):
-                    os.remove(os.path.join(dir, manifest, file))
-                os.rmdir(os.path.join(dir, manifest))
+        if os.path.exists(dir):
+            for manifest in os.listdir(dir):
+                if re.search(self.manifest_list_ref, manifest):
+                    for file in os.listdir(os.path.join(dir, manifest)):
+                        os.remove(os.path.join(dir, manifest, file))
+                    os.rmdir(os.path.join(dir, manifest))

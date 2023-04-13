@@ -14,7 +14,7 @@ sntl --help
 
 ## Documentation
 
-See the [docs](https://wheegee.github.io/sentential/).
+See the [docs](https://linecard.github.io/sentential/).
 
 ## Develop
 
