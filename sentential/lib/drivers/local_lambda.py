@@ -47,9 +47,7 @@ class LocalLambdaDriver(LambdaDriver):
         export_paths = ",".join(
             [str(self.ontology.envs.path), str(self.ontology.secrets.path)]
         )
-        ssm_paths = ",".join(
-            [f""]
-        )
+        ssm_paths = ",".join([f""])
 
         default_env = {
             "AWS_REGION": self.ontology.context.region,
