@@ -236,8 +236,7 @@ class AwsLambdaDriver(LambdaDriver):
                 Description=f"sententially deployed {image_uri}",
                 Environment={
                     "Variables": {
-                        "PARTITION": export_paths,
-                        "SSM_PATHS": ssm_paths,
+                        "SSM_PATHS": export_paths,
                     }
                 },
                 EphemeralStorage={"Size": self.provision.storage},
