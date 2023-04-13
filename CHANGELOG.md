@@ -2,6 +2,10 @@
 
 <!--next-version-placeholder-->
 
+## v0.11.2 (2023-04-13)
+### Fix
+* Adjust to new `entry` pathing requirements ([#250](https://github.com/linecard/sentential/issues/250)) ([`5864b68`](https://github.com/linecard/sentential/commit/5864b6841c0b9e7f7c2e9fce60dd56e7f4d293d2))
+
 ## v0.11.1 (2023-04-11)
 ### Fix
 * SSM export fix ([#248](https://github.com/wheegee/sentential/issues/248)) ([`311db15`](https://github.com/wheegee/sentential/commit/311db15c8258f70b57036319113d36dae0fd3e8a))
