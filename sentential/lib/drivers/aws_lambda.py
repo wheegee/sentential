@@ -6,7 +6,6 @@ from sentential.lib.ontology import Ontology
 from sentential.lib.exceptions import AwsDriverError
 from sentential.lib.shapes import (
     LAMBDA_ROLE_POLICY_JSON,
-    SNTL_ENTRY_PATHS,
     Architecture,
     AwsImageDetail,
     AwsManifestList,
@@ -217,8 +216,7 @@ class AwsLambdaDriver(LambdaDriver):
                 Description=f"sententially deployed {image_uri}",
                 Environment={
                     "Variables": {
-                        "PARTITION": export_paths,
-                        "SSM_PATHS": SNTL_ENTRY_PATHS,
+                        "SSM_PATHS": export_paths,
                     }
                 },
                 Architectures=[image_arch],
@@ -239,7 +237,7 @@ class AwsLambdaDriver(LambdaDriver):
                 Environment={
                     "Variables": {
                         "PARTITION": export_paths,
-                        "SSM_PATHS": SNTL_ENTRY_PATHS,
+                        "SSM_PATHS": ssm_paths,
                     }
                 },
                 EphemeralStorage={"Size": self.provision.storage},
