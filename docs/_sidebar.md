@@ -1,12 +1,12 @@
 <!-- docs/_sidebar.md -->
 * [Home](README.md)
 * [Install](install.md)
-* [Flow](basics.md)
-* [Explore](explore/project.md)
-    * [Envs & Secrets](explore/envs.md)
-    * [Policy](explore/policy.json.md)
-    * [Partition](explore/partition.md)
-    * [Shapes](explore/shapes.md)
+<!-- * [Flow](basics.md) -->
+* [Flow](flow/basics.md)
+    * [Develop](flow/develop.md)
+    * [Build](flow/build.md)
+    * [Publish](flow/publish.md)
+    * [Deploy](flow/deploy.md)
 
 * [Mounts](mounts/description.md)
     * [Schedule](mounts/schedule.md)
