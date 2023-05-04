@@ -1,5 +1,21 @@
 # Develop
 
+```mermaid
+flowchart LR
+  develop([<a href='/#/flow/develop'>develop</a>])
+  build([<a href='/#/flow/build'>build</a>])
+  verify([<a href='/#/flow/deploy'>verify</a>])
+  publish([<a href='/#/flow/publish'>publish</a>])
+  deploy([<a href='/#/flow/deploy'>deploy</a>])
+
+  develop --> build --> verify --> publish --> deploy --> develop
+
+  style build fill: none
+  style verify fill: none
+  style publish fill: none
+  style deploy fill: none
+```
+
 The `init` command can be used to create a new project. It scaffolds a small number of files/folders as described below.
 
 ```bash

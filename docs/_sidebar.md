@@ -7,7 +7,9 @@
     * [Build](flow/build.md)
     * [Publish](flow/publish.md)
     * [Deploy](flow/deploy.md)
-
+* [Store](store.md)
+* [Partitions](partitions.md)
+* [Policy](policy.md)
 * [Mounts](mounts/description.md)
     * [Schedule](mounts/schedule.md)
     * [Function URL](mounts/public_url.md)

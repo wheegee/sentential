@@ -1,5 +1,21 @@
 # Publish
 
+```mermaid
+flowchart LR
+  develop([<a href='/#/flow/develop'>develop</a>])
+  build([<a href='/#/flow/build'>build</a>])
+  verify([<a href='/#/flow/deploy'>verify</a>])
+  publish([<a href='/#/flow/publish'>publish</a>])
+  deploy([<a href='/#/flow/deploy'>deploy</a>])
+
+  develop --> build --> verify --> publish --> deploy --> develop
+
+  style develop fill: none
+  style build fill: none
+  style verify fill: none
+  style deploy fill: none
+```
+
 Sentential is opinionated about how to manage publishing and versions. This is for two reasons:
 1. SemVer is a highly defensible convention for broad use.
 2. By conventionalizing we can trivialize the process of publishing.
