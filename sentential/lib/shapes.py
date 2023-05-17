@@ -374,10 +374,7 @@ class AwsFunction(BaseModel):
 class Paths(BaseModel):
     root: PosixPath
     src: PosixPath
-    bake: PosixPath
-    runtime: PosixPath
     dockerfile: PosixPath
-    wrapper: PosixPath
     policy: PosixPath
     shapes: PosixPath
 
@@ -386,10 +383,7 @@ def derive_paths(root: PosixPath = PosixPath(".")):
     return Paths(
         root=root,
         src=PosixPath(f"{root}/src"),
-        bake=PosixPath(f"{root}/.sntl/docker-bake.hcl"),
-        runtime=PosixPath(f"{root}/.sntl/Dockerfile"),
         dockerfile=PosixPath(f"{root}/Dockerfile"),
-        wrapper=PosixPath(f"{root}/.sntl/wrapper.sh"),
         policy=PosixPath(f"{root}/policy.json"),
         shapes=PosixPath(f"{root}/shapes.py"),
     )

@@ -1,26 +1,26 @@
+from typing import Dict, List
 import boto3
 from os import getenv, environ
 from sentential.lib.exceptions import ContextError
 from sentential.lib.clients import clients
 from sentential.lib.shapes import derive_paths, Paths, AWSCallerIdentity
-from sentential.lib.exceptions import SntlException
 
 
 class Context:
+    def dict(self) -> Dict:
+        all = {}
+        for method in dir(self):
+            if "__" not in method:
+                all[method] = getattr(self, method)
+        return all
+    
     @property
     def repository_name(self) -> str:
-        try:
-            repo = None
             with open("./Dockerfile") as file:
                 for line in file.readlines():
                     if "FROM runtime AS" in line:
-                        repo = line.split("AS")[1].strip()
-                if repo is not None:
-                    return repo
-                else:
-                    raise ContextError("Dockerfile not formed for sentential")
-        except IOError:
-            raise ContextError("no Dockerfile present, run `sntl init` first")
+                        return line.split("AS")[1].strip()
+            raise ContextError("No runtime stage found in Dockerfile")
 
     @property
     def resource_name(self) -> str:
