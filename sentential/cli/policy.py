@@ -14,5 +14,5 @@ def render():
 
 @policy.command()
 def ls():
-    """show all available interpolation values"""
+    """show all available interpolations and values"""
     print(Policy(Ontology()).available_data())

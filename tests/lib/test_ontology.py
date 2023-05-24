@@ -86,7 +86,7 @@ class TestContext(object):
 
     def test_missing_dockerfile(self, ontology: Ontology):
         remove("./Dockerfile")
-        with pytest.raises(ContextError):
+        with pytest.raises(FileNotFoundError):
             ontology.context.repository_name
 
 

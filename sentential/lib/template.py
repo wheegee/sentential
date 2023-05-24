@@ -1,4 +1,5 @@
 from shutil import copy
+from textwrap import shorten
 from os import makedirs
 from typing import Any, Dict, Optional
 from rich.table import Table, box
@@ -10,6 +11,7 @@ from sentential.lib.ontology import Ontology
 from sentential.lib.shapes import Envs
 from pydantic import BaseModel
 from typing import cast
+
 
 PACKAGE_PATH = PosixPath(dirname(abspath(__file__))).parent
 
@@ -46,7 +48,7 @@ class Init:
 
 
 class TemplateTableRow(BaseModel):
-    key: Any
+    interpolation: Any
     value: Optional[Any]
 
 def flatten(kls: object) -> Dict[str, Any]:
@@ -55,10 +57,9 @@ def flatten(kls: object) -> Dict[str, Any]:
         if type(x) is dict:
             for a in x:
                 flatten(x[a], name + a + '.')
-        elif type(x) is list:
+        elif not hasattr(x, '__self__'): # is not a method
             out[name[:-1]] = x
-        else:
-            out[name[:-1]] = x
+
     flatten(kls)
     return out
 
@@ -80,9 +81,12 @@ class Policy:
         context = flatten(self.ontology.context.dict())
 
         for key, value in envs.items():
-            table.add_row(*[f"\"{{{{ env.{key} }}}}\"", str(value)])
+            table.add_row(*[f"\"{{{{ env.{key} }}}}\"", self._shorten(value)])
         
         for key, value in context.items():
-            table.add_row(*[f"\"{{{{ context.{key} }}}}\"", str(value)])
+            table.add_row(*[f"\"{{{{ context.{key} }}}}\"", self._shorten(value)])
         
         return table
+    
+    def _shorten(self, obj: Any) -> str:
+        return shorten(str(obj), width=100, placeholder="...")
