@@ -6,11 +6,13 @@ from sentential.lib.ontology import Ontology
 
 policy = typer.Typer()
 
+
 @policy.command()
 def render():
     """render policy.json to console"""
     print(Policy(Ontology()).render())
     ...
+
 
 @policy.command()
 def ls():

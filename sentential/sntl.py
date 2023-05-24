@@ -21,13 +21,20 @@ root.add_typer(store, name="envs", help="environment variables")
 root.add_typer(store, name="secrets", help="secrets")
 root.add_typer(store, name="configs", help="provisioning")
 root.add_typer(store, name="tags", help="tagging")
-root.add_typer(deploy, name="deploy", help="create deployment", callback=Assurances.deploy)
+root.add_typer(
+    deploy, name="deploy", help="create deployment", callback=Assurances.deploy
+)
 root.add_typer(destroy, name="destroy", help="destroy deployment")
 root.add_typer(mount, name="mount", help="mount integration")
 root.add_typer(umount, name="umount", help="unmount integration")
 root.add_typer(invoke, name="invoke", help="invoke function")
 root.add_typer(logs, name="logs", help="logging")
-root.add_typer(policy, name="policy", help="inspect and render policy.json", callback=Assurances.render)
+root.add_typer(
+    policy,
+    name="policy",
+    help="inspect and render policy.json",
+    callback=Assurances.render,
+)
 
 
 def main():

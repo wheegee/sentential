@@ -13,14 +13,14 @@ class Context:
             if "__" not in method:
                 all[method] = getattr(self, method)
         return all
-    
+
     @property
     def repository_name(self) -> str:
-            with open("./Dockerfile") as file:
-                for line in file.readlines():
-                    if "FROM runtime AS" in line:
-                        return line.split("AS")[1].strip()
-            raise ContextError("No runtime stage found in Dockerfile")
+        with open("./Dockerfile") as file:
+            for line in file.readlines():
+                if "FROM runtime AS" in line:
+                    return line.split("AS")[1].strip()
+        raise ContextError("No runtime stage found in Dockerfile")
 
     @property
     def resource_name(self) -> str:
