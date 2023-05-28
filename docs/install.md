@@ -14,23 +14,3 @@ pip install sentential
 ```bash
 sntl --help
 ```
-
-## Develop
-
-### Virtual environment
-
-```bash
-poetry shell
-```
-
-### Dependencies
-
-```bash
-poetry install
-```
-
-### Test
-
-```bash
-poetry run pytest
-```

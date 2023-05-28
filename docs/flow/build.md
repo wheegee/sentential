@@ -16,6 +16,8 @@ flowchart LR
   style deploy fill: none
 ```
 
+The `build` command executes the building of your Dockerfile.
+
 ```bash
 > sntl build
 ```

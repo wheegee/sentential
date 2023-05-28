@@ -1,4 +1,4 @@
-# Deploy
+# Verify & Deploy
 
 ```mermaid
 flowchart LR
@@ -62,7 +62,7 @@ All configuration for sentential is stored in SSM. When executing a Lambda, [ent
 
 All locally running lambdas utilize the [Lambda Runtime Interface Emulator](https://github.com/aws/aws-lambda-runtime-interface-emulator).
 
-The outcome of this is most easily apperceive via example:
+The outcome of this is most easily apperceived via example:
 
 ```bash
 # Invoke Lambda in AWS
