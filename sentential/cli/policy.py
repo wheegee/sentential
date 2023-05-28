@@ -8,10 +8,9 @@ policy = typer.Typer()
 
 
 @policy.command()
-def render():
+def cat():
     """render policy.json to console"""
     print(Policy(Ontology()).render())
-    ...
 
 
 @policy.command()

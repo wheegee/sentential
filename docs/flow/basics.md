@@ -12,7 +12,7 @@ flowchart LR
 
   develop --> build --> verify --> publish --> deploy --> develop
 
-  style develop fill: none
+  style develop fill:none
   style build fill: none
   style verify fill: none
   style publish fill: none
