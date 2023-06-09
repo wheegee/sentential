@@ -8,7 +8,7 @@ To demonstrate deploying an HTTP based Lambda, we are going to use the python fr
 
 ### Prerequisites
 
-You have initialized the [explore project](/explore/project) and are operating in said directory.
+You have initialized the [explore project](/examples/project?id=explore-project-setup) and are operating in said directory.
 
 ### Develop
 

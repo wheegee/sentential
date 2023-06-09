@@ -1,6 +1,6 @@
 # Store
 
-Sentential uses SSM for configuration persistence. Each store is unique to its [partition](/partition).
+Sentential uses SSM for configuration persistence. Each store is unique to its [partition](/partitions).
 
 ## Args
 

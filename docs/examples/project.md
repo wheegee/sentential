@@ -1,3 +1,25 @@
+# Explore Project Setup
+We will use a project named `explore` to cover the usage and features of Sentential.
+
+### ECR
+Create an ECR repository called `explore`. 
+
+### Init
+1. `mkdir explore`
+1. `cd explore`
+1. `sntl init explore python`
+
+```bash
+> tree
+.
+├── Dockerfile
+├── policy.json
+├── shapes.py
+└── src
+```
+
+At this point you can move on to the examples.
+
 # Services VPC setup
 
 For the examples in this section, you will need a VPC. The below VPC setup using [Terraform](https://www.terraform.io/) is a minimized configuration to illuminate the requirements of the examples. These requirements can be overlayed onto whatever setup, using whatever IaC.
