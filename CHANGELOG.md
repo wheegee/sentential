@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.12.0 (2023-06-09)
+
+### Feature
+
+* Fixing up some doc issues, cutting release ([#259](https://github.com/linecard/sentential/issues/259)) ([`8d15bff`](https://github.com/linecard/sentential/commit/8d15bff8dc213ae25c5d66ccd82d9e352fab1361))
+
 ## v0.11.2 (2023-04-13)
 ### Fix
 * Adjust to new `entry` pathing requirements ([#250](https://github.com/linecard/sentential/issues/250)) ([`5864b68`](https://github.com/linecard/sentential/commit/5864b6841c0b9e7f7c2e9fce60dd56e7f4d293d2))
