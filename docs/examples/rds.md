@@ -4,8 +4,8 @@ This example aims to illustrate how to arrive at a basic RDS setup with a Lambda
 
 ### Prerequisites
 
-1. You have initialized the [explore project](/explore/project).
-1. You have initialized the [service infrastructure vpc](/services/vpc).
+1. You have initialized the [explore project](/examples/project?id=explore-project-setup).
+1. You have initialized the [service infrastructure vpc](/examples/project?id=services-vpc-setup).
 
 ### Infrastructure
 
@@ -23,7 +23,7 @@ In your infrastructure directory create an `rds.tf` like so...
 
 #### **./main.tf**
 
-This should already be populated from the [prerequisite step]((/services/vpc)).
+This should already be populated from the [prerequisite step]((/examples/project?id=services-vpc-setup)).
 
 #### **./rds.tf**
 

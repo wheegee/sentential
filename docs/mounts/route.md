@@ -8,7 +8,7 @@ To demonstrate this functionality, we will write a small function to inspect our
 
 ### Prerequisites
 
-You have initialized the [explore project](/examples/project) and are operating in said directory.
+You have initialized the [explore project](/examples/project?id=explore-project-setup) and are operating in said directory.
 
 ### Develop
 

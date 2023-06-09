@@ -18,7 +18,7 @@
     * [Ruby](custom_images/ruby.md)
     * [Go](custom_images/go.md)
     <!-- * [Bash](custom_images/bash.md) -->
-* [Examples](examples/vpc.md)
+* [Examples](examples/project.md)
     * [Hello World](examples/hello_world.md)
     * [ElastiCache](examples/elasticache.md)
     * [RDS](examples/rds.md)
