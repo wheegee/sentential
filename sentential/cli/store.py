@@ -6,11 +6,13 @@ from sentential.lib.ontology import Ontology
 
 store = typer.Typer()
 
+
 def _from_context(ctx: typer.Context) -> Tuple[Store, Callable]:
     zero_arg, store, method, *n_arg = ctx.command_path.split(" ")
     store = getattr(Ontology(), store)
     method = getattr(store, method)
     return (store, method)
+
 
 @store.command()
 def ls(ctx: typer.Context):
