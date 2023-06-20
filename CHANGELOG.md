@@ -2,6 +2,12 @@
 
 <!--next-version-placeholder-->
 
+## v0.12.1 (2023-06-20)
+
+### Fix
+
+* Args ([`fce85da`](https://github.com/linecard/sentential/commit/fce85da011be431fc61f976a05fe7b1703049fb2))
+
 ## v0.12.0 (2023-06-09)
 
 ### Feature
