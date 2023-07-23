@@ -35,11 +35,11 @@
       image = pkgs.dockerTools.streamLayeredImage {
         inherit name;
         tag = version;
-        contents = [ site-packages pkgs.python311 ];
+        contents = [ site-packages pkgs.python311 pkgs.docker-client ];
         config = {
           Env = [ 
             "PYTHONPATH=${site-packages}/lib/python3.11/site-packages/"
-            "PATH=${site-packages}/bin/sntl:$PATH "
+            "PATH=${site-packages}/bin:$PATH "
           ];
           Entrypoint = [ "sntl" ];
           Cmd = [ "--help" ];
@@ -50,7 +50,7 @@
         packages = [ site-packages pkgs.python311 ];
         shellhook = ''
           PYTHONPATH=${site-packages}/lib/python3.11/site-packages/
-          PATH=${site-packages}/bin/sntl:$PATH
+          PATH=${site-packages}/bin:$PATH
         '';
       };
 
