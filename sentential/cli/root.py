@@ -22,11 +22,14 @@ def init(repository_name: str, runtime: Runtimes):
 
 
 @root.command()
-def build(arch: Architecture = typer.Option(Architecture.system().value)):
+def build(
+    arch: Architecture = typer.Option(Architecture.system().value),
+    ssh_agent: bool = typer.Option(False),
+):
     """build lambda image"""
     ontology = Ontology()
     LocalLambdaDriver(ontology).destroy()
-    LocalImagesDriver(ontology).build(arch)
+    LocalImagesDriver(ontology).build(arch, ssh_agent)
 
 
 @root.command()
@@ -35,6 +38,7 @@ def publish(
     minor: bool = typer.Option(False),
     arch: List[Architecture] = typer.Option([Architecture.system().value]),
     multiarch: bool = typer.Option(False),
+    ssh_agent: bool = typer.Option(False),
 ):
     """publish lambda image"""
     ontology = Ontology()
@@ -42,9 +46,9 @@ def publish(
     docker = LocalImagesDriver(ontology)
 
     if multiarch:
-        docker.publish(tag, [a for a in Architecture])
+        docker.publish(tag, [a for a in Architecture], ssh_agent)
     else:
-        docker.publish(tag, [a for a in arch])
+        docker.publish(tag, [a for a in arch], ssh_agent)
 
 
 @root.command()

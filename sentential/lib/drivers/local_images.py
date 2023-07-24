@@ -17,13 +17,13 @@ class LocalImagesDriver(ImagesDriver):
         self.repo_name = ontology.context.repository_name
         self.repo_url = ontology.context.repository_url
 
-    def build(self, arch: Architecture) -> Image:
+    def build(self, arch: Architecture, ssh_agent: bool) -> Image:
         platform = f"linux/{arch.value}"
         manifest_uri = f"{self.repo_name}:{SNTL_WORKING_IMAGE_TAG}"
-        self._build(manifest_uri, platform)
+        self._build(manifest_uri, platform, ssh_agent)
         return self.get_image()
 
-    def publish(self, tag: str, arch: List[Architecture]) -> List[Image]:
+    def publish(self, tag: str, arch: List[Architecture], ssh_agent: bool) -> List[Image]:
         platforms = [f"linux/{a.value}" for a in arch]
         manifest_list_uri = f"{self.repo_url}:{tag}"
         image_manifest_uris = []
@@ -32,14 +32,9 @@ class LocalImagesDriver(ImagesDriver):
 
         for platform in platforms:
             image_manifest_uri = f"{manifest_list_uri}-{platform.split('/')[1]}"
-            image = self._build(image_manifest_uri, platform)
+            image = self._build(image_manifest_uri, platform, ssh_agent)
             image_manifest_uris.append(image_manifest_uri)
             built.append(image)
-
-        if cwi.id not in [build.id for build in built]:
-            raise LocalDriverError(
-                "current working image id does not match that of any local build"
-            )
 
         for image_manifest_uri in image_manifest_uris:
             clients.docker.push(image_manifest_uri)
@@ -49,7 +44,7 @@ class LocalImagesDriver(ImagesDriver):
         clients.docker.manifest.push(manifest_list_uri, False)
         return built
 
-    def _build(self, tag: str, platform: str) -> Image:
+    def _build(self, tag: str, platform: str, ssh_agent: bool) -> Image:
         self.ontology.args.export_defaults()
         cmd = {
             "tags": [tag],
@@ -57,6 +52,8 @@ class LocalImagesDriver(ImagesDriver):
             "load": True,
             "build_args": self.ontology.args.parameters.dict(),
         }
+        if ssh_agent:
+            cmd["ssh"] = "default"
 
         image = clients.docker.build(self.ontology.context.path.root, **cmd)
 

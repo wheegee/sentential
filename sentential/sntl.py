@@ -16,7 +16,7 @@ from sentential.lib.exceptions import (
     ValidationError,
 )
 
-root.add_typer(store, name="args", help="build arguments", callback=Assurances.build)
+root.add_typer(store, name="args", help="build arguments")
 root.add_typer(store, name="envs", help="environment variables")
 root.add_typer(store, name="secrets", help="secrets")
 root.add_typer(store, name="configs", help="provisioning")
