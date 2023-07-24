@@ -23,7 +23,9 @@ class LocalImagesDriver(ImagesDriver):
         self._build(manifest_uri, platform, ssh_agent)
         return self.get_image()
 
-    def publish(self, tag: str, arch: List[Architecture], ssh_agent: bool) -> List[Image]:
+    def publish(
+        self, tag: str, arch: List[Architecture], ssh_agent: bool
+    ) -> List[Image]:
         platforms = [f"linux/{a.value}" for a in arch]
         manifest_list_uri = f"{self.repo_url}:{tag}"
         image_manifest_uris = []
