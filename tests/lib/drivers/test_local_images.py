@@ -50,7 +50,10 @@ class TestLocalImagesDriver:
         assert cwi in built
 
     def test_cross_build(self, local_images_driver: LocalImagesDriver, cross_arch):
-        assert local_images_driver.build(cross_arch, False).architecture == cross_arch.value
+        assert (
+            local_images_driver.build(cross_arch, False).architecture
+            == cross_arch.value
+        )
 
     def test_cross_publish_failure(
         self, local_images_driver: LocalImagesDriver, native_arch
