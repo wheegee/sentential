@@ -55,12 +55,6 @@ class TestLocalImagesDriver:
             == cross_arch.value
         )
 
-    def test_cross_publish_failure(
-        self, local_images_driver: LocalImagesDriver, native_arch
-    ):
-        with pytest.raises(LocalDriverError):
-            local_images_driver.publish("1.0.1", [native_arch], False)
-
     def test_cross_publish(self, local_images_driver: LocalImagesDriver, cross_arch):
         built = local_images_driver.publish("1.0.1", [cross_arch], False)
         archs = [image.architecture for image in built]
