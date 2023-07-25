@@ -28,7 +28,7 @@ jobs:
 
     - name: Configure semantic release
       run: |
-        pip install python-semantic-release
+        pip install python-semantic-release==7.34.6
         git config user.name "sentential[release-bot]"
         git config user.email "release-bot@sentential"
 
