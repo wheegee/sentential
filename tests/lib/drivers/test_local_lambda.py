@@ -33,7 +33,7 @@ class TestLocalLambdaDriver:
         local_images_driver: LocalImagesDriver,
     ):
         local_images_driver.ontology.args.set("buildarg", "present")
-        local_images_driver.build(Architecture.system())
+        local_images_driver.build(Architecture.system(), False)
 
     def test_deploy(
         self,
