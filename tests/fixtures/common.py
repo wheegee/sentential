@@ -17,7 +17,7 @@ from tests.helpers import generate_image_manifest, generate_image_manifest_list
 def cwi():
     local_images_driver = LocalImagesDriver(Ontology())
     local_images_driver.clean()
-    yield local_images_driver.build(Architecture.system())
+    yield local_images_driver.build(Architecture.system(), False)
 
 
 #
