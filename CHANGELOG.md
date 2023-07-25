@@ -2,6 +2,14 @@
 
 <!--next-version-placeholder-->
 
+## v0.12.2 (2023-07-25)
+
+### Fix
+
+* Proper semantic release versioning ([`17ab0b4`](https://github.com/linecard/sentential/commit/17ab0b4f75f1c62869de0487d580501b108cb4d0))
+* Sometimes new is too new ([`0182406`](https://github.com/linecard/sentential/commit/0182406e8602fd2d021d7b267c51d26e4c78dbd3))
+* Ssh-agent, etc. ([#268](https://github.com/linecard/sentential/issues/268)) ([`a91aa62`](https://github.com/linecard/sentential/commit/a91aa62c30d995e342040954aa404e2235b34ab0))
+
 ## v0.12.1 (2023-06-20)
 
 ### Fix
