@@ -37,12 +37,12 @@ class TestLocalImagesDriver:
     def test_publish(
         self, cwi: Image, local_images_driver: LocalImagesDriver, native_arch
     ):
-        assert cwi in local_images_driver.publish("1.0.0", [native_arch])
+        assert cwi in local_images_driver.publish("1.0.0", [native_arch], False)
 
     def test_publish_multi_arch(
         self, cwi: Image, local_images_driver: LocalImagesDriver
     ):
-        built = local_images_driver.publish("2.0.0", [a for a in Architecture])
+        built = local_images_driver.publish("2.0.0", [a for a in Architecture], False)
         archs = [image.architecture for image in built]
         assert len(archs) == 2
         assert "amd64" in archs
@@ -56,10 +56,10 @@ class TestLocalImagesDriver:
         self, local_images_driver: LocalImagesDriver, native_arch
     ):
         with pytest.raises(LocalDriverError):
-            local_images_driver.publish("1.0.1", [native_arch])
+            local_images_driver.publish("1.0.1", [native_arch], False)
 
     def test_cross_publish(self, local_images_driver: LocalImagesDriver, cross_arch):
-        built = local_images_driver.publish("1.0.1", [cross_arch])
+        built = local_images_driver.publish("1.0.1", [cross_arch], False)
         archs = [image.architecture for image in built]
         assert len(archs) == 1
         assert cross_arch.value in archs
